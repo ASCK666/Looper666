@@ -67,10 +67,13 @@
   height: 7.0% !important;
 }
 
+/* Re-centred directly on the two cassette hubs in V95. The previous 41.5%
+   top anchor placed the spinning reel sprites visibly below the mechanism. */
 .cassetteReel {
-  top: 41.5% !important;
-  width: 10.8% !important;
-  margin-left: -5.4% !important;
+  top: 35.4% !important;
+  width: 9.1% !important;
+  margin-left: -4.55% !important;
+  transform-origin: 50% 50% !important;
 }
 .cassetteReelLeft { left: 27.4% !important; }
 .cassetteReelRight { left: 54.8% !important; }
@@ -100,9 +103,7 @@
   bottom: 52.0% !important;
 }
 
-/* Full-canvas PNG overlays prepared for recessed hardware backlighting.
-   If the files are not in assets/ yet, JS marks them missing and the deck
-   continues to work normally. */
+/* Full-canvas PNG overlays prepared for recessed hardware backlighting. */
 .deckBacklightLayer {
   position: absolute;
   z-index: 10;
@@ -123,8 +124,11 @@
 
 .deckBacklight.missing { display: none; }
 
+/* The idle asset already contains a subtle seam for all five buttons. Keep it
+   fully visible; reducing this layer's opacity made only the active overlay
+   readable on real devices. */
 .deckBacklightIdle {
-  opacity: .62;
+  opacity: 1;
 }
 
 .deckBacklightActive {
@@ -134,16 +138,14 @@
 }
 
 .deckBacklightActive.is-hover {
-  opacity: .68;
+  opacity: .72;
 }
 
 .deckBacklightActive.is-on {
-  opacity: .92;
-  filter: brightness(1.04);
+  opacity: 1;
+  filter: brightness(1.08);
 }
 
-/* Interactive hit areas over the physical controls. They stay visually
-   transparent: illumination comes from the PNG backlight overlays instead. */
 .artworkTransport {
   position: absolute;
   z-index: 12;
@@ -272,10 +274,6 @@
     top: 35.0% !important;
     width: 14.7% !important;
   }
-
-  .deckBacklightIdle { opacity: .68; }
-  .deckBacklightActive.is-hover { opacity: .76; }
-  .deckBacklightActive.is-on { opacity: .96; }
 
   .loopCounterLabel { font-size: 5px !important; }
   .loopCounterDigits,
