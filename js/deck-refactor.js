@@ -2,8 +2,22 @@
 
 (() => {
   const LOOP_BATCH = 8;
+  const DECK_ASSET_V95 = "assets/cassette-mechanism-pixel-v95.png";
+  const DECK_ASSET_FALLBACK = "assets/cassette-mechanism-pixel-v84.png";
   const $id = id => document.getElementById(id);
   let installed = false;
+
+  function prepareDeckAsset(){
+    const images=[...document.querySelectorAll(".cassetteDeckImage,.cassetteDoorPanel")];
+    images.forEach(img=>{
+      if(img.dataset.deckAssetPrepared==="1")return;
+      img.dataset.deckAssetPrepared="1";
+      img.addEventListener("error",()=>{
+        if(!img.src.endsWith("cassette-mechanism-pixel-v84.png"))img.src=DECK_ASSET_FALLBACK;
+      });
+      img.src=DECK_ASSET_V95;
+    });
+  }
 
   function buildLoopCounter(){
     const grid=document.querySelector(".deckHardwareGrid");
@@ -13,7 +27,7 @@
     module.className="loopCounterModule";
     module.setAttribute("aria-label","Compteur de boucles");
     module.innerHTML=`
-      <small class="loopCounterLabel">LOOP COUNTER</small>
+      <small class="loopCounterLabel">LOOP</small>
       <div class="loopCounterWindow" role="timer" aria-live="off" aria-label="0 boucle sur ${LOOP_BATCH}">
         <span id="loopCounterCurrent" class="loopCounterDigits">00</span>
         <span class="loopCounterSlash">/</span>
@@ -53,10 +67,6 @@
     const legacy=document.querySelector(".tapeCounterModule");
     if(legacy)legacy.remove();
 
-    // refreshCassetteUI() in the current engine still writes two harmless
-    // presentation fields that used to live inside EJECT. Keep invisible
-    // compatibility sinks so the engine can update loaded/playing classes
-    // without keeping either legacy control in the rendered deck.
     let bridge=$id("deckLegacyBridge");
     if(!bridge){
       bridge=document.createElement("span");
@@ -69,9 +79,6 @@
   }
 
   function disableLegacyTapeCounterEngine(){
-    // The mechanical tape counter no longer exists. Stop its 100 ms timer and
-    // replace its old hooks with no-ops. This deliberately leaves reel timing
-    // untouched: cassette reel animation is independent from this counter.
     try{
       if(typeof stopTapeCounter==="function")stopTapeCounter();
       if(typeof startTapeCounter==="function")startTapeCounter=()=>{};
@@ -101,11 +108,10 @@
     installed=true;
     removeLegacyHardware();
     disableLegacyTapeCounterEngine();
+    prepareDeckAsset();
     buildLoopCounter();
     refreshDeckState();
 
-    // Counter refresh is intentionally lightweight and follows the engine's
-    // existing loop state. It does not calculate transport or reel speed.
     setInterval(refreshDeckState,120);
     return true;
   }
