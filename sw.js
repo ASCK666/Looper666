@@ -1,5 +1,5 @@
 "use strict";
-const CACHE="scratch-practice-v96";
+const CACHE="scratch-practice-v97";
 const ASSETS=[
   "./",
   "./index.html",
@@ -7,6 +7,7 @@ const ASSETS=[
   "./css/base.css",
   "./css/looper-polish.css",
   "./css/deck-refactor.css",
+  "./css/clean-ui.css",
   "./js/bootstrap.js",
   "./js/core.js",
   "./js/looper.js",
