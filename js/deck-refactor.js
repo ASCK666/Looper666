@@ -8,9 +8,6 @@
     const grid=document.querySelector(".deckHardwareGrid");
     if(!grid || grid.querySelector(".loopCounterModule"))return;
 
-    const legacy=document.querySelector(".tapeCounterModule");
-    if(legacy)legacy.remove();
-
     const module=document.createElement("aside");
     module.className="loopCounterModule";
     module.setAttribute("aria-label","Compteur de boucles");
@@ -51,17 +48,16 @@
     hint.textContent=!loaded ? "LOAD A BEAT TO START" : playing ? "PLAYING" : "READY • PRESS PLAY";
   }
 
-  function detachLegacyCounter(){
-    try{ if(typeof stopTapeCounter==="function")stopTapeCounter(); }catch{}
-  }
-
   function boot(){
     if(!document.querySelector(".deckHardwareGrid"))return false;
     buildLoopCounter();
-    detachLegacyCounter();
     refreshHint();
     refreshLoopCounter();
 
+    // Keep the legacy tape-counter DOM alive during this first refactor stage:
+    // refreshCassetteUI() still references its eject/action nodes. It is only
+    // hidden visually here; the hard code deletion comes in the next step so
+    // cassette playing/loaded classes and reel animation cannot regress.
     setInterval(()=>{
       refreshLoopCounter();
       refreshHint();
