@@ -3,6 +3,7 @@
 (() => {
   const LOOP_BATCH = 8;
   const $id = id => document.getElementById(id);
+  let installed = false;
 
   function buildLoopCounter(){
     const grid=document.querySelector(".deckHardwareGrid");
@@ -48,26 +49,70 @@
     hint.textContent=!loaded ? "LOAD A BEAT TO START" : playing ? "PLAYING" : "READY • PRESS PLAY";
   }
 
-  function boot(){
-    if(!document.querySelector(".deckHardwareGrid"))return false;
-    buildLoopCounter();
-    refreshHint();
-    refreshLoopCounter();
+  function removeLegacyHardware(){
+    const legacy=document.querySelector(".tapeCounterModule");
+    if(legacy)legacy.remove();
 
-    // Keep the legacy tape-counter DOM alive during this first refactor stage:
-    // refreshCassetteUI() still references its eject/action nodes. It is only
-    // hidden visually here; the hard code deletion comes in the next step so
-    // cassette playing/loaded classes and reel animation cannot regress.
-    setInterval(()=>{
-      refreshLoopCounter();
-      refreshHint();
-    },120);
+    // refreshCassetteUI() in the current engine still writes two harmless
+    // presentation fields that used to live inside EJECT. Keep invisible
+    // compatibility sinks so the engine can update loaded/playing classes
+    // without keeping either legacy control in the rendered deck.
+    let bridge=$id("deckLegacyBridge");
+    if(!bridge){
+      bridge=document.createElement("span");
+      bridge.id="deckLegacyBridge";
+      bridge.hidden=true;
+      bridge.setAttribute("aria-hidden","true");
+      bridge.innerHTML='<span id="cassetteDoorEject"></span><span id="cassetteDoorAction"></span>';
+      document.body.appendChild(bridge);
+    }
+  }
+
+  function disableLegacyTapeCounterEngine(){
+    // The mechanical tape counter no longer exists. Stop its 100 ms timer and
+    // replace its old hooks with no-ops. This deliberately leaves reel timing
+    // untouched: cassette reel animation is independent from this counter.
+    try{
+      if(typeof stopTapeCounter==="function")stopTapeCounter();
+      if(typeof startTapeCounter==="function")startTapeCounter=()=>{};
+      if(typeof stopTapeCounter==="function")stopTapeCounter=()=>{};
+      if(typeof resetTapeCounter==="function")resetTapeCounter=()=>{};
+      if(typeof refreshTapeCounter==="function")refreshTapeCounter=()=>{};
+    }catch(error){
+      console.warn("Scratch Practice: legacy tape counter cleanup skipped",error);
+    }
+  }
+
+  function refreshDeckState(){
+    try{
+      if(typeof refreshCassetteUI==="function")refreshCassetteUI();
+    }catch(error){
+      console.warn("Scratch Practice: cassette UI refresh failed",error);
+    }
+    refreshLoopCounter();
+    refreshHint();
+  }
+
+  function boot(){
+    if(installed)return true;
+    if(!document.querySelector(".deckHardwareGrid"))return false;
+    if(typeof refreshCassetteUI!=="function")return false;
+
+    installed=true;
+    removeLegacyHardware();
+    disableLegacyTapeCounterEngine();
+    buildLoopCounter();
+    refreshDeckState();
+
+    // Counter refresh is intentionally lightweight and follows the engine's
+    // existing loop state. It does not calculate transport or reel speed.
+    setInterval(refreshDeckState,120);
     return true;
   }
 
   let attempts=0;
   const timer=setInterval(()=>{
     attempts++;
-    if(boot() || attempts>80)clearInterval(timer);
+    if(boot() || attempts>120)clearInterval(timer);
   },25);
 })();
