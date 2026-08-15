@@ -4,9 +4,19 @@
   const LOOP_BATCH = 8;
   const DECK_ASSET_V95 = "assets/cassette-mechanism-pixel-v95.png";
   const DECK_ASSET_FALLBACK = "assets/cassette-mechanism-pixel-v84.png";
+  const BACKLIGHT_IDLE = "assets/deck-buttons-backlight-idle.png";
+  const BACKLIGHT_ACTIVE = {
+    prevBeat: "assets/deck-button-prev-backlight-active.png",
+    playBeat: "assets/deck-button-play-backlight-active.png",
+    stopBeat: "assets/deck-button-stop-backlight-active.png",
+    nextBeat: "assets/deck-button-next-backlight-active.png",
+    autoLooperToggle: "assets/deck-button-auto-backlight-active.png"
+  };
+  const FLASH_MS = 150;
   const $id = id => document.getElementById(id);
   let installed = false;
   let intervalId = null;
+  let flashTimer = null;
 
   function prepareDeckAsset(){
     const images=[...document.querySelectorAll(".cassetteDeckImage,.cassetteDoorPanel")];
@@ -25,6 +35,34 @@
       document.querySelector("#looper .cassetteMechanismCrop") ||
       document.querySelector(".cassetteDeckStage") ||
       document.querySelector(".cassetteMechanismCrop");
+  }
+
+  function makeOverlay(src,className){
+    const img=document.createElement("img");
+    img.className=className;
+    img.src=src;
+    img.alt="";
+    img.setAttribute("aria-hidden","true");
+    img.draggable=false;
+    img.addEventListener("error",()=>img.classList.add("missing"),{once:true});
+    return img;
+  }
+
+  function buildBacklightLayers(host){
+    if(!host || host.querySelector(".deckBacklightLayer"))return;
+
+    const layer=document.createElement("div");
+    layer.className="deckBacklightLayer";
+    layer.setAttribute("aria-hidden","true");
+
+    layer.appendChild(makeOverlay(BACKLIGHT_IDLE,"deckBacklight deckBacklightIdle"));
+    Object.entries(BACKLIGHT_ACTIVE).forEach(([target,src])=>{
+      const overlay=makeOverlay(src,"deckBacklight deckBacklightActive");
+      overlay.dataset.target=target;
+      layer.appendChild(overlay);
+    });
+
+    host.appendChild(layer);
   }
 
   function removeDetachedCounter(){
@@ -50,6 +88,18 @@
     host.appendChild(module);
   }
 
+  function flashBacklight(target){
+    if(target==="playBeat" || target==="autoLooperToggle")return;
+    const overlay=document.querySelector(`.deckBacklightActive[data-target="${target}"]`);
+    if(!overlay)return;
+    overlay.classList.add("is-on");
+    if(flashTimer)clearTimeout(flashTimer);
+    flashTimer=setTimeout(()=>{
+      overlay.classList.remove("is-on");
+      flashTimer=null;
+    },FLASH_MS);
+  }
+
   function buildArtworkTransport(){
     const host=findDeckHost();
     if(!host || host.querySelector(".artworkTransport"))return;
@@ -66,11 +116,23 @@
       <button class="artworkTransportHit artworkTransportAuto" type="button" data-target="autoLooperToggle" aria-label="Accélération automatique" aria-pressed="false"></button>
     `;
 
+    transport.addEventListener("pointerenter",event=>{
+      const hit=event.target.closest?.(".artworkTransportHit");
+      if(!hit)return;
+      document.querySelector(`.deckBacklightActive[data-target="${hit.dataset.target}"]`)?.classList.add("is-hover");
+    },true);
+    transport.addEventListener("pointerleave",event=>{
+      const hit=event.target.closest?.(".artworkTransportHit");
+      if(!hit)return;
+      document.querySelector(`.deckBacklightActive[data-target="${hit.dataset.target}"]`)?.classList.remove("is-hover");
+    },true);
+
     transport.addEventListener("click",event=>{
       const hit=event.target.closest(".artworkTransportHit");
       if(!hit)return;
       event.preventDefault();
       event.stopPropagation();
+      flashBacklight(hit.dataset.target);
       $id(hit.dataset.target)?.click();
     });
 
@@ -78,14 +140,18 @@
   }
 
   function refreshArtworkTransport(){
+    const playing=!!document.querySelector(".cassetteDeck.playing");
     const auto=$id("autoLooperToggle");
+    const autoEnabled=!!auto?.classList.contains("active");
     const artworkAuto=document.querySelector(".artworkTransportAuto");
+
     if(artworkAuto && auto){
       artworkAuto.setAttribute("aria-pressed",auto.getAttribute("aria-pressed")||"false");
-      artworkAuto.classList.toggle("active",auto.classList.contains("active"));
+      artworkAuto.classList.toggle("active",autoEnabled);
     }
-    const play=document.querySelector(".artworkTransportPlay");
-    if(play)play.classList.toggle("active",!!document.querySelector(".cassetteDeck.playing"));
+    document.querySelector(".artworkTransportPlay")?.classList.toggle("active",playing);
+    document.querySelector('.deckBacklightActive[data-target="playBeat"]')?.classList.toggle("is-on",playing);
+    document.querySelector('.deckBacklightActive[data-target="autoLooperToggle"]')?.classList.toggle("is-on",autoEnabled);
   }
 
   function refreshLoopCounter(){
@@ -157,6 +223,8 @@
     removeLegacyHardware();
     disableLegacyTapeCounterEngine();
     prepareDeckAsset();
+    const host=findDeckHost();
+    buildBacklightLayers(host);
     buildLoopCounter();
     buildArtworkTransport();
     document.querySelector(".deckTransport")?.classList.add("deckTransport--legacy");
