@@ -1,5 +1,5 @@
 "use strict";
-window.__SP={version:"92",ready:false,errors:[]};
+window.__SP={version:"93",ready:false,errors:[]};
 window.__SP.report=(scope,error)=>{
   const message=error?.message||String(error||"Unknown error");
   const item={scope,message,time:new Date().toISOString()};
@@ -31,3 +31,13 @@ const looperPolishScript=document.createElement("script");
 looperPolishScript.src="./js/looper-polish.js";
 looperPolishScript.defer=true;
 document.head.appendChild(looperPolishScript);
+
+const deckRefactorStyle=document.createElement("link");
+deckRefactorStyle.rel="stylesheet";
+deckRefactorStyle.href="./css/deck-refactor.css";
+document.head.appendChild(deckRefactorStyle);
+
+const deckRefactorScript=document.createElement("script");
+deckRefactorScript.src="./js/deck-refactor.js";
+deckRefactorScript.defer=true;
+document.head.appendChild(deckRefactorScript);
