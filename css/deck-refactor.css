@@ -68,14 +68,15 @@
 }
 
 /* Measured against the actual V95 deck + V81 reel sprite. Anchor each reel by
-   its centre so scaling never shifts the rotation axis. V95 hub centres are
-   approximately (426,430) and (844,430) on the 1536x1024 bitmap. */
+   its centre so scaling never shifts the rotation axis. Use the independent
+   `translate` property for centering so the existing reel animation remains
+   free to animate `transform: rotate(...)`. */
 .cassetteReel {
   top: 41.9922% !important;
   width: 5.8594% !important;
   height: auto !important;
   margin: 0 !important;
-  transform: translate(-50%, -50%) rotate(var(--cassette-reel-angle, 0deg)) !important;
+  translate: -50% -50% !important;
   transform-origin: 50% 50% !important;
 }
 .cassetteReelLeft { left: 27.7344% !important; }
