@@ -1,5 +1,5 @@
 "use strict";
-const CACHE="scratch-practice-v97";
+const CACHE="scratch-practice-v98";
 const ASSETS=[
   "./",
   "./index.html",
