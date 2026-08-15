@@ -1,5 +1,5 @@
 "use strict";
-window.__SP={version:"109-dev-no-sw",ready:false,errors:[]};
+window.__SP={version:"110-dev-no-sw",ready:false,errors:[]};
 window.__SP.report=(scope,error)=>{
   const message=error?.message||String(error||"Unknown error");
   const item={scope,message,time:new Date().toISOString()};
@@ -31,7 +31,10 @@ if("caches" in window){
     .catch(error=>console.warn("Scratch Practice cache cleanup failed:",error));
 }
 
-const DEV_ASSET_VERSION=109;
+// During active UI development, use a fresh query token on every reload.
+// This avoids stale CSS/JS from the browser/CDN cache without hand-bumping a
+// version number for each visual tweak.
+const DEV_ASSET_VERSION=Date.now();
 const versioned=path=>`${path}?v=${DEV_ASSET_VERSION}`;
 
 const chopperLayoutScript=document.createElement("script");
