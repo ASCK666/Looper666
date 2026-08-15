@@ -1,4 +1,4 @@
-/* Looper deck refactor – integrate the live loop counter into the cassette stage. */
+/* Looper deck refactor – keep every live overlay in the cassette artwork coordinate space. */
 
 .deckHardwareGrid {
   grid-template-columns: minmax(0, 1fr) 148px !important;
@@ -13,22 +13,45 @@
   position: relative !important;
 }
 
+/* The artwork itself is 1536x1024. The previous 2.12 crop ratio clipped the
+   stage vertically, so reels/counter were positioned in a different geometry
+   from the pixels users actually saw. Use the artwork ratio everywhere. */
+.cassetteMechanismCrop {
+  width: 100% !important;
+  aspect-ratio: 1536 / 1024 !important;
+  overflow: hidden !important;
+}
+
+.cassetteDeckStage {
+  position: absolute !important;
+  inset: 0 !important;
+  width: 100% !important;
+  height: 100% !important;
+  aspect-ratio: auto !important;
+}
+
+:is(.cassetteDeckImage,.cassetteDoorPanel) {
+  inset: 0 !important;
+  width: 100% !important;
+  height: 100% !important;
+  object-fit: fill !important;
+}
+
 .tapeCounterModule,
 .deckHardwareGrid > .loopCounterModule {
   display: none !important;
 }
 
-/* This overlay is now positioned against the cassette art itself, not the
-   whole deck. That keeps it out of the IMPORT BEAT column at every width. */
+/* Live loop counter anchored directly to the cassette artwork. */
 .cassetteDeckStage > .loopCounterModule.loopCounterModule--integrated {
   position: absolute !important;
   z-index: 7 !important;
   pointer-events: none !important;
-  right: 4.2% !important;
-  top: 31.8% !important;
-  width: 16.2% !important;
-  max-width: 132px !important;
-  min-width: 72px !important;
+  left: 76.8% !important;
+  top: 31.5% !important;
+  width: 17.2% !important;
+  max-width: none !important;
+  min-width: 0 !important;
   display: flex !important;
   flex-direction: column !important;
   align-items: stretch !important;
@@ -37,6 +60,22 @@
   border: 0 !important;
   background: transparent !important;
   box-shadow: none !important;
+}
+
+/* Reels use the same coordinate system as the artwork and therefore keep the
+   same visual centres on desktop and mobile. */
+.cassetteReel {
+  top: 34.2% !important;
+  width: 10.8% !important;
+  margin-left: -5.4% !important;
+}
+.cassetteReelLeft { left: 34.5% !important; }
+.cassetteReelRight { left: 65% !important; }
+
+.cassetteDeckHint {
+  left: 37.5% !important;
+  right: 37.5% !important;
+  bottom: 47% !important;
 }
 
 .loopCounterLabel {
@@ -55,8 +94,8 @@
   grid-template-columns: 1fr auto 1fr !important;
   align-items: center !important;
   justify-items: center !important;
-  min-height: clamp(38px,4.7vw,58px) !important;
-  padding: 6px 7px 4px !important;
+  min-height: clamp(34px,4.2vw,54px) !important;
+  padding: 5px 6px 4px !important;
   border-radius: 4px !important;
   background: linear-gradient(180deg,rgba(42,24,8,.2),rgba(9,5,3,.12)) !important;
   box-shadow:
@@ -75,13 +114,13 @@
 
 .loopCounterDigits,
 .loopCounterTotal {
-  font-size: clamp(15px,1.95vw,26px) !important;
+  font-size: clamp(14px,1.8vw,25px) !important;
   font-weight: 800 !important;
   font-variant-numeric: tabular-nums !important;
 }
 
 .loopCounterSlash {
-  font-size: clamp(12px,1.35vw,18px) !important;
+  font-size: clamp(11px,1.25vw,17px) !important;
   font-weight: 700 !important;
   opacity: .9 !important;
 }
@@ -119,16 +158,17 @@
     gap: 8px !important;
   }
 
+  /* Coordinates intentionally stay identical to desktop. Only typography
+     scales down; changing the anchor here reintroduced mobile drift. */
   .cassetteDeckStage > .loopCounterModule.loopCounterModule--integrated {
-    right: 4.1% !important;
-    top: 31.7% !important;
-    width: 16.6% !important;
-    min-width: 60px !important;
+    left: 76.8% !important;
+    top: 31.5% !important;
+    width: 17.2% !important;
   }
 
   .loopCounterLabel { font-size: 6px !important; }
   .loopCounterDigits,
-  .loopCounterTotal { font-size: clamp(12px,3.7vw,18px) !important; }
-  .loopCounterSlash { font-size: clamp(10px,2.8vw,14px) !important; }
+  .loopCounterTotal { font-size: clamp(12px,3.5vw,18px) !important; }
+  .loopCounterSlash { font-size: clamp(10px,2.6vw,14px) !important; }
   .loopCounterLegend { font-size: 5px !important; gap: 3px !important; }
 }
