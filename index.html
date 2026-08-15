@@ -8,6 +8,8 @@
 <title>Scratch Practice Station</title>
 <link rel="manifest" href="manifest.json">
 <link rel="stylesheet" href="./css/base.css">
+<link rel="stylesheet" href="./css/looper-polish.css">
+<link rel="stylesheet" href="./css/deck-refactor.css">
 <link rel="stylesheet" href="./css/clean-ui.css">
 </head>
 <body>
@@ -244,201 +246,55 @@
 
           <div class="samplerSelectRow">
             <div><label>CHOPS</label><select id="sliceCount"><option value="4">4</option><option value="8">8</option><option value="12">12</option><option value="16" selected>16</option></select></div>
-            <div><label>SNAP</label><select id="snapMode"><option value="transient">TRANSIENT</option><option value="grid">GRID</option><option value="free">FREE</option></select></div>
+            <div><label>SNAP</label><select id="markerSnap"><option value="off">OFF</option><option value="zero">ZERO CROSS</option><option value="grid">GRID</option></select></div>
           </div>
 
-          <div class="friendlyControls">
-            <div><label>TEMPO GRID</label><input id="sampleBpm" type="number" min="40" max="220" step="0.1" value="90"></div>
-            <div>
-              <label>PITCH <span id="samplePitchReadout">0 st</span></label>
-              <input id="samplePitch" type="range" min="-6" max="6" step="1" value="0">
-            </div>
-            <div class="sampleVolControl">
-              <label>SAMPLE VOL <span id="sampleVolumeReadout">80%</span></label>
-              <input id="sampleVolume" type="range" min="0" max="100" step="1" value="80">
-            </div>
+          <div class="samplerKnobRow">
+            <div class="knobBlock"><label>PITCH</label><input id="pitch" type="range" min="-12" max="12" step="1" value="0"><span id="pitchVal">0 ST</span></div>
+            <div class="knobBlock"><label>VOLUME</label><input id="sampleVol" type="range" min="0" max="120" step="1" value="85"><span id="sampleVolVal">85%</span></div>
           </div>
-
-          <details class="advancedBox">
-            <summary>FINE SETTINGS</summary>
-            <div class="grid2 advancedInner">
-              <div><label>GRID PRECISION</label><select id="gridDivision"><option value="0.25">1/4 beat</option><option value="0.125">1/8 beat</option><option value="0.0625" selected>1/16 beat</option><option value="0.03125">1/32 beat</option></select></div>
-              <div><label>TRANSIENT RANGE</label><select id="transientRadius"><option value="20">20 ms</option><option value="40">40 ms</option><option value="80" selected>80 ms</option><option value="120">120 ms</option><option value="200">200 ms</option></select></div>
-            </div>
-          </details>
-
-          <div class="samplerControlLegend">wheel = zoom • drag chop = free placement</div>
         </div>
       </div>
 
       <div class="samplerPerformanceDeck">
-        <div class="panel padsPanel samplerPadsModule">
-          <div class="title compactTitle samplerSectionTitle">CHOP PADS <span class="titleMeta">01–16</span></div>
+        <div class="panel samplerPadsModule">
+          <div class="title stableTitle"><span>16 PADS <i class="blueLed"></i></span><span class="titleMeta">CHOPS</span></div>
           <div id="pads" class="pads"></div>
-          <div class="samplerModuleHint">Tap a pad to audition from that chop to the end.</div>
+          <div class="samplerModuleHint">KEYS 1–8 / Q–I</div>
         </div>
 
-        <div class="panel gridPanel samplerSequenceModule">
-          <div class="samplerSequenceHead">
-            <div class="title compactTitle samplerSectionTitle">SEQUENCE <span class="titleMeta">2 BARS / 8TH</span></div>
-            <button id="clearGrid" class="btn">CLEAR GRID</button>
-          </div>
-          <div class="loopGridWrap">
-            <div id="loopGrid" class="matrixGrid"></div>
-          </div>
-          <div class="samplerModuleHint">Click = place • right click = clear • one chop per step.</div>
+        <div class="panel samplerSequenceModule">
+          <div class="title stableTitle"><span>SEQUENCE <i class="blueLed"></i></span><span class="titleMeta">2 BARS</span></div>
+          <div id="sequenceGrid" class="sequenceGrid"></div>
+          <div class="samplerModuleHint">CLICK CELLS TO PROGRAM CHOPS</div>
         </div>
       </div>
 
-      <div class="panel chopTransportPanel samplerTransportModule">
-        <div class="title compactTitle">TRANSPORT</div>
-        <div class="grid4 samplerTransportButtons">
-          <button id="previewFlip" class="btn primary">PLAY</button>
-          <button id="playDrumsOnly" class="btn blue">DRUMS</button>
-          <button id="stopFlip" class="btn">STOP</button>
-          <button id="addFlipLibrary" class="btn good">SAVE BEAT</button>
+      <div class="panel samplerTransportModule">
+        <div class="title stableTitle"><span>TRANSPORT <i class="blueLed"></i></span><span class="titleMeta">PLAY / RECORD</span></div>
+        <div class="samplerTransportRow">
+          <button id="seqPlay" class="btn good">PLAY</button>
+          <button id="seqStop" class="btn">STOP</button>
+          <button id="seqClear" class="btn">CLEAR</button>
+          <button id="seqRecord" class="btn danger">REC</button>
         </div>
-        <div id="beatSaveStatus" class="status saveBeatStatus">SAVE rend la grille actuelle puis écrit un WAV.</div>
-        <div class="spaceHint">ESPACE = PLAY / STOP</div>
       </div>
 
-      <div class="panel controlPanel samplerDrumSection">
-        <div class="title stableTitle"><span>DRUM MACHINE <i class="blueLed"></i></span><span class="titleMeta">GROOVE / OUTPUT</span></div>
-        <div class="drumSelector">
-          <div>
-            <label>STYLE POUR LA PROCHAINE SÉLECTION</label>
-            <select id="drumMode"><option value="auto" selected>AUTO / 30 GROOVES</option><option value="classic">BOOM BAP</option><option value="sparse">DUSTY / SPARSE</option><option value="hard">HARD</option><option value="wonky">WONKY</option><option value="west">WEST COAST</option><option value="off">OFF</option></select>
-          </div>
-          <button id="newDrums" class="btn blue">NEW DRUMS</button>
-        </div>
-
-        <div class="snareFx">
-          <div class="snareFxHead">
-            <label class="fxToggle">
-              <input id="snareReverbOn" type="checkbox">
-              <span>SNARE REVERB</span>
-            </label>
-            <select id="snareReverbType">
-              <option value="room">ROOM</option>
-              <option value="plate" selected>PLATE</option>
-              <option value="dark">DARK</option>
-            </select>
-          </div>
-          <div class="snareMixRow">
-            <label>MIX <span id="snareReverbMixReadout">25%</span></label>
-            <input id="snareReverbMix" type="range" min="0" max="70" step="1" value="25">
-          </div>
-          <div class="help">Le réglage reste fixe quand tu fais NEW DRUMS.</div>
-        </div>
-
-        <div class="snareFx punchFx">
-          <div class="snareFxHead">
-            <label>PUNCH / MASTER</label>
-            <select id="punchMode">
-              <option value="off">OFF</option>
-              <option value="warm" selected>WARM</option>
-              <option value="knock">KNOCK</option>
-              <option value="hard">HARD</option>
-            </select>
-          </div>
-          <div id="punchDesc" class="help">WARM • glue légère, transitoires préservées, limiteur de sécurité.</div>
-        </div>
-
-        <div class="currentDrums">
-          <div class="currentDrumsTitle">BATTERIE COURANTE</div>
-          <div id="drumSelectionStatus">Pas encore sélectionnée — le premier PLAY en choisira une.</div>
-          <div class="drumParts">
-            <span id="currentKick">KICK —</span>
-            <span id="currentSnare">SNARE —</span>
-            <span id="currentHat">HAT —</span>
-            <span id="currentPattern">PATTERN —</span>
-          </div>
-        </div>
-
-        <div class="drumEditBox">
-          <div class="drumEditHead">
-            <div>
-              <div class="currentDrumsTitle">EDIT GROOVE</div>
-              <div class="help">1 mesure • clic = ajouter/enlever • molette sur une case = volume 10–100%</div>
-            </div>
-            <div class="drumEditActions">
-              <select id="drumEditView" aria-label="Drum editor resolution">
-                <option value="8">8TH</option>
-                <option value="16" selected>16TH</option>
-              </select>
-              <button id="clearDrumEdits" class="btn">CLEAR DRUMS</button>
-            </div>
-          </div>
-          <div id="drumEditor" class="drumEditor"></div>
-        </div>
-
-        <div class="drumLibrariesPanel" id="drumLibrariesPanel">
-          <button id="loadDrumLibraryCTA" class="loadDrumLibraryCTA btn" type="button">
-            <span class="loadDrumLibraryArrow">↓</span>
-            <span class="loadDrumLibraryCopy">
-              <b>LOAD DRUM LIBRARY</b>
-              <small>START WITH YOUR KICKS</small>
-            </span>
-          </button>
-          <div class="drumLibrariesHead">
-            <div>
-              <div class="currentDrumsTitle">DRUM LIBRARIES</div>
-              <div class="help">Charge tes dossiers locaux. Les sons sont appliqués immédiatement au groove courant.</div>
-            </div>
-            <div id="chopStatus" class="status drumEngineStatus">READY</div>
-          </div>
-
-          <div class="drumLibraryGrid">
-            <div class="drumLibrarySlot kickLibrarySlot">
-              <div class="drumLibraryIcon">K</div>
-              <div class="drumLibraryCopy">
-                <b>KICK</b>
-                <span id="kickFolderStatus" class="folderStatus">no folder selected • synth fallback</span>
-              </div>
-              <button id="kickFolderBtn" class="btn drumLibraryButton" type="button">SELECT KICK FOLDER</button>
-              <input id="kickFolderFallback" class="folderFallback" type="file" accept="audio/*" webkitdirectory multiple>
-            </div>
-
-            <div class="drumLibrarySlot snareLibrarySlot">
-              <div class="drumLibraryIcon">S</div>
-              <div class="drumLibraryCopy">
-                <b>SNARE</b>
-                <span id="snareFolderStatus" class="folderStatus">no folder selected • synth fallback</span>
-              </div>
-              <button id="snareFolderBtn" class="btn drumLibraryButton" type="button">SELECT SNARE FOLDER</button>
-              <input id="snareFolderFallback" class="folderFallback" type="file" accept="audio/*" webkitdirectory multiple>
-            </div>
-
-            <div class="drumLibrarySlot hatLibrarySlot">
-              <div class="drumLibraryIcon">H</div>
-              <div class="drumLibraryCopy">
-                <b>HI-HAT</b>
-                <span id="hatFolderStatus" class="folderStatus">no folder selected • synth fallback</span>
-              </div>
-              <button id="hatFolderBtn" class="btn drumLibraryButton" type="button">SELECT HI-HAT FOLDER</button>
-              <input id="hatFolderFallback" class="folderFallback" type="file" accept="audio/*" webkitdirectory multiple>
-            </div>
-          </div>
-        </div>
-
-        <div class="outputMeterPanel">
-          <div class="title compactTitle">MASTER</div>
-          <div class="verticalMeter">
-            <div id="masterVuVertical" class="verticalVu"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div>
-            <div class="verticalScale"><span>0</span><span>-6</span><span>-12</span><span>-18</span><span>-24</span><span>-36</span><span>-∞</span></div>
-          </div>
-        </div>
+      <div class="panel samplerDrumSection">
+        <div class="title stableTitle"><span>DRUM MACHINE <i class="blueLed"></i></span><span class="titleMeta">GROOVE / EXPORT</span></div>
+        <div id="drumRoot"></div>
       </div>
     </div>
   </section>
 
-  
 </div>
 </div>
 
 <script src="./js/bootstrap.js"></script>
 <script src="./js/core.js" defer></script>
 <script src="./js/looper.js" defer></script>
+<script src="./js/looper-polish.js" defer></script>
+<script src="./js/deck-refactor.js" defer></script>
 <script src="./js/practice.js" defer></script>
 <script src="./js/chopper.js" defer></script>
 <script src="./js/drums.js" defer></script>
