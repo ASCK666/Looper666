@@ -13,9 +13,8 @@
   position: relative !important;
 }
 
-/* The artwork itself is 1536x1024. The previous 2.12 crop ratio clipped the
-   stage vertically, so reels/counter were positioned in a different geometry
-   from the pixels users actually saw. Use the artwork ratio everywhere. */
+/* Keep the complete 1536x1024 artwork visible and use it as the only
+   coordinate system for the door, reels, hint and live loop counter. */
 .cassetteMechanismCrop {
   width: 100% !important;
   aspect-ratio: 1536 / 1024 !important;
@@ -42,12 +41,27 @@
   display: none !important;
 }
 
+/* V95 artwork is visually biased to the right relative to the old V84
+   overlay coordinates. Shift every live cassette overlay left together so
+   the mechanism stays internally aligned on desktop and mobile. */
+.cassetteDoorAssembly,
+.cassetteDoorCavity,
+.cassetteDeckHint,
+.cassetteDeckStage > .loopCounterModule.loopCounterModule--integrated {
+  --deck-overlay-x: -3.2%;
+}
+
+.cassetteDoorAssembly,
+.cassetteDoorCavity {
+  translate: var(--deck-overlay-x) 0;
+}
+
 /* Live loop counter anchored directly to the cassette artwork. */
 .cassetteDeckStage > .loopCounterModule.loopCounterModule--integrated {
   position: absolute !important;
   z-index: 7 !important;
   pointer-events: none !important;
-  left: 76.8% !important;
+  left: calc(76.8% + var(--deck-overlay-x)) !important;
   top: 31.5% !important;
   width: 17.2% !important;
   max-width: none !important;
@@ -62,19 +76,19 @@
   box-shadow: none !important;
 }
 
-/* Reels use the same coordinate system as the artwork and therefore keep the
-   same visual centres on desktop and mobile. */
+/* Reels use the same correction as the door/counter so the spinning hubs sit
+   on the physical axes drawn in the V95 artwork. */
 .cassetteReel {
   top: 34.2% !important;
   width: 10.8% !important;
   margin-left: -5.4% !important;
 }
-.cassetteReelLeft { left: 34.5% !important; }
-.cassetteReelRight { left: 65% !important; }
+.cassetteReelLeft { left: calc(34.5% + var(--deck-overlay-x, -3.2%)) !important; }
+.cassetteReelRight { left: calc(65% + var(--deck-overlay-x, -3.2%)) !important; }
 
 .cassetteDeckHint {
-  left: 37.5% !important;
-  right: 37.5% !important;
+  left: calc(37.5% + var(--deck-overlay-x)) !important;
+  right: calc(37.5% - var(--deck-overlay-x)) !important;
   bottom: 47% !important;
 }
 
@@ -158,10 +172,9 @@
     gap: 8px !important;
   }
 
-  /* Coordinates intentionally stay identical to desktop. Only typography
-     scales down; changing the anchor here reintroduced mobile drift. */
+  /* Same physical correction on mobile; only typography scales. */
   .cassetteDeckStage > .loopCounterModule.loopCounterModule--integrated {
-    left: 76.8% !important;
+    left: calc(76.8% + var(--deck-overlay-x)) !important;
     top: 31.5% !important;
     width: 17.2% !important;
   }
