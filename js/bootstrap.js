@@ -1,5 +1,5 @@
 "use strict";
-window.__SP={version:"108",ready:false,errors:[]};
+window.__SP={version:"109-dev-no-sw",ready:false,errors:[]};
 window.__SP.report=(scope,error)=>{
   const message=error?.message||String(error||"Unknown error");
   const item={scope,message,time:new Date().toISOString()};
@@ -17,46 +17,49 @@ window.addEventListener("unhandledrejection",event=>{
   window.__SP.report("PROMISE",event.reason);
 });
 
-// Always register/update the worker explicitly. Older builds could leave a
-// previously-installed worker controlling the app without ever asking it to
-// update, which made GitHub Pages look permanently stale on mobile.
+// DEV MODE: do not let a service worker hide freshly deployed GitHub Pages
+// changes. Remove every registration for this origin and purge Scratch Practice
+// caches on each boot. PWA/offline support can be restored once the UI settles.
 if("serviceWorker" in navigator){
-  window.addEventListener("load",async()=>{
-    try{
-      const reg=await navigator.serviceWorker.register("./sw.js",{updateViaCache:"none"});
-      await reg.update();
-    }catch(error){
-      console.warn("Scratch Practice service worker update failed:",error);
-    }
-  });
+  navigator.serviceWorker.getRegistrations()
+    .then(regs=>Promise.all(regs.map(reg=>reg.unregister())))
+    .catch(error=>console.warn("Scratch Practice SW cleanup failed:",error));
+}
+if("caches" in window){
+  caches.keys()
+    .then(keys=>Promise.all(keys.filter(key=>key.startsWith("scratch-practice-")).map(key=>caches.delete(key))))
+    .catch(error=>console.warn("Scratch Practice cache cleanup failed:",error));
 }
 
+const DEV_ASSET_VERSION=109;
+const versioned=path=>`${path}?v=${DEV_ASSET_VERSION}`;
+
 const chopperLayoutScript=document.createElement("script");
-chopperLayoutScript.src="./js/chopper-layout.js?v=108";
+chopperLayoutScript.src=versioned("./js/chopper-layout.js");
 chopperLayoutScript.defer=true;
 document.head.appendChild(chopperLayoutScript);
 
 const looperPolishStyle=document.createElement("link");
 looperPolishStyle.rel="stylesheet";
-looperPolishStyle.href="./css/looper-polish.css?v=108";
+looperPolishStyle.href=versioned("./css/looper-polish.css");
 document.head.appendChild(looperPolishStyle);
 
 const looperPolishScript=document.createElement("script");
-looperPolishScript.src="./js/looper-polish.js?v=108";
+looperPolishScript.src=versioned("./js/looper-polish.js");
 looperPolishScript.defer=true;
 document.head.appendChild(looperPolishScript);
 
 const deckRefactorStyle=document.createElement("link");
 deckRefactorStyle.rel="stylesheet";
-deckRefactorStyle.href="./css/deck-refactor.css?v=108";
+deckRefactorStyle.href=versioned("./css/deck-refactor.css");
 document.head.appendChild(deckRefactorStyle);
 
 const deckMotionStyle=document.createElement("link");
 deckMotionStyle.rel="stylesheet";
-deckMotionStyle.href="./css/deck-motion-fix.css?v=108";
+deckMotionStyle.href=versioned("./css/deck-motion-fix.css");
 document.head.appendChild(deckMotionStyle);
 
 const deckRefactorScript=document.createElement("script");
-deckRefactorScript.src="./js/deck-refactor.js?v=108";
+deckRefactorScript.src=versioned("./js/deck-refactor.js");
 deckRefactorScript.defer=true;
 document.head.appendChild(deckRefactorScript);
