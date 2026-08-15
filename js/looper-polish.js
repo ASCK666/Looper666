@@ -5,9 +5,10 @@
   let autoSpeedLevel = 0;
   let originalApplyAutoLooperIncrement = null;
   let originalRefreshCassetteUI = null;
+  let installed = false;
 
   function cleanBeatTitle(){
-    const row = typeof currentTrack !== "undefined" ? currentTrack : null;
+    const row = currentTrack || null;
     const raw = String(row?.label || row?.name || $("deckTrack")?.textContent || "NO BEAT").trim();
     return raw
       .replace(/\.[a-z0-9]{2,5}$/i, "")
@@ -18,7 +19,7 @@
   }
 
   function beatBpm(){
-    const row = typeof currentTrack !== "undefined" ? currentTrack : null;
+    const row = currentTrack || null;
     if(Number.isFinite(Number(row?.bpm))) return Math.round(Number(row.bpm));
     const raw = String(row?.name || $("deckTrack")?.textContent || "");
     const match = raw.match(/(?:^|\D)(\d{2,3})\s*BPM\b/i);
@@ -47,7 +48,7 @@
     if(!label) return;
     const title = label.querySelector(".cassettePrintedTitle");
     const bpm = label.querySelector(".cassettePrintedBpm");
-    const loaded = typeof deckBuffer !== "undefined" && !!deckBuffer;
+    const loaded = !!deckBuffer;
     if(title) title.textContent = loaded ? cleanBeatTitle().toUpperCase() : "NO BEAT";
     const value = loaded ? beatBpm() : null;
     if(bpm) bpm.textContent = value ? `${value} BPM` : "";
@@ -99,7 +100,7 @@
 
   function installAutoSpeed(){
     const btn = $("autoLooperToggle");
-    if(!btn || typeof applyAutoLooperIncrement !== "function") return;
+    if(!btn) return;
 
     originalApplyAutoLooperIncrement = applyAutoLooperIncrement;
     applyAutoLooperIncrement = function incrementalAutoSpeed(){
@@ -115,7 +116,6 @@
 
   function installCassetteLabelRefresh(){
     refreshPrintedLabel();
-    if(typeof refreshCassetteUI !== "function") return;
     originalRefreshCassetteUI = refreshCassetteUI;
     refreshCassetteUI = function refreshCassetteUIWithPrintedLabel(){
       const result = originalRefreshCassetteUI.apply(this, arguments);
@@ -126,12 +126,29 @@
   }
 
   function boot(){
+    if(installed) return;
+    installed = true;
     installAutoSpeed();
     installCassetteLabelRefresh();
     refreshPrintedLabel();
     refreshAutoSpeedButton();
   }
 
-  if(document.readyState === "loading") document.addEventListener("DOMContentLoaded", boot, {once:true});
-  else boot();
+  function waitForLooper(attempt = 0){
+    const ready =
+      typeof toggleAutoLooper === "function" &&
+      typeof applyAutoLooperIncrement === "function" &&
+      typeof refreshCassetteUI === "function" &&
+      typeof $ === "function";
+
+    if(ready){
+      boot();
+      return;
+    }
+
+    if(attempt < 80) setTimeout(() => waitForLooper(attempt + 1), 25);
+    else console.warn("Scratch Practice: Looper polish could not attach to the deck engine.");
+  }
+
+  waitForLooper();
 })();
