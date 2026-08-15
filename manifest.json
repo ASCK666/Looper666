@@ -1,9 +1,11 @@
 {
-  "name": "Scratch Practice Station",
+  "name": "Scratch Practice",
   "short_name": "Scratch Practice",
+  "id": "./",
+  "scope": "./",
   "start_url": "./index.html",
   "display": "standalone",
-  "background_color": "#15100b",
+  "background_color": "#060504",
   "theme_color": "#15100b",
-  "icons": []
+  "description": "Local pixel-art Looper + Chopper with a unified cassette deck, functional four-wheel tape counter, realistic cassette-spine rack, three included beats and physical 4.75 cm/s motion."
 }
