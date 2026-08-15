@@ -13,8 +13,6 @@
   position: relative !important;
 }
 
-/* V95 is exactly 1536x1024. Keep it undistorted and use the full bitmap as
-   the shared coordinate system for every HTML overlay. */
 .cassetteMechanismCrop {
   width: 100% !important;
   aspect-ratio: 1536 / 1024 !important;
@@ -41,9 +39,6 @@
   display: none !important;
 }
 
-/* Measured directly on cassette-mechanism-pixel-v95.png (1536x1024).
-   Main cassette window: x≈170..1090. Reel centres: x≈421 and x≈842, y≈425.
-   Counter display aperture: x≈1132..1355, y≈357..482. */
 .cassetteDoorCavity {
   left: 11.1% !important;
   top: 10.8% !important;
@@ -72,7 +67,6 @@
   height: 7.0% !important;
 }
 
-/* Reel overlays sit on the actual hubs visible in the V95 bitmap. */
 .cassetteReel {
   top: 41.5% !important;
   width: 10.8% !important;
@@ -81,8 +75,6 @@
 .cassetteReelLeft { left: 27.4% !important; }
 .cassetteReelRight { left: 54.8% !important; }
 
-/* The live LOOP counter occupies the empty screen drawn on the right side of
-   the V95 asset instead of floating against the old V84 coordinates. */
 .cassetteDeckStage > .loopCounterModule.loopCounterModule--integrated {
   position: absolute !important;
   z-index: 7 !important;
@@ -108,6 +100,65 @@
   bottom: 52.0% !important;
 }
 
+/* Interactive hit areas laid over the five physical buttons drawn in V95.
+   These stay transparent: the artwork is the visible button surface. */
+.artworkTransport {
+  position: absolute;
+  z-index: 12;
+  inset: 0;
+  pointer-events: none;
+}
+
+.artworkTransportHit {
+  position: absolute;
+  pointer-events: auto;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  border-radius: 2px;
+  background: transparent;
+  color: transparent;
+  opacity: 1;
+  cursor: pointer;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.artworkTransportHit:focus-visible {
+  outline: 2px solid rgba(226,173,95,.9);
+  outline-offset: -3px;
+  box-shadow: inset 0 0 0 2px rgba(0,0,0,.65),0 0 10px rgba(226,173,95,.35);
+}
+
+.artworkTransportHit:active,
+.artworkTransportHit.active {
+  background: rgba(226,173,95,.055);
+  box-shadow: inset 0 0 18px rgba(226,173,95,.12);
+}
+
+/* Measured from the 1536×1024 bitmap. Button row is approximately
+   y=797..930; x ranges correspond to PREV / PLAY / STOP / NEXT / AUTO. */
+.artworkTransportPrev { left: 12.1%; top: 77.8%; width: 13.5%; height: 13.2%; }
+.artworkTransportPlay { left: 28.0%; top: 77.8%; width: 13.0%; height: 13.2%; }
+.artworkTransportStop { left: 43.6%; top: 77.8%; width: 13.0%; height: 13.2%; }
+.artworkTransportNext { left: 59.0%; top: 77.8%; width: 13.1%; height: 13.2%; }
+.artworkTransportAuto { left: 74.6%; top: 77.8%; width: 13.0%; height: 13.2%; }
+
+/* Keep the existing semantic controls in the DOM so events.js and the audio
+   engine remain untouched, but remove their separate visual row. */
+.deckTransport--legacy {
+  position: absolute !important;
+  width: 1px !important;
+  height: 1px !important;
+  margin: -1px !important;
+  padding: 0 !important;
+  overflow: hidden !important;
+  clip: rect(0 0 0 0) !important;
+  clip-path: inset(50%) !important;
+  white-space: nowrap !important;
+  border: 0 !important;
+}
+
 .loopCounterLabel {
   margin: 0 !important;
   padding: 0 1px !important;
@@ -128,9 +179,7 @@
   padding: 4px 5px 3px !important;
   border-radius: 2px !important;
   background: linear-gradient(180deg,rgba(42,24,8,.18),rgba(9,5,3,.10)) !important;
-  box-shadow:
-    inset 0 0 14px rgba(0,0,0,.28),
-    inset 0 0 0 1px rgba(201,118,23,.08) !important;
+  box-shadow: inset 0 0 14px rgba(0,0,0,.28), inset 0 0 0 1px rgba(201,118,23,.08) !important;
 }
 
 .loopCounterDigits,
@@ -188,7 +237,6 @@
     gap: 8px !important;
   }
 
-  /* Keep identical physical anchors on mobile; only text scales down. */
   .cassetteDeckStage > .loopCounterModule.loopCounterModule--integrated {
     left: 73.7% !important;
     top: 35.0% !important;
