@@ -1,5 +1,5 @@
 "use strict";
-const CACHE="scratch-practice-v95";
+const CACHE="scratch-practice-v96";
 const ASSETS=[
   "./",
   "./index.html",
@@ -16,6 +16,7 @@ const ASSETS=[
   "./js/chopper.js",
   "./js/drums.js",
   "./js/events.js",
+  "./assets/cassette-mechanism-pixel-v95.png",
   "./assets/cassette-mechanism-pixel-v84.png",
   "./assets/cassette-reel-pixel-v81.png",
   "./assets/deck-black-ui-texture.png",
