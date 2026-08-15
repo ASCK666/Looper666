@@ -4,7 +4,18 @@
   to { transform: rotate(360deg); }
 }
 
+/* V81 is the correct full reel artwork. On the 1536px-wide V95 deck, 10.8%
+   is ~166px and lines up with the large static teeth almost pixel-for-pixel.
+   Keep the centre anchoring from deck-refactor.css, but restore the reel to
+   its physical scale so the large teeth themselves are what visibly rotate. */
+.cassetteReel {
+  width: 10.8% !important;
+  filter: brightness(.90) contrast(.96) saturate(.78) sepia(.06) !important;
+  mix-blend-mode: normal !important;
+}
+
 .cassetteDeck.playing .cassetteReel {
+  opacity: .90 !important;
   animation-name: deckReelSpin !important;
   animation-timing-function: linear !important;
   animation-iteration-count: infinite !important;
