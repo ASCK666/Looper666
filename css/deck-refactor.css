@@ -70,17 +70,28 @@
 /* Measured against the actual V95 deck + V81 reel sprite. Anchor each reel by
    its centre so scaling never shifts the rotation axis. Use the independent
    `translate` property for centering so the existing reel animation remains
-   free to animate `transform: rotate(...)`. */
+   free to animate `transform: rotate(...)`.
+
+   The V81 sprite is intentionally rendered much smaller and dimmer than its
+   native artwork. At the previous ~90px / 96% opacity it read as a separate
+   disc pasted on top of the cassette. Around 72px with reduced contrast/color
+   keeps only the motion cue and lets the V95 mechanism remain visually dominant. */
 .cassetteReel {
   top: 41.9922% !important;
-  width: 5.8594% !important;
+  width: 4.6875% !important;
   height: auto !important;
   margin: 0 !important;
   translate: -50% -50% !important;
   transform-origin: 50% 50% !important;
+  filter: brightness(.72) contrast(.86) saturate(.45) sepia(.12) !important;
+  mix-blend-mode: screen;
 }
 .cassetteReelLeft { left: 27.7344% !important; }
 .cassetteReelRight { left: 54.9479% !important; }
+.cassetteDeck.playing .cassetteReel {
+  opacity: .55 !important;
+  animation-timing-function: steps(24,end) !important;
+}
 
 .cassetteDeckStage > .loopCounterModule.loopCounterModule--integrated {
   position: absolute !important;
