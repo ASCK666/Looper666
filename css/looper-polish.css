@@ -1,0 +1,95 @@
+/* Looper polish: keep the deck instrument-like and let the cassette carry metadata. */
+
+/* TRACK / STATE / SPEED / AUTO duplicated information that is either visible
+   on the cassette itself or controlled directly from the transport. */
+#looper .deckReadout {
+  display: none !important;
+}
+
+/* Printed directly into the cassette artwork area. The glass stays above this
+   layer, so the type inherits the cassette reflections instead of reading as
+   a floating HTML overlay. */
+#looper .cassettePrintedLabel {
+  position: absolute;
+  z-index: 2;
+  left: 29.5%;
+  top: 20.8%;
+  width: 41%;
+  min-width: 0;
+  display: grid;
+  grid-template-columns: minmax(0,1fr) auto;
+  align-items: baseline;
+  gap: 6%;
+  pointer-events: none;
+  color: rgba(69,51,35,.82);
+  font-family: var(--font-mono);
+  line-height: 1;
+  text-transform: uppercase;
+  mix-blend-mode: multiply;
+  filter: sepia(.18) saturate(.72) contrast(.9);
+  transform: rotate(-.22deg);
+  transform-origin: 50% 50%;
+  opacity: .88;
+}
+
+#looper .cassettePrintedLabel::after {
+  content: "";
+  position: absolute;
+  inset: -18% -3% -22%;
+  background: repeating-linear-gradient(
+    0deg,
+    rgba(71,49,31,.028) 0 1px,
+    transparent 1px 3px
+  );
+  mix-blend-mode: multiply;
+  opacity: .42;
+  pointer-events: none;
+}
+
+#looper .cassettePrintedTitle {
+  min-width: 0;
+  overflow: hidden;
+  font-size: clamp(7px,1.02vw,14px);
+  font-weight: 900;
+  letter-spacing: .045em;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+#looper .cassettePrintedBpm {
+  font-size: clamp(5px,.68vw,9px);
+  font-weight: 800;
+  letter-spacing: .08em;
+  white-space: nowrap;
+  opacity: .82;
+}
+
+/* AUTO SPEED is one compact control. The level itself is the useful state. */
+#looper .deckAutoHotspot small {
+  display: none !important;
+}
+
+#looper .deckAutoHotspot > span {
+  min-width: 2.2em;
+  font-variant-numeric: tabular-nums;
+}
+
+#looper .deckAutoHotspot.active > span {
+  color: #f0c77f !important;
+}
+
+@media (max-width: 760px) {
+  #looper .cassettePrintedLabel {
+    left: 28.5%;
+    top: 20.4%;
+    width: 43%;
+  }
+
+  #looper .cassettePrintedTitle {
+    font-size: clamp(6px,2.15vw,11px);
+  }
+
+  #looper .cassettePrintedBpm {
+    font-size: clamp(5px,1.5vw,8px);
+  }
+}
