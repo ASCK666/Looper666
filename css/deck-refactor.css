@@ -67,16 +67,19 @@
   height: 7.0% !important;
 }
 
-/* Re-centred directly on the two cassette hubs in V95. The previous 41.5%
-   top anchor placed the spinning reel sprites visibly below the mechanism. */
+/* Measured against the actual V95 deck + V81 reel sprite. Anchor each reel by
+   its centre so scaling never shifts the rotation axis. V95 hub centres are
+   approximately (426,430) and (844,430) on the 1536x1024 bitmap. */
 .cassetteReel {
-  top: 35.4% !important;
-  width: 9.1% !important;
-  margin-left: -4.55% !important;
+  top: 41.9922% !important;
+  width: 5.8594% !important;
+  height: auto !important;
+  margin: 0 !important;
+  transform: translate(-50%, -50%) rotate(var(--cassette-reel-angle, 0deg)) !important;
   transform-origin: 50% 50% !important;
 }
-.cassetteReelLeft { left: 27.4% !important; }
-.cassetteReelRight { left: 54.8% !important; }
+.cassetteReelLeft { left: 27.7344% !important; }
+.cassetteReelRight { left: 54.9479% !important; }
 
 .cassetteDeckStage > .loopCounterModule.loopCounterModule--integrated {
   position: absolute !important;
