@@ -50,6 +50,44 @@
     host.appendChild(module);
   }
 
+  function buildArtworkTransport(){
+    const host=findDeckHost();
+    if(!host || host.querySelector(".artworkTransport"))return;
+
+    const transport=document.createElement("div");
+    transport.className="artworkTransport";
+    transport.setAttribute("role","group");
+    transport.setAttribute("aria-label","Transport du Looper");
+    transport.innerHTML=`
+      <button class="artworkTransportHit artworkTransportPrev" type="button" data-target="prevBeat" aria-label="Beat précédent"></button>
+      <button class="artworkTransportHit artworkTransportPlay" type="button" data-target="playBeat" aria-label="Lecture"></button>
+      <button class="artworkTransportHit artworkTransportStop" type="button" data-target="stopBeat" aria-label="Stop"></button>
+      <button class="artworkTransportHit artworkTransportNext" type="button" data-target="nextBeat" aria-label="Beat suivant"></button>
+      <button class="artworkTransportHit artworkTransportAuto" type="button" data-target="autoLooperToggle" aria-label="Accélération automatique" aria-pressed="false"></button>
+    `;
+
+    transport.addEventListener("click",event=>{
+      const hit=event.target.closest(".artworkTransportHit");
+      if(!hit)return;
+      event.preventDefault();
+      event.stopPropagation();
+      $id(hit.dataset.target)?.click();
+    });
+
+    host.appendChild(transport);
+  }
+
+  function refreshArtworkTransport(){
+    const auto=$id("autoLooperToggle");
+    const artworkAuto=document.querySelector(".artworkTransportAuto");
+    if(artworkAuto && auto){
+      artworkAuto.setAttribute("aria-pressed",auto.getAttribute("aria-pressed")||"false");
+      artworkAuto.classList.toggle("active",auto.classList.contains("active"));
+    }
+    const play=document.querySelector(".artworkTransportPlay");
+    if(play)play.classList.toggle("active",!!document.querySelector(".cassetteDeck.playing"));
+  }
+
   function refreshLoopCounter(){
     const current=$id("loopCounterCurrent");
     const windowEl=document.querySelector(".loopCounterWindow");
@@ -107,6 +145,7 @@
     }
     refreshLoopCounter();
     refreshHint();
+    refreshArtworkTransport();
   }
 
   function boot(){
@@ -119,6 +158,8 @@
     disableLegacyTapeCounterEngine();
     prepareDeckAsset();
     buildLoopCounter();
+    buildArtworkTransport();
+    document.querySelector(".deckTransport")?.classList.add("deckTransport--legacy");
     refreshDeckState();
 
     if(intervalId)clearInterval(intervalId);
