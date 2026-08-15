@@ -1,7 +1,7 @@
 "use strict";
 
 (()=>{
-  const STYLE_ID="chopper-layout-v92";
+  const STYLE_ID="chopper-layout-v93";
 
   function injectStyles(){
     if(document.getElementById(STYLE_ID))return;
@@ -10,12 +10,13 @@
     style.textContent=`
       #chopper .samplerUpperDeck{grid-template-columns:1fr!important}
       #chopper .samplerControlModule{display:none!important}
+      #chopper .sampleConditionHelp{display:none!important}
 
       #chopper .samplerWaveToolbar{
         display:grid;
         grid-template-columns:minmax(0,1.25fr) minmax(260px,.75fr);
         gap:8px;
-        margin:0 0 10px;
+        margin:0 0 8px;
         padding:9px;
         border:1px solid #382f26;
         border-radius:5px;
@@ -29,19 +30,49 @@
       #chopper .samplerWaveToolbar label{margin-top:0!important}
 
       #chopper .samplerFineRow{
-        display:flex;
+        display:grid;
+        grid-template-columns:minmax(0,1fr) auto;
         align-items:center;
-        justify-content:space-between;
-        gap:10px;
-        margin-top:8px;
+        gap:8px;
+        margin:0 0 8px;
       }
-      #chopper .samplerFineRow .advancedBox{flex:1;margin:0!important}
-      #chopper .samplerFineRow .samplerControlLegend{margin:0!important;white-space:nowrap}
+      #chopper .samplerFineRow .advancedBox{margin:0!important}
+      #chopper .samplerControlLegend{display:none!important}
 
-      #chopper .samplerPadsModule .samplerSectionTitle{margin-bottom:8px!important}
+      #chopper .samplerZoomControls{
+        display:grid;
+        grid-template-columns:36px minmax(54px,auto) 36px auto;
+        align-items:center;
+        gap:4px;
+        min-height:38px;
+        padding:4px;
+        border:1px solid #382f26;
+        border-radius:5px;
+        background:linear-gradient(180deg,#100d0a,#080605);
+      }
+      #chopper .samplerZoomControls .btn{
+        min-width:36px;
+        min-height:30px!important;
+        padding:5px 7px!important;
+        border-color:#3b3127!important;
+        color:#d7bf96!important;
+        background:#090705!important;
+        font:900 10px/1 var(--font-mono)!important;
+      }
+      #chopper .samplerZoomControls .zoomFit{min-width:46px}
+      #chopper .samplerZoomReadout{
+        min-width:54px;
+        color:#e5c98f;
+        text-align:center;
+        font:900 9px/1 var(--font-mono);
+        letter-spacing:.5px;
+      }
+
+      #chopper .samplerPadsModule .samplerSectionTitle,
+      #chopper .samplerPadsModule .samplerModuleHint{display:none!important}
       #chopper .padPerformanceControls{
         display:grid!important;
-        grid-template-columns:minmax(120px,1fr) 92px 92px!important;
+        grid-template-columns:minmax(150px,1fr) 92px 92px!important;
         gap:8px!important;
         align-items:stretch;
         margin:0 0 10px!important;
@@ -53,7 +84,7 @@
       }
       #chopper .padPerformanceControls>div{
         min-width:0!important;
-        min-height:78px;
+        min-height:72px;
         padding:7px!important;
         border:1px solid #302820!important;
         border-radius:4px!important;
@@ -63,7 +94,15 @@
         align-items:center;
         justify-content:center;
       }
-      #chopper .padPerformanceControls>div:first-child{align-items:stretch}
+      #chopper .padPerformanceControls>div:first-child{
+        min-height:72px;
+        display:grid!important;
+        grid-template-columns:auto minmax(72px,110px);
+        align-content:center;
+        align-items:center;
+        justify-content:space-between;
+        gap:10px;
+      }
       #chopper .padPerformanceControls label{
         width:100%;
         margin:0 0 6px!important;
@@ -72,14 +111,21 @@
         font:800 8px/1 var(--font-mono);
         letter-spacing:.7px;
       }
-      #chopper .padPerformanceControls>div:first-child label{text-align:left}
+      #chopper .padPerformanceControls>div:first-child label{
+        width:auto;
+        margin:0!important;
+        text-align:left;
+        white-space:nowrap;
+      }
       #chopper .padPerformanceControls #sampleBpm{
-        min-height:40px;
+        width:100%;
+        min-height:36px;
+        padding:5px 7px;
         color:#efe1c7;
         border-color:#3b3127;
         background:#070605;
         text-align:center;
-        font:900 14px/1 var(--font-mono);
+        font:900 13px/1 var(--font-mono);
       }
       #chopper .samplerKnob{
         --knob-angle:0deg;
@@ -133,18 +179,48 @@
         letter-spacing:.4px;
       }
 
+      #chopper .pads .pad{
+        border-color:#4a3a29!important;
+        background:linear-gradient(180deg,#1a140d,#0d0906)!important;
+        box-shadow:
+          inset 0 0 18px rgba(226,173,95,.055),
+          inset 0 1px 0 rgba(255,238,204,.025),
+          0 0 7px rgba(226,173,95,.035)!important;
+        transition:box-shadow .12s ease,border-color .12s ease,filter .12s ease,transform .08s ease!important;
+      }
+      #chopper .pads .pad:first-child{
+        border-color:#76562f!important;
+        box-shadow:
+          inset 0 0 24px rgba(226,173,95,.13),
+          inset 0 1px 0 rgba(255,238,204,.05),
+          0 0 10px rgba(226,173,95,.10)!important;
+        filter:brightness(1.08);
+      }
+      #chopper .pads .pad:hover,
+      #chopper .pads .pad:focus-visible{
+        border-color:#8d6938!important;
+        box-shadow:inset 0 0 28px rgba(226,173,95,.17),0 0 12px rgba(226,173,95,.12)!important;
+      }
+      #chopper .pads .pad:active{
+        transform:translateY(1px) scale(.99);
+        filter:brightness(1.22);
+        box-shadow:inset 0 0 34px rgba(226,173,95,.27),0 0 15px rgba(226,173,95,.18)!important;
+      }
+
       @media(max-width:760px){
         #chopper .samplerWaveToolbar{grid-template-columns:1fr}
-        #chopper .padPerformanceControls{grid-template-columns:minmax(110px,1fr) 82px 82px!important}
+        #chopper .padPerformanceControls{grid-template-columns:minmax(130px,1fr) 82px 82px!important}
       }
       @media(max-width:520px){
         #chopper .samplerWaveToolbar .samplerActionRow,
         #chopper .samplerWaveToolbar .samplerSelectRow{grid-template-columns:1fr 1fr!important}
-        #chopper .padPerformanceControls{grid-template-columns:1fr 78px 78px!important;padding:6px!important;gap:6px!important}
-        #chopper .padPerformanceControls>div{min-height:72px;padding:5px!important}
+        #chopper .samplerFineRow{grid-template-columns:1fr}
+        #chopper .samplerZoomControls{grid-template-columns:36px 1fr 36px auto}
+        #chopper .padPerformanceControls{grid-template-columns:minmax(120px,1fr) 74px 74px!important;padding:6px!important;gap:6px!important}
+        #chopper .padPerformanceControls>div{min-height:68px;padding:5px!important}
+        #chopper .padPerformanceControls>div:first-child{grid-template-columns:1fr;gap:5px}
+        #chopper .padPerformanceControls>div:first-child label{text-align:center}
         #chopper .samplerKnob{width:42px;height:42px;flex-basis:42px}
-        #chopper .samplerFineRow{align-items:stretch;flex-direction:column}
-        #chopper .samplerFineRow .samplerControlLegend{white-space:normal}
       }
     `;
     document.head.appendChild(style);
@@ -236,6 +312,62 @@
     update();
   }
 
+  function makeZoomControls(input){
+    if(!input||document.querySelector("#chopper .samplerZoomControls"))return null;
+    const wrap=document.createElement("div");
+    wrap.className="samplerZoomControls";
+    wrap.setAttribute("role","group");
+    wrap.setAttribute("aria-label","Sample waveform zoom");
+
+    const minus=document.createElement("button");
+    minus.type="button";
+    minus.className="btn";
+    minus.textContent="−";
+    minus.title="Zoom out";
+    minus.setAttribute("aria-label","Zoom out");
+
+    const readout=document.createElement("span");
+    readout.className="samplerZoomReadout";
+
+    const plus=document.createElement("button");
+    plus.type="button";
+    plus.className="btn";
+    plus.textContent="+";
+    plus.title="Zoom in";
+    plus.setAttribute("aria-label","Zoom in");
+
+    const fit=document.createElement("button");
+    fit.type="button";
+    fit.className="btn zoomFit";
+    fit.textContent="FIT";
+    fit.title="Show full sample";
+
+    wrap.append(minus,readout,plus,fit);
+
+    const min=Number(input.min)||1;
+    const max=Number(input.max)||24;
+    const update=()=>{readout.textContent=`ZOOM ${Number(input.value)||1}×`;};
+    const setZoom=value=>{
+      input.value=String(Math.min(max,Math.max(min,Math.round(value))));
+      dispatchInput(input,true);
+      update();
+    };
+    minus.addEventListener("click",()=>setZoom((Number(input.value)||1)-1));
+    plus.addEventListener("click",()=>setZoom((Number(input.value)||1)+1));
+    fit.addEventListener("click",()=>{
+      setZoom(1);
+      const scroll=document.getElementById("waveScroll");
+      if(scroll){
+        scroll.value="0";
+        dispatchInput(scroll,true);
+      }
+    });
+    input.addEventListener("input",update);
+    input.addEventListener("change",update);
+    update();
+    return wrap;
+  }
+
   function arrangeChopper(){
     const screen=document.querySelector("#chopper .samplerScreenModule");
     const controls=document.querySelector("#chopper .samplerControlModule");
@@ -260,13 +392,13 @@
       });
 
       const fine=controls.querySelector(".advancedBox");
-      const legend=controls.querySelector(".samplerControlLegend");
-      if(fine||legend){
+      if(fine){
         const fineRow=document.createElement("div");
         fineRow.className="samplerFineRow";
-        if(fine)fineRow.appendChild(fine);
-        if(legend)fineRow.appendChild(legend);
-        screen.appendChild(fineRow);
+        fineRow.appendChild(fine);
+        const zoomControls=makeZoomControls(document.getElementById("waveZoom"));
+        if(zoomControls)fineRow.appendChild(zoomControls);
+        screen.insertBefore(fineRow,wave);
       }
     }
 
