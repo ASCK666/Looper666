@@ -1,4 +1,4 @@
-/* Looper deck refactor – keep every live overlay in the cassette artwork coordinate space. */
+/* Looper deck refactor – keep every live overlay in the V95 artwork coordinate space. */
 
 .deckHardwareGrid {
   grid-template-columns: minmax(0, 1fr) 148px !important;
@@ -13,8 +13,8 @@
   position: relative !important;
 }
 
-/* Keep the complete 1536x1024 artwork visible and use it as the only
-   coordinate system for the door, reels, hint and live loop counter. */
+/* V95 is exactly 1536x1024. Keep it undistorted and use the full bitmap as
+   the shared coordinate system for every HTML overlay. */
 .cassetteMechanismCrop {
   width: 100% !important;
   aspect-ratio: 1536 / 1024 !important;
@@ -41,55 +41,71 @@
   display: none !important;
 }
 
-/* V95 artwork is visually biased to the right relative to the old V84
-   overlay coordinates. Shift every live cassette overlay left together so
-   the mechanism stays internally aligned on desktop and mobile. */
-.cassetteDoorAssembly,
-.cassetteDoorCavity,
-.cassetteDeckHint,
-.cassetteDeckStage > .loopCounterModule.loopCounterModule--integrated {
-  --deck-overlay-x: -3.2%;
-}
-
-.cassetteDoorAssembly,
+/* Measured directly on cassette-mechanism-pixel-v95.png (1536x1024).
+   Main cassette window: x≈170..1090. Reel centres: x≈421 and x≈842, y≈425.
+   Counter display aperture: x≈1132..1355, y≈357..482. */
 .cassetteDoorCavity {
-  translate: var(--deck-overlay-x) 0;
+  left: 11.1% !important;
+  top: 10.8% !important;
+  width: 59.9% !important;
+  height: 55.8% !important;
+  translate: none !important;
 }
 
-/* Live loop counter anchored directly to the cassette artwork. */
+.cassetteDoorAssembly {
+  inset: 0 !important;
+  clip-path: inset(10.8% 28.9% 33.4% 11.1% round 3px) !important;
+  translate: none !important;
+}
+
+.cassetteDoorGlass {
+  left: 12.0% !important;
+  top: 11.8% !important;
+  width: 57.7% !important;
+  height: 52.9% !important;
+}
+
+.cassetteDoorLip {
+  left: 23.0% !important;
+  top: 53.2% !important;
+  width: 35.8% !important;
+  height: 7.0% !important;
+}
+
+/* Reel overlays sit on the actual hubs visible in the V95 bitmap. */
+.cassetteReel {
+  top: 41.5% !important;
+  width: 10.8% !important;
+  margin-left: -5.4% !important;
+}
+.cassetteReelLeft { left: 27.4% !important; }
+.cassetteReelRight { left: 54.8% !important; }
+
+/* The live LOOP counter occupies the empty screen drawn on the right side of
+   the V95 asset instead of floating against the old V84 coordinates. */
 .cassetteDeckStage > .loopCounterModule.loopCounterModule--integrated {
   position: absolute !important;
   z-index: 7 !important;
   pointer-events: none !important;
-  left: calc(76.8% + var(--deck-overlay-x)) !important;
-  top: 31.5% !important;
-  width: 17.2% !important;
+  left: 73.7% !important;
+  top: 35.0% !important;
+  width: 14.7% !important;
   max-width: none !important;
   min-width: 0 !important;
   display: flex !important;
   flex-direction: column !important;
   align-items: stretch !important;
-  gap: 3px !important;
+  gap: 2px !important;
   padding: 0 !important;
   border: 0 !important;
   background: transparent !important;
   box-shadow: none !important;
 }
 
-/* Reels use the same correction as the door/counter so the spinning hubs sit
-   on the physical axes drawn in the V95 artwork. */
-.cassetteReel {
-  top: 34.2% !important;
-  width: 10.8% !important;
-  margin-left: -5.4% !important;
-}
-.cassetteReelLeft { left: calc(34.5% + var(--deck-overlay-x, -3.2%)) !important; }
-.cassetteReelRight { left: calc(65% + var(--deck-overlay-x, -3.2%)) !important; }
-
 .cassetteDeckHint {
-  left: calc(37.5% + var(--deck-overlay-x)) !important;
-  right: calc(37.5% - var(--deck-overlay-x)) !important;
-  bottom: 47% !important;
+  left: 37.2% !important;
+  right: 49.0% !important;
+  bottom: 52.0% !important;
 }
 
 .loopCounterLabel {
@@ -97,7 +113,7 @@
   padding: 0 1px !important;
   color: rgba(231,178,96,.9) !important;
   text-align: center !important;
-  font: 800 clamp(6px,.72vw,10px)/1 var(--font-condensed) !important;
+  font: 800 clamp(6px,.66vw,9px)/1 var(--font-condensed) !important;
   letter-spacing: 1px !important;
   text-transform: uppercase !important;
   text-shadow: 0 0 6px rgba(215,130,34,.18) !important;
@@ -108,13 +124,13 @@
   grid-template-columns: 1fr auto 1fr !important;
   align-items: center !important;
   justify-items: center !important;
-  min-height: clamp(34px,4.2vw,54px) !important;
-  padding: 5px 6px 4px !important;
-  border-radius: 4px !important;
-  background: linear-gradient(180deg,rgba(42,24,8,.2),rgba(9,5,3,.12)) !important;
+  min-height: clamp(30px,3.7vw,49px) !important;
+  padding: 4px 5px 3px !important;
+  border-radius: 2px !important;
+  background: linear-gradient(180deg,rgba(42,24,8,.18),rgba(9,5,3,.10)) !important;
   box-shadow:
-    inset 0 0 16px rgba(0,0,0,.3),
-    inset 0 0 0 1px rgba(201,118,23,.1) !important;
+    inset 0 0 14px rgba(0,0,0,.28),
+    inset 0 0 0 1px rgba(201,118,23,.08) !important;
 }
 
 .loopCounterDigits,
@@ -128,13 +144,13 @@
 
 .loopCounterDigits,
 .loopCounterTotal {
-  font-size: clamp(14px,1.8vw,25px) !important;
+  font-size: clamp(13px,1.55vw,22px) !important;
   font-weight: 800 !important;
   font-variant-numeric: tabular-nums !important;
 }
 
 .loopCounterSlash {
-  font-size: clamp(11px,1.25vw,17px) !important;
+  font-size: clamp(10px,1.1vw,15px) !important;
   font-weight: 700 !important;
   opacity: .9 !important;
 }
@@ -142,10 +158,10 @@
 .loopCounterLegend {
   display: grid !important;
   grid-template-columns: 1fr 1fr !important;
-  gap: 6px !important;
-  padding: 0 3px !important;
+  gap: 5px !important;
+  padding: 0 2px !important;
   color: rgba(198,155,92,.78) !important;
-  font: 700 clamp(5px,.5vw,7px)/1 var(--font-mono) !important;
+  font: 700 clamp(5px,.46vw,7px)/1 var(--font-mono) !important;
   letter-spacing: .3px !important;
   text-transform: uppercase !important;
 }
@@ -172,16 +188,16 @@
     gap: 8px !important;
   }
 
-  /* Same physical correction on mobile; only typography scales. */
+  /* Keep identical physical anchors on mobile; only text scales down. */
   .cassetteDeckStage > .loopCounterModule.loopCounterModule--integrated {
-    left: calc(76.8% + var(--deck-overlay-x)) !important;
-    top: 31.5% !important;
-    width: 17.2% !important;
+    left: 73.7% !important;
+    top: 35.0% !important;
+    width: 14.7% !important;
   }
 
-  .loopCounterLabel { font-size: 6px !important; }
+  .loopCounterLabel { font-size: 5px !important; }
   .loopCounterDigits,
-  .loopCounterTotal { font-size: clamp(12px,3.5vw,18px) !important; }
-  .loopCounterSlash { font-size: clamp(10px,2.6vw,14px) !important; }
-  .loopCounterLegend { font-size: 5px !important; gap: 3px !important; }
+  .loopCounterTotal { font-size: clamp(10px,3vw,16px) !important; }
+  .loopCounterSlash { font-size: clamp(8px,2.2vw,12px) !important; }
+  .loopCounterLegend { font-size: 4px !important; gap: 2px !important; }
 }
