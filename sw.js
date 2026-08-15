@@ -1,5 +1,5 @@
 "use strict";
-const CACHE="scratch-practice-v107";
+const CACHE="scratch-practice-v108";
 const ASSETS=[
   "./",
   "./index.html",
@@ -7,6 +7,7 @@ const ASSETS=[
   "./css/base.css",
   "./css/looper-polish.css",
   "./css/deck-refactor.css",
+  "./css/deck-motion-fix.css",
   "./css/clean-ui.css",
   "./js/bootstrap.js",
   "./js/core.js",
@@ -21,6 +22,12 @@ const ASSETS=[
   "./assets/cassette-mechanism-pixel-v84.png",
   "./assets/cassette-reel-pixel-v81.png",
   "./assets/deck-black-ui-texture.png",
+  "./assets/deck-buttons-backlight-idle.png",
+  "./assets/deck-button-prev-backlight-active.png",
+  "./assets/deck-button-play-backlight-active.png",
+  "./assets/deck-button-stop-backlight-active.png",
+  "./assets/deck-button-next-backlight-active.png",
+  "./assets/deck-button-auto-backlight-active.png",
   "./assets/beats/stack-piano-horns-85-asharp-minor.wav",
   "./assets/beats/violin-piano-92-bflat-minor.wav",
   "./assets/beats/stack-violin-piano-89-c-minor.wav"
@@ -41,6 +48,16 @@ self.addEventListener("activate",event=>{
   );
 });
 
+function networkFirst(request,cacheKey=request){
+  return fetch(request).then(response=>{
+    if(response.ok && response.type==="basic"){
+      const copy=response.clone();
+      caches.open(CACHE).then(cache=>cache.put(cacheKey,copy));
+    }
+    return response;
+  }).catch(()=>caches.match(cacheKey,{ignoreSearch:true}));
+}
+
 self.addEventListener("fetch",event=>{
   const request=event.request;
   if(request.method!=="GET")return;
@@ -49,32 +66,14 @@ self.addEventListener("fetch",event=>{
   if(url.origin!==self.location.origin)return;
 
   if(request.mode==="navigate"){
-    event.respondWith(
-      fetch(request)
-        .then(response=>{
-          if(response.ok && response.type==="basic"){
-            const copy=response.clone();
-            event.waitUntil(caches.open(CACHE).then(cache=>cache.put(INDEX_URL,copy)));
-          }
-          return response;
-        })
-        .catch(()=>caches.match(INDEX_URL))
-    );
+    event.respondWith(networkFirst(request,INDEX_URL));
     return;
   }
 
   if(!STATIC_PATHS.has(url.pathname))return;
 
-  event.respondWith(
-    caches.match(request,{ignoreSearch:true}).then(cached=>{
-      if(cached)return cached;
-      return fetch(request).then(response=>{
-        if(response.ok && response.type==="basic"){
-          const copy=response.clone();
-          event.waitUntil(caches.open(CACHE).then(cache=>cache.put(request,copy)));
-        }
-        return response;
-      });
-    })
-  );
+  // During active UI development, always ask the network first so a newly
+  // deployed CSS/JS/image is visible immediately. Cache remains the offline
+  // fallback instead of becoming a stale source of truth.
+  event.respondWith(networkFirst(request,request));
 });
