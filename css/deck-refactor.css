@@ -100,9 +100,50 @@
   bottom: 52.0% !important;
 }
 
-/* Interactive hit areas laid over the five physical buttons drawn in V95.
-   The artwork remains the visible button surface; the hit area adds only a
-   subtle amber backlight so users can discover that the controls are live. */
+/* Full-canvas PNG overlays prepared for recessed hardware backlighting.
+   If the files are not in assets/ yet, JS marks them missing and the deck
+   continues to work normally. */
+.deckBacklightLayer {
+  position: absolute;
+  z-index: 10;
+  inset: 0;
+  pointer-events: none;
+  overflow: hidden;
+}
+
+.deckBacklight {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: fill;
+  pointer-events: none;
+  user-select: none;
+}
+
+.deckBacklight.missing { display: none; }
+
+.deckBacklightIdle {
+  opacity: .62;
+}
+
+.deckBacklightActive {
+  opacity: 0;
+  transition: opacity .11s ease, filter .11s ease;
+  will-change: opacity;
+}
+
+.deckBacklightActive.is-hover {
+  opacity: .68;
+}
+
+.deckBacklightActive.is-on {
+  opacity: .92;
+  filter: brightness(1.04);
+}
+
+/* Interactive hit areas over the physical controls. They stay visually
+   transparent: illumination comes from the PNG backlight overlays instead. */
 .artworkTransport {
   position: absolute;
   z-index: 12;
@@ -115,71 +156,26 @@
   pointer-events: auto;
   margin: 0;
   padding: 0;
-  border: 1px solid rgba(226,173,95,.10);
+  border: 0;
   border-radius: 4px;
-  background: rgba(226,173,95,.012);
+  background: transparent;
   color: transparent;
-  opacity: 1;
   cursor: pointer;
   touch-action: manipulation;
   -webkit-tap-highlight-color: transparent;
-  box-shadow:
-    inset 0 0 9px rgba(226,173,95,.035),
-    0 0 6px rgba(226,173,95,.045);
-  transition: background .12s ease,border-color .12s ease,box-shadow .12s ease,filter .12s ease;
-}
-
-.artworkTransportHit:hover {
-  border-color: rgba(226,173,95,.28);
-  background: rgba(226,173,95,.035);
-  box-shadow:
-    inset 0 0 14px rgba(226,173,95,.075),
-    0 0 12px rgba(226,173,95,.16),
-    0 0 22px rgba(212,134,67,.07);
-  filter: brightness(1.045);
 }
 
 .artworkTransportHit:focus-visible {
-  outline: 1px solid rgba(242,199,127,.95);
+  outline: 1px solid rgba(226,173,95,.55);
   outline-offset: -3px;
-  border-color: rgba(226,173,95,.34);
-  background: rgba(226,173,95,.045);
-  box-shadow:
-    inset 0 0 14px rgba(226,173,95,.10),
-    0 0 13px rgba(226,173,95,.24);
 }
 
-.artworkTransportHit:active {
-  border-color: rgba(242,199,127,.42);
-  background: rgba(226,173,95,.075);
-  box-shadow:
-    inset 0 0 20px rgba(226,173,95,.17),
-    0 0 8px rgba(226,173,95,.15);
-  filter: brightness(1.08);
-}
-
-/* AUTO keeps a persistent lamp-like glow while any auto-speed level is on. */
-.artworkTransportAuto.active,
-.artworkTransportAuto[aria-pressed="true"] {
-  border-color: rgba(242,199,127,.40);
-  background: rgba(226,173,95,.055);
-  box-shadow:
-    inset 0 0 18px rgba(226,173,95,.13),
-    0 0 12px rgba(226,173,95,.22),
-    0 0 24px rgba(212,134,67,.08);
-  filter: brightness(1.06);
-}
-
-/* Measured from the 1536×1024 bitmap. Button row is approximately
-   y=797..930; x ranges correspond to PREV / PLAY / STOP / NEXT / AUTO. */
 .artworkTransportPrev { left: 12.1%; top: 77.8%; width: 13.5%; height: 13.2%; }
 .artworkTransportPlay { left: 28.0%; top: 77.8%; width: 13.0%; height: 13.2%; }
 .artworkTransportStop { left: 43.6%; top: 77.8%; width: 13.0%; height: 13.2%; }
 .artworkTransportNext { left: 59.0%; top: 77.8%; width: 13.1%; height: 13.2%; }
 .artworkTransportAuto { left: 74.6%; top: 77.8%; width: 13.0%; height: 13.2%; }
 
-/* Keep the existing semantic controls in the DOM so events.js and the audio
-   engine remain untouched, but remove their separate visual row. */
 .deckTransport--legacy {
   position: absolute !important;
   width: 1px !important;
@@ -277,11 +273,9 @@
     width: 14.7% !important;
   }
 
-  .artworkTransportHit {
-    border-color: rgba(226,173,95,.14);
-    background: rgba(226,173,95,.018);
-    box-shadow: inset 0 0 8px rgba(226,173,95,.045),0 0 7px rgba(226,173,95,.055);
-  }
+  .deckBacklightIdle { opacity: .68; }
+  .deckBacklightActive.is-hover { opacity: .76; }
+  .deckBacklightActive.is-on { opacity: .96; }
 
   .loopCounterLabel { font-size: 5px !important; }
   .loopCounterDigits,
