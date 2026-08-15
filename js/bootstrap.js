@@ -1,5 +1,5 @@
 "use strict";
-window.__SP={version:"93",ready:false,errors:[]};
+window.__SP={version:"95",ready:false,errors:[]};
 window.__SP.report=(scope,error)=>{
   const message=error?.message||String(error||"Unknown error");
   const item={scope,message,time:new Date().toISOString()};
