@@ -1,15 +1,17 @@
 "use strict";
-const CACHE="scratch-practice-v92";
+const CACHE="scratch-practice-v93";
 const ASSETS=[
   "./",
   "./index.html",
   "./manifest.json",
   "./css/base.css",
   "./css/looper-polish.css",
+  "./css/deck-refactor.css",
   "./js/bootstrap.js",
   "./js/core.js",
   "./js/looper.js",
   "./js/looper-polish.js",
+  "./js/deck-refactor.js",
   "./js/practice.js",
   "./js/chopper.js",
   "./js/drums.js",
@@ -42,7 +44,7 @@ self.addEventListener("fetch",event=>{
   if(request.method!=="GET")return;
 
   const url=new URL(request.url);
-  if(url.origin!==self.location.origin)return; // never proxy/cache third-party traffic
+  if(url.origin!==self.location.origin)return;
 
   if(request.mode==="navigate"){
     event.respondWith(
@@ -59,7 +61,7 @@ self.addEventListener("fetch",event=>{
     return;
   }
 
-  if(!STATIC_PATHS.has(url.pathname))return; // no unbounded dynamic cache
+  if(!STATIC_PATHS.has(url.pathname))return;
 
   event.respondWith(
     caches.match(request,{ignoreSearch:true}).then(cached=>{
