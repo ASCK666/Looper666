@@ -1,7 +1,5 @@
-/* Looper deck refactor – integrate the loop counter into the cassette deck
-   and remove the detached left-side counter column. */
+/* Looper deck refactor – integrate the live loop counter into the cassette stage. */
 
-/* Keep the hardware row simple: deck + import actions. */
 .deckHardwareGrid {
   grid-template-columns: minmax(0, 1fr) 148px !important;
   grid-template-areas: "mechanism imports" !important;
@@ -9,32 +7,32 @@
   align-items: stretch !important;
 }
 
-/* The cassette deck becomes the positioning context for the live loop counter. */
 .deckMechanismColumn,
-.cassetteDeck {
+.cassetteMechanismCrop,
+.cassetteDeckStage {
   position: relative !important;
 }
 
-/* Legacy detached tape counter / column is gone. */
 .tapeCounterModule,
-.deckHardwareGrid > .loopCounterModule:not(.loopCounterModule--integrated) {
+.deckHardwareGrid > .loopCounterModule {
   display: none !important;
 }
 
-/* Integrated loop counter placed over the empty counter window in the v95 asset. */
-.loopCounterModule.loopCounterModule--integrated {
+/* This overlay is now positioned against the cassette art itself, not the
+   whole deck. That keeps it out of the IMPORT BEAT column at every width. */
+.cassetteDeckStage > .loopCounterModule.loopCounterModule--integrated {
   position: absolute !important;
-  z-index: 4 !important;
+  z-index: 7 !important;
   pointer-events: none !important;
-  right: 3.8% !important;
-  top: 32.5% !important;
-  width: 15.4% !important;
-  max-width: 128px !important;
-  min-width: 78px !important;
+  right: 4.2% !important;
+  top: 31.8% !important;
+  width: 16.2% !important;
+  max-width: 132px !important;
+  min-width: 72px !important;
   display: flex !important;
   flex-direction: column !important;
   align-items: stretch !important;
-  gap: 4px !important;
+  gap: 3px !important;
   padding: 0 !important;
   border: 0 !important;
   background: transparent !important;
@@ -44,12 +42,12 @@
 .loopCounterLabel {
   margin: 0 !important;
   padding: 0 1px !important;
-  color: rgba(231, 178, 96, 0.88) !important;
+  color: rgba(231,178,96,.9) !important;
   text-align: center !important;
-  font: 800 clamp(6px, 0.72vw, 10px)/1 var(--font-condensed) !important;
+  font: 800 clamp(6px,.72vw,10px)/1 var(--font-condensed) !important;
   letter-spacing: 1px !important;
   text-transform: uppercase !important;
-  text-shadow: 0 0 6px rgba(215, 130, 34, 0.18) !important;
+  text-shadow: 0 0 6px rgba(215,130,34,.18) !important;
 }
 
 .loopCounterWindow {
@@ -57,13 +55,13 @@
   grid-template-columns: 1fr auto 1fr !important;
   align-items: center !important;
   justify-items: center !important;
-  min-height: clamp(42px, 5.2vw, 63px) !important;
-  padding: 7px 8px 5px !important;
+  min-height: clamp(38px,4.7vw,58px) !important;
+  padding: 6px 7px 4px !important;
   border-radius: 4px !important;
-  background: linear-gradient(180deg, rgba(52, 30, 8, 0.22), rgba(13, 7, 3, 0.12)) !important;
+  background: linear-gradient(180deg,rgba(42,24,8,.2),rgba(9,5,3,.12)) !important;
   box-shadow:
-    inset 0 0 18px rgba(0, 0, 0, 0.34),
-    inset 0 0 0 1px rgba(201, 118, 23, 0.12) !important;
+    inset 0 0 16px rgba(0,0,0,.3),
+    inset 0 0 0 1px rgba(201,118,23,.1) !important;
 }
 
 .loopCounterDigits,
@@ -72,83 +70,65 @@
   color: #e2ad5f !important;
   font-family: var(--font-mono) !important;
   line-height: 1 !important;
-  text-shadow: 0 0 10px rgba(226, 173, 95, 0.18) !important;
+  text-shadow: 0 0 9px rgba(226,173,95,.18) !important;
 }
 
 .loopCounterDigits,
 .loopCounterTotal {
-  font-size: clamp(16px, 2.1vw, 28px) !important;
+  font-size: clamp(15px,1.95vw,26px) !important;
   font-weight: 800 !important;
+  font-variant-numeric: tabular-nums !important;
 }
 
 .loopCounterSlash {
-  font-size: clamp(13px, 1.45vw, 20px) !important;
+  font-size: clamp(12px,1.35vw,18px) !important;
   font-weight: 700 !important;
-  opacity: 0.92 !important;
+  opacity: .9 !important;
 }
 
 .loopCounterLegend {
   display: grid !important;
   grid-template-columns: 1fr 1fr !important;
-  gap: 8px !important;
+  gap: 6px !important;
   padding: 0 3px !important;
-  color: rgba(198, 155, 92, 0.84) !important;
-  font: 700 clamp(5px, 0.54vw, 8px)/1 var(--font-mono) !important;
-  letter-spacing: 0.35px !important;
+  color: rgba(198,155,92,.78) !important;
+  font: 700 clamp(5px,.5vw,7px)/1 var(--font-mono) !important;
+  letter-spacing: .3px !important;
   text-transform: uppercase !important;
-  opacity: 0.92 !important;
 }
 
-.loopCounterLegend span:first-child {
-  text-align: left !important;
-}
-
-.loopCounterLegend span:last-child {
-  text-align: right !important;
-}
+.loopCounterLegend span:first-child { text-align: left !important; }
+.loopCounterLegend span:last-child { text-align: right !important; }
 
 .loopCounterWindow.active .loopCounterDigits,
 .loopCounterWindow.active .loopCounterSlash,
-.loopCounterWindow.active .loopCounterTotal,
-.loopCounterWindow.active + .loopCounterLegend {
+.loopCounterWindow.active .loopCounterTotal {
   filter: brightness(1.08);
 }
 
-@media (max-width: 900px) {
+@media (max-width:900px) {
   .deckHardwareGrid {
-    grid-template-columns: minmax(0, 1fr) 126px !important;
+    grid-template-columns: minmax(0,1fr) 126px !important;
   }
 }
 
-@media (max-width: 680px) {
+@media (max-width:680px) {
   .deckHardwareGrid {
-    grid-template-columns: minmax(0, 1fr) !important;
+    grid-template-columns: minmax(0,1fr) !important;
     grid-template-areas: "mechanism" "imports" !important;
     gap: 8px !important;
   }
 
-  .loopCounterModule.loopCounterModule--integrated {
+  .cassetteDeckStage > .loopCounterModule.loopCounterModule--integrated {
     right: 4.1% !important;
-    top: 32.6% !important;
-    width: 15.7% !important;
-    min-width: 66px !important;
+    top: 31.7% !important;
+    width: 16.6% !important;
+    min-width: 60px !important;
   }
 
-  .loopCounterLabel {
-    font-size: 6px !important;
-  }
-
+  .loopCounterLabel { font-size: 6px !important; }
   .loopCounterDigits,
-  .loopCounterTotal {
-    font-size: clamp(13px, 4vw, 20px) !important;
-  }
-
-  .loopCounterSlash {
-    font-size: clamp(11px, 3vw, 15px) !important;
-  }
-
-  .loopCounterLegend {
-    font-size: 5px !important;
-    gap: 4px !important;
-  }
+  .loopCounterTotal { font-size: clamp(12px,3.7vw,18px) !important; }
+  .loopCounterSlash { font-size: clamp(10px,2.8vw,14px) !important; }
+  .loopCounterLegend { font-size: 5px !important; gap: 3px !important; }
 }
