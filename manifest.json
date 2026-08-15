@@ -1,0 +1,9 @@
+{
+  "name": "Scratch Practice Station",
+  "short_name": "Scratch Practice",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "background_color": "#15100b",
+  "theme_color": "#15100b",
+  "icons": []
+}
