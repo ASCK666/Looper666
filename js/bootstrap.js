@@ -16,3 +16,8 @@ window.addEventListener("error",event=>{
 window.addEventListener("unhandledrejection",event=>{
   window.__SP.report("PROMISE",event.reason);
 });
+
+const chopperLayoutScript=document.createElement("script");
+chopperLayoutScript.src="./js/chopper-layout.js";
+chopperLayoutScript.defer=true;
+document.head.appendChild(chopperLayoutScript);
