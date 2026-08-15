@@ -1,0 +1,27 @@
+/* Temporary isolated deck motion fix while the V95 refactor is stabilised. */
+@keyframes deckReelSpin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+.cassetteDeck.playing .cassetteReel {
+  animation-name: deckReelSpin !important;
+  animation-timing-function: linear !important;
+  animation-iteration-count: infinite !important;
+  animation-direction: reverse !important;
+  animation-play-state: running !important;
+}
+
+.cassetteDeck.playing .cassetteReelLeft {
+  animation-duration: 2.91s !important;
+}
+
+.cassetteDeck.playing .cassetteReelRight {
+  animation-duration: 1.46s !important;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .cassetteDeck.playing .cassetteReel {
+    animation: none !important;
+  }
+}
