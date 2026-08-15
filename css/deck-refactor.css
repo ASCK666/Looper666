@@ -1,78 +1,154 @@
-.loopCounterModule{
-  grid-area:counter;
-  min-width:0;
-  padding:10px;
-  border:1px solid #2c2117;
-  background:
-    linear-gradient(180deg,rgba(226,173,95,.035),transparent 28%),
-    rgba(7,5,4,.82);
-  box-shadow:inset 0 0 18px rgba(0,0,0,.58),0 1px 0 rgba(255,224,170,.025);
-  font-family:var(--font-mono);
+/* Looper deck refactor – integrate the loop counter into the cassette deck
+   and remove the detached left-side counter column. */
+
+/* Keep the hardware row simple: deck + import actions. */
+.deckHardwareGrid {
+  grid-template-columns: minmax(0, 1fr) 148px !important;
+  grid-template-areas: "mechanism imports" !important;
+  gap: 10px !important;
+  align-items: stretch !important;
 }
 
-.loopCounterLabel{
-  display:block;
-  margin:0 0 8px;
-  color:#786044;
-  font:700 7px/1 var(--font-mono);
-  letter-spacing:1px;
+/* The cassette deck becomes the positioning context for the live loop counter. */
+.deckMechanismColumn,
+.cassetteDeck {
+  position: relative !important;
 }
 
-.loopCounterWindow{
-  display:grid;
-  grid-template-columns:1fr auto 1fr;
-  align-items:center;
-  min-height:58px;
-  padding:8px 7px;
-  border:1px solid #4b351f;
-  background:
-    radial-gradient(circle at 50% 35%,rgba(232,174,88,.08),transparent 56%),
-    #080604;
+/* Legacy detached tape counter / column is gone. */
+.tapeCounterModule,
+.deckHardwareGrid > .loopCounterModule:not(.loopCounterModule--integrated) {
+  display: none !important;
+}
+
+/* Integrated loop counter placed over the empty counter window in the v95 asset. */
+.loopCounterModule.loopCounterModule--integrated {
+  position: absolute !important;
+  z-index: 4 !important;
+  pointer-events: none !important;
+  right: 3.8% !important;
+  top: 32.5% !important;
+  width: 15.4% !important;
+  max-width: 128px !important;
+  min-width: 78px !important;
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: stretch !important;
+  gap: 4px !important;
+  padding: 0 !important;
+  border: 0 !important;
+  background: transparent !important;
+  box-shadow: none !important;
+}
+
+.loopCounterLabel {
+  margin: 0 !important;
+  padding: 0 1px !important;
+  color: rgba(231, 178, 96, 0.88) !important;
+  text-align: center !important;
+  font: 800 clamp(6px, 0.72vw, 10px)/1 var(--font-condensed) !important;
+  letter-spacing: 1px !important;
+  text-transform: uppercase !important;
+  text-shadow: 0 0 6px rgba(215, 130, 34, 0.18) !important;
+}
+
+.loopCounterWindow {
+  display: grid !important;
+  grid-template-columns: 1fr auto 1fr !important;
+  align-items: center !important;
+  justify-items: center !important;
+  min-height: clamp(42px, 5.2vw, 63px) !important;
+  padding: 7px 8px 5px !important;
+  border-radius: 4px !important;
+  background: linear-gradient(180deg, rgba(52, 30, 8, 0.22), rgba(13, 7, 3, 0.12)) !important;
   box-shadow:
-    inset 0 0 14px rgba(0,0,0,.92),
-    inset 0 1px rgba(239,195,126,.045),
-    0 0 0 1px rgba(0,0,0,.55);
+    inset 0 0 18px rgba(0, 0, 0, 0.34),
+    inset 0 0 0 1px rgba(201, 118, 23, 0.12) !important;
 }
 
 .loopCounterDigits,
-.loopCounterTotal{
-  color:#c9964e;
-  text-align:center;
-  font:900 clamp(17px,2vw,26px)/1 var(--font-mono);
-  letter-spacing:1px;
-  text-shadow:0 0 5px rgba(226,158,66,.18),0 1px #1c1006;
-  font-variant-numeric:tabular-nums;
+.loopCounterSlash,
+.loopCounterTotal {
+  color: #e2ad5f !important;
+  font-family: var(--font-mono) !important;
+  line-height: 1 !important;
+  text-shadow: 0 0 10px rgba(226, 173, 95, 0.18) !important;
 }
 
-.loopCounterTotal{color:#8f6a3e}
-.loopCounterSlash{color:#4f3822;font:700 16px/1 var(--font-mono)}
-.loopCounterWindow.active .loopCounterDigits{
-  color:#e0ad62;
-  text-shadow:0 0 7px rgba(226,173,95,.28),0 1px #1c1006;
+.loopCounterDigits,
+.loopCounterTotal {
+  font-size: clamp(16px, 2.1vw, 28px) !important;
+  font-weight: 800 !important;
 }
 
-.loopCounterLegend{
-  display:grid;
-  grid-template-columns:1fr 1fr;
-  gap:8px;
-  margin-top:6px;
-  color:#584934;
-  font:700 6px/1 var(--font-mono);
-  letter-spacing:.65px;
-  text-align:center;
+.loopCounterSlash {
+  font-size: clamp(13px, 1.45vw, 20px) !important;
+  font-weight: 700 !important;
+  opacity: 0.92 !important;
 }
 
-/* The former mechanical tape counter/eject control is retired. */
-.tapeCounterModule,
-#cassetteDoorEject,
-#tapeCounter,
-#tapeCounterReset{display:none!important}
+.loopCounterLegend {
+  display: grid !important;
+  grid-template-columns: 1fr 1fr !important;
+  gap: 8px !important;
+  padding: 0 3px !important;
+  color: rgba(198, 155, 92, 0.84) !important;
+  font: 700 clamp(5px, 0.54vw, 8px)/1 var(--font-mono) !important;
+  letter-spacing: 0.35px !important;
+  text-transform: uppercase !important;
+  opacity: 0.92 !important;
+}
 
-@media (max-width:680px){
-  .deckHardwareGrid{
-    grid-template-columns:minmax(112px,.72fr) minmax(0,1.28fr);
-    grid-template-areas:"mechanism mechanism" "counter imports";
+.loopCounterLegend span:first-child {
+  text-align: left !important;
+}
+
+.loopCounterLegend span:last-child {
+  text-align: right !important;
+}
+
+.loopCounterWindow.active .loopCounterDigits,
+.loopCounterWindow.active .loopCounterSlash,
+.loopCounterWindow.active .loopCounterTotal,
+.loopCounterWindow.active + .loopCounterLegend {
+  filter: brightness(1.08);
+}
+
+@media (max-width: 900px) {
+  .deckHardwareGrid {
+    grid-template-columns: minmax(0, 1fr) 126px !important;
   }
-  .loopCounterModule{padding:8px}
-  .loopCounterWindow{min-height:52px}
+}
+
+@media (max-width: 680px) {
+  .deckHardwareGrid {
+    grid-template-columns: minmax(0, 1fr) !important;
+    grid-template-areas: "mechanism" "imports" !important;
+    gap: 8px !important;
+  }
+
+  .loopCounterModule.loopCounterModule--integrated {
+    right: 4.1% !important;
+    top: 32.6% !important;
+    width: 15.7% !important;
+    min-width: 66px !important;
+  }
+
+  .loopCounterLabel {
+    font-size: 6px !important;
+  }
+
+  .loopCounterDigits,
+  .loopCounterTotal {
+    font-size: clamp(13px, 4vw, 20px) !important;
+  }
+
+  .loopCounterSlash {
+    font-size: clamp(11px, 3vw, 15px) !important;
+  }
+
+  .loopCounterLegend {
+    font-size: 5px !important;
+    gap: 4px !important;
+  }
 }
