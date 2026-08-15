@@ -1,13 +1,15 @@
 "use strict";
-const CACHE="scratch-practice-v91";
+const CACHE="scratch-practice-v92";
 const ASSETS=[
   "./",
   "./index.html",
   "./manifest.json",
   "./css/base.css",
+  "./css/looper-polish.css",
   "./js/bootstrap.js",
   "./js/core.js",
   "./js/looper.js",
+  "./js/looper-polish.js",
   "./js/practice.js",
   "./js/chopper.js",
   "./js/drums.js",
