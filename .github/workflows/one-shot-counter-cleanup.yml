@@ -1,0 +1,167 @@
+name: One-shot legacy counter cleanup
+
+on:
+  push:
+    branches:
+      - agent/looper-deck-refactor
+    paths:
+      - .github/workflows/one-shot-counter-cleanup.yml
+
+permissions:
+  contents: write
+
+jobs:
+  cleanup:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Checkout branch
+        uses: actions/checkout@v4
+        with:
+          ref: agent/looper-deck-refactor
+          fetch-depth: 0
+
+      - name: Remove legacy tape-counter source
+        shell: python
+        run: |
+          from pathlib import Path
+          import re
+
+          root = Path.cwd()
+
+          def replace_once(text, old, new, label):
+              if old not in text:
+                  raise SystemExit(f"missing expected source fragment: {label}")
+              return text.replace(old, new, 1)
+
+          index = root / "index.html"
+          html = index.read_text(encoding="utf-8")
+          html, count = re.subn(
+              r'\n\s*<aside class="tapeCounterModule"\b.*?</aside>\n',
+              "\n",
+              html,
+              count=1,
+              flags=re.S,
+          )
+          if count != 1:
+              raise SystemExit(f"expected one legacy tape-counter aside, removed {count}")
+          index.write_text(html, encoding="utf-8")
+
+          deck_js = root / "js/deck-refactor.js"
+          js = deck_js.read_text(encoding="utf-8")
+          js, count = re.subn(
+              r'\n  function removeLegacyCounterMarkup\(\)\{.*?\n  \}\n',
+              "\n",
+              js,
+              count=1,
+              flags=re.S,
+          )
+          if count != 1:
+              raise SystemExit(f"expected one removeLegacyCounterMarkup function, removed {count}")
+          js = replace_once(js, "    removeLegacyCounterMarkup();\n", "", "legacy counter boot hook")
+          deck_js.write_text(js, encoding="utf-8")
+
+          deck_css = root / "css/deck-refactor.css"
+          css = deck_css.read_text(encoding="utf-8")
+          css = replace_once(
+              css,
+              ".tapeCounterModule,\n.deckHardwareGrid > .loopCounterModule {\n  display: none !important;\n}\n",
+              ".deckHardwareGrid > .loopCounterModule {\n  display: none !important;\n}\n",
+              "deck-refactor tape-counter hide selector",
+          )
+          deck_css.write_text(css, encoding="utf-8")
+
+          base_css = root / "css/base.css"
+          css = base_css.read_text(encoding="utf-8")
+          css = replace_once(
+              css,
+              '  grid-template-columns:148px minmax(360px,1fr) 148px;\n  grid-template-areas:"counter mechanism imports";\n',
+              '  grid-template-columns:minmax(0,1fr) 148px;\n  grid-template-areas:"mechanism imports";\n',
+              "desktop counter grid column",
+          )
+          css = re.sub(r'(?m)^\.tapeCounterModule \{grid-area:counter\}\n', "", css, count=1)
+
+          block_patterns = [
+              r'(?ms)^\.tapeCounterModule \{\n.*?^\}\n\n',
+              r'(?ms)^\.tapeCounterLabel \{\n.*?^\}\n\n',
+              r'(?ms)^\.tapeCounterWindow \{\n.*?^\}\n\n',
+              r'(?ms)^\.counterWheel \{\n.*?^\}\n\n',
+              r'(?ms)^\.counterWheel::before,\n\.counterWheel::after \{\n.*?^\}\n',
+              r'(?ms)^@keyframes counterWheelTick \{\n.*?^\}\n\n',
+              r'(?ms)^\.deckCounterKey \{\n.*?^\}\n\n',
+              r'(?ms)^\.counterEjectKey \{\n.*?^\}\n',
+          ]
+          for pattern in block_patterns:
+              css, count = re.subn(pattern, "", css, count=1)
+              if count != 1:
+                  raise SystemExit(f"expected one CSS block for {pattern!r}, removed {count}")
+
+          line_patterns = [
+              r'(?m)^\.counterWheel::before \{[^\n]*\}\n',
+              r'(?m)^\.counterWheel::after \{[^\n]*\}\n',
+              r'(?m)^\.deckSideKey \.deckKeyIcon \{[^\n]*\}\n',
+              r'(?m)^\.counterEjectKey \.deckKeyIcon \{[^\n]*\}\n',
+              r'(?m)^\s*\.tapeCounterModule \{[^\n]*\}\n',
+              r'(?m)^\s*\.counterWheel \{[^\n]*\}\n',
+              r'(?m)^\s*\.counterWheel\.rolling \.counterGlyph \{[^\n]*\}\n',
+          ]
+          for pattern in line_patterns:
+              css = re.sub(pattern, "", css)
+
+          css = css.replace(":is(.deckSideKey,.deckCounterKey,.deckLoadKey,.deckHotspot)", ":is(.deckLoadKey,.deckHotspot)")
+          css = css.replace(":is(.deckSideKey,.deckLoadKey) strong", ".deckLoadKey strong")
+          css = css.replace(":is(.deckSideKey,.deckLoadKey) small", ".deckLoadKey small")
+          css = replace_once(
+              css,
+              "  .deckHardwareGrid {grid-template-columns:126px minmax(300px,1fr) 126px}\n",
+              "  .deckHardwareGrid {grid-template-columns:minmax(0,1fr) 126px}\n",
+              "900px counter grid column",
+          )
+          css = replace_once(
+              css,
+              '    grid-template-columns:minmax(126px,1fr) minmax(0,2fr);\n    grid-template-areas:"mechanism mechanism" "counter imports";\n',
+              '    grid-template-columns:minmax(0,1fr);\n    grid-template-areas:"mechanism" "imports";\n',
+              "680px counter grid area",
+          )
+          base_css.write_text(css, encoding="utf-8")
+
+          css_health = root / "tests/css_health.py"
+          test = css_health.read_text(encoding="utf-8")
+          test, count = re.subn(
+              r'\n# base\.css is currently maintained directly.*?KNOWN_LEGACY_SELECTORS = \{.*?\}\n',
+              "\n",
+              test,
+              count=1,
+              flags=re.S,
+          )
+          if count != 1:
+              raise SystemExit(f"expected one CSS-health legacy exception block, removed {count}")
+          test = replace_once(
+              test,
+              "def impossible(selector):\n    if selector in KNOWN_LEGACY_SELECTORS:\n        return False\n\n",
+              "def impossible(selector):\n",
+              "CSS-health exception branch",
+          )
+          css_health.write_text(test, encoding="utf-8")
+
+          leftovers = {
+              "index.html": ["tapeCounterModule", "tapeCounterReset", "counterWheel"],
+              "js/deck-refactor.js": ["removeLegacyCounterMarkup", "tapeCounterModule"],
+              "css/deck-refactor.css": ["tapeCounterModule"],
+              "css/base.css": ["tapeCounterModule", "tapeCounterLabel", "tapeCounterWindow", "counterWheel", "counterWheelTick", "deckCounterKey", "counterEjectKey", "deckSideKey"],
+              "tests/css_health.py": ["KNOWN_LEGACY_SELECTORS", "counterWheel"],
+          }
+          for relative, needles in leftovers.items():
+              text = (root / relative).read_text(encoding="utf-8")
+              found = [needle for needle in needles if needle in text]
+              if found:
+                  raise SystemExit(f"legacy counter residue in {relative}: {found}")
+
+      - name: Commit cleanup
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add index.html js/deck-refactor.js css/deck-refactor.css css/base.css tests/css_health.py
+          git diff --cached --check
+          git commit -m "remove legacy tape counter source"
+          git push origin HEAD:agent/looper-deck-refactor
