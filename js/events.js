@@ -163,11 +163,7 @@ $("masterVolume").oninput=()=>{
   refreshMasterVolumeUI();
 };
 
-$("sampleVolume").oninput=()=>{
-  sampleVolumePercent=Number($("sampleVolume").value)||0;
-  $("sampleVolumeReadout").textContent=`${sampleVolumePercent}%`;
-  if(chopAuditionGain)chopAuditionGain.gain.value=sampleVolumeGain()*sampleConditionTrimGain();
-};
+$("sampleVolume").oninput=()=>updateSampleVolume($("sampleVolume").value);
 
 async function rerenderPreviewMode(mode=lastPreviewMode){
   if(mode==="drums"){
