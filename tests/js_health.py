@@ -52,6 +52,7 @@ forbidden = {
         r"startTapeCounter|stopTapeCounter|TAPE_COUNTER_INTERVAL_MS|"
         r"STANDARD_TAPE_SPEED_CM_PER_SECOND|TAPE_COUNTER_CM_PER_UNIT)\b"
     ),
+    "hidden AUTO status bridge": re.compile(r"\bautoLooperCompactStatus\b"),
 }
 forbidden_hits = [name for name, pattern in forbidden.items() if pattern.search(RUNTIME)]
 
