@@ -1,0 +1,67 @@
+name: One-shot legacy transport CSS cleanup
+
+on:
+  push:
+    branches:
+      - agent/looper-deck-refactor
+    paths:
+      - .github/workflows/one-shot-legacy-transport-css.yml
+
+permissions:
+  contents: write
+
+jobs:
+  cleanup:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Checkout branch
+        uses: actions/checkout@v4
+        with:
+          ref: agent/looper-deck-refactor
+          fetch-depth: 0
+
+      - name: Remove legacy transport CSS
+        shell: python
+        run: |
+          from pathlib import Path
+          import re
+
+          path = Path("css/base.css")
+          css = path.read_text(encoding="utf-8")
+
+          css = css.replace(":is(.deckLoadKey,.deckHotspot)", ".deckLoadKey")
+
+          css, count = re.subn(
+              r'(?ms)^\.deckTransport \{\n.*?^\.deckHotspot>small \{[^\n]*\}\n\n',
+              "",
+              css,
+              count=1,
+          )
+          if count != 1:
+              raise SystemExit(f"expected one main legacy transport CSS block, removed {count}")
+
+          css = re.sub(r'(?m)^\s*\.deckTransport \{[^\n]*\}\n', "", css)
+          css = re.sub(r'(?m)^\s*\.deckHotspot \{[^\n]*\}\n', "", css)
+          css = re.sub(r'(?m)^\s*\.deckHotspot>[^\n]*\n', "", css)
+          css = re.sub(
+              r'(?ms)^\s*\.deckAutoHotspot \{\n.*?^\s*\}\n\s*\.deckAutoHotspot>small \{[^\n]*\}\n',
+              "",
+              css,
+              count=1,
+          )
+
+          leftovers = [name for name in ["deckTransport", "deckHotspot", "deckAutoHotspot"] if name in css]
+          if leftovers:
+              raise SystemExit(f"legacy transport CSS residue: {leftovers}")
+
+          path.write_text(css, encoding="utf-8")
+
+      - name: Commit cleanup
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add css/base.css
+          git diff --cached --check
+          git commit -m "remove legacy deck transport styles"
+          git push origin HEAD:agent/looper-deck-refactor
