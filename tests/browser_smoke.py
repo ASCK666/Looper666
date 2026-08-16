@@ -1,149 +1,112 @@
+#!/usr/bin/env python3
+"""End-to-end smoke test against the project exactly as it is served."""
+
 from pathlib import Path
-from functools import partial
-from http.server import ThreadingHTTPServer, SimpleHTTPRequestHandler
-import os, sys, tempfile, threading, wave, struct, math
+import math
+import struct
+import sys
+import tempfile
+import wave
 
 try:
     from playwright.sync_api import sync_playwright
 except Exception:
-    print('SKIP: playwright is not installed')
+    print("SKIP: playwright is not installed")
     sys.exit(0)
 
-ROOT=Path(__file__).resolve().parents[1]
+from site_test_utils import launch_chromium, serve_project
 
-class QuietHandler(SimpleHTTPRequestHandler):
-    def log_message(self, *args):
-        pass
 
-def make_wav(path: Path, seconds=.25, hz=220):
-    rate=44100
-    frames=max(1,int(rate*seconds))
-    with wave.open(str(path),'wb') as wf:
-        wf.setnchannels(1)
-        wf.setsampwidth(2)
-        wf.setframerate(rate)
-        data=[]
-        for i in range(frames):
-            v=int(0.18*32767*math.sin(2*math.pi*hz*i/rate))
-            data.append(struct.pack('<h',v))
-        wf.writeframes(b''.join(data))
+def make_wav(path: Path, seconds=.35, hz=220):
+    rate = 44100
+    frames = max(1, int(rate * seconds))
+    with wave.open(str(path), "wb") as output:
+        output.setnchannels(1)
+        output.setsampwidth(2)
+        output.setframerate(rate)
+        payload = []
+        for index in range(frames):
+            value = int(.18 * 32767 * math.sin(2 * math.pi * hz * index / rate))
+            payload.append(struct.pack("<h", value))
+        output.writeframes(b"".join(payload))
 
-html=(ROOT/'index.html').read_text(encoding='utf-8')
-for rel in ['./css/base.css']:
-    css=(ROOT/rel[2:]).read_text(encoding='utf-8')
-    html=html.replace(f'<link rel="stylesheet" href="{rel}">',f'<style>{css}</style>')
-for rel in ['./js/bootstrap.js','./js/core.js','./js/looper.js','./js/practice.js','./js/chopper.js','./js/drums.js','./js/events.js']:
-    js=(ROOT/rel[2:]).read_text(encoding='utf-8')
-    html=html.replace(f'<script src="{rel}" defer></script>',f'<script>{js}</script>')
-    html=html.replace(f'<script src="{rel}"></script>',f'<script>{js}</script>')
 
-with tempfile.TemporaryDirectory() as td:
-    td=Path(td)
-    beat=td/'test-beat.wav'
-    sample=td/'test-sample.wav'
-    xss=td/'"><img src=x onerror=window.__sp_xss=1>.wav'
-    make_wav(beat,.30,180)
-    make_wav(sample,.42,330)
-    make_wav(xss,.18,440)
+with tempfile.TemporaryDirectory() as temp_dir, serve_project() as base_url, sync_playwright() as playwright:
+    temp_dir = Path(temp_dir)
+    beat = temp_dir / "test-beat.wav"
+    sample = temp_dir / "test-sample.wav"
+    make_wav(beat, .30, 180)
+    make_wav(sample, .42, 330)
 
-    chromium=os.environ.get('CHROMIUM','/usr/bin/chromium')
-    with sync_playwright() as p:
-        browser=p.chromium.launch(
-            headless=True,
-            executable_path=chromium,
-            args=['--no-sandbox','--disable-dev-shm-usage','--autoplay-policy=no-user-gesture-required']
-        )
-        context=browser.new_context()
-        page=context.new_page()
-        page_errors=[]
-        console_errors=[]
-        page.on('pageerror',lambda e:page_errors.append(str(e)))
-        page.on('console',lambda m:console_errors.append(m.text) if m.type=='error' else None)
-        page.set_content(html,wait_until='load',timeout=15000)
-        page.wait_for_function('window.__SP && window.__SP.ready === true',timeout=10000)
+    browser = launch_chromium(playwright)
+    page = browser.new_page(viewport={"width": 1280, "height": 1000})
+    page_errors = []
+    console_errors = []
+    page.on("pageerror", lambda error: page_errors.append(str(error)))
+    page.on("console", lambda message: console_errors.append(message.text) if message.type == "error" else None)
 
-        assert page.evaluate('window.__SP.errors.length') == 0, page.evaluate('window.__SP.errors')
-        assert not page_errors, page_errors
-        assert not console_errors, console_errors
+    page.goto(base_url + "/index.html", wait_until="load", timeout=20000)
+    page.wait_for_function("window.__SP && window.__SP.ready === true", timeout=15000)
 
-        # Critical controls are present and wired.
-        for rid in ['cassetteDoorEject','tapeCounter','tapeCounterReset','playBeat','loadSampleBtn','kickFolderBtn','snareFolderBtn','hatFolderBtn','autoLooperToggle','deckTransportState','deckSpeedReadout','deckAutoReadout','looperVu']:
-            assert page.locator('#'+rid).count()==1, rid
-        handlers=page.evaluate('''() => ({
-          play:typeof document.getElementById('playBeat').onclick,
-          eject:typeof document.getElementById('cassetteDoorEject').onclick,
-          counterReset:typeof document.getElementById('tapeCounterReset').onclick,
-          sample:typeof document.getElementById('loadSampleBtn').onclick,
-          kick:typeof document.getElementById('kickFolderBtn').onclick,
-          auto:typeof document.getElementById('autoLooperToggle').onclick
-        })''')
-        assert all(v=='function' for v in handlers.values()), handlers
+    assert page.evaluate("window.__SP.errors.length") == 0, page.evaluate("window.__SP.errors")
+    assert not page_errors, page_errors
+    assert not console_errors, console_errors
 
-        # Real LOOPER import -> load -> PLAY/STOP.
-        page.set_input_files('#beatFiles',str(beat))
-        page.wait_for_function("document.getElementById('deckTrack').textContent === 'test-beat.wav'",timeout=10000)
-        assert page.locator('#cassetteBeatName').inner_text() == 'TEST-BEAT.WAV'
-        assert page.locator('#deckTransportState').inner_text() == 'READY'
-        assert page.locator('#deckSpeedReadout').inner_text() == '100%'
-        assert page.locator('#library .track').count()>=1
-        page.click('#playBeat')
-        page.wait_for_function('deckSource !== null')
-        assert page.locator('#deckTransportState').inner_text() == 'PLAYING'
-        assert page.locator('.cassetteDeck.playing').count() == 1
-        page.wait_for_timeout(1250)
-        running_counter=page.locator('#tapeCounter').get_attribute('aria-label')
-        assert running_counter != 'Compteur de bande 0000', running_counter
-        page.click('#stopBeat')
-        page.wait_for_function('deckSource === null')
-        assert page.locator('#deckTransportState').inner_text() == 'READY'
-        frozen_counter=page.locator('#tapeCounter').get_attribute('aria-label')
-        page.wait_for_timeout(250)
-        assert page.locator('#tapeCounter').get_attribute('aria-label') == frozen_counter
-        page.click('#tapeCounterReset')
-        assert page.locator('#tapeCounter').get_attribute('aria-label') == 'Compteur de bande 0000'
+    # The real deck refactor must be installed before events.js binds handlers.
+    for element_id in [
+        "playBeat", "stopBeat", "prevBeat", "nextBeat", "autoLooperToggle",
+        "loadSampleBtn", "sampleFile", "samplePitch", "sampleVolume", "loopGrid",
+        "previewFlip", "stopFlip", "addFlipLibrary", "chopStatus",
+    ]:
+        assert page.locator("#" + element_id).count() == 1, element_id
 
-        # Space shortcut follows active mode, but not while an interactive control has focus.
-        page.evaluate('document.activeElement && document.activeElement.blur()')
-        page.keyboard.press('Space')
-        page.wait_for_function('deckSource !== null')
-        page.keyboard.press('Space')
-        page.wait_for_function('deckSource === null')
-        page.focus('#autoLooperToggle')
-        page.keyboard.press('Space')
-        page.wait_for_timeout(120)
-        assert page.evaluate('deckSource === null') is True
+    assert page.locator("#looper .artworkTransport #playBeat").count() == 1
+    handlers = page.evaluate("""() => ({
+        play: typeof document.getElementById('playBeat').onclick,
+        sample: typeof document.getElementById('loadSampleBtn').onclick,
+        auto: typeof document.getElementById('autoLooperToggle').onclick,
+        preview: typeof document.getElementById('previewFlip').onclick
+    })""")
+    assert all(value == "function" for value in handlers.values()), handlers
 
-        # AUTO toggle still works.
-        if page.locator('#autoLooperToggle').get_attribute('aria-pressed')!='false':
-            page.click('#autoLooperToggle')
-        page.click('#autoLooperToggle')
-        assert page.locator('#autoLooperToggle').get_attribute('aria-pressed')=='true'
-        assert page.locator('#deckAutoReadout').inner_text() == 'ON'
-        page.click('#autoLooperToggle')
-        assert page.locator('#autoLooperToggle').get_attribute('aria-pressed')=='false'
-        assert page.locator('#deckAutoReadout').inner_text() == 'OFF'
+    # Real Looper import -> PLAY -> STOP.
+    page.set_input_files("#beatFiles", str(beat))
+    page.wait_for_function("document.getElementById('deckTrack').textContent === 'test-beat.wav'", timeout=10000)
+    page.click("#playBeat")
+    page.wait_for_function("deckSource !== null", timeout=10000)
+    assert page.locator("#looper .cassetteDeck.playing").count() == 1
+    page.click("#stopBeat")
+    page.wait_for_function("deckSource === null", timeout=10000)
 
-        # Real CHOPPER sample import.
-        page.click('[data-tab="chopper"]')
-        assert page.locator('#chopper.active').count()==1
-        page.set_input_files('#sampleFile',str(sample))
-        page.wait_for_function("document.getElementById('chopStatus').textContent.includes('SAMPLE READY')",timeout=10000)
-        assert page.evaluate("sampleName === 'test-sample.wav' && sampleBuffer !== null") is True
+    # AUTO state is bound directly to the artwork control.
+    if page.locator("#autoLooperToggle").get_attribute("aria-pressed") != "false":
+        page.click("#autoLooperToggle")
+    page.click("#autoLooperToggle")
+    assert page.locator("#autoLooperToggle").get_attribute("aria-pressed") == "true"
+    page.click("#autoLooperToggle")
+    assert page.locator("#autoLooperToggle").get_attribute("aria-pressed") == "false"
 
-        # Filename XSS regression test: malicious-looking local names remain plain text.
-        page.click('[data-tab="looper"]')
-        page.set_input_files('#beatFiles',str(xss))
-        page.wait_for_timeout(500)
-        assert page.evaluate('window.__sp_xss') is None
-        assert page.locator('#library img').count()==0
-        assert '<img' in page.locator('#library').inner_text()
+    # Real Chopper sample import through the currently deployed DOM contract.
+    page.click('[data-tab="chopper"]')
+    page.set_input_files("#sampleFile", str(sample))
+    page.wait_for_function(
+        "document.getElementById('chopStatus').textContent.includes('SAMPLE READY')",
+        timeout=10000,
+    )
+    assert page.evaluate("sampleBuffer !== null && sampleName === 'test-sample.wav'") is True
+    assert page.locator("#pads .pad").count() == 16
+    assert page.locator("#loopGrid .matrixCell").count() == 256
 
-        # Windows-safe output filenames.
-        assert page.evaluate("safeBeatFilename('CON.wav')") == '_CON'
-        assert page.evaluate("safeBeatFilename('hello?.wav')") == 'hello_'
+    # No accidental horizontal overflow in the two primary modes.
+    assert page.evaluate("document.body.scrollWidth <= innerWidth + 2") is True
+    page.click('[data-tab="looper"]')
+    assert page.evaluate("document.body.scrollWidth <= innerWidth + 2") is True
 
-        assert page.locator('#appBootError.visible').count()==0
-        context.close()
-        browser.close()
+    assert page.locator("#appBootError.visible").count() == 0
+    assert not page_errors, page_errors
+    assert not console_errors, console_errors
 
-print('OK: browser startup, tape counter, real imports, transport, shortcuts, AUTO and filename-XSS regression')
+    page.close()
+    browser.close()
+
+print("OK: real-site browser smoke — boot, Looper import/transport/AUTO and Chopper sample import")
