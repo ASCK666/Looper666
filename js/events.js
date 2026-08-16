@@ -1,13 +1,7 @@
 "use strict";
 
-// Cross-app wiring only. Feature-specific bindings live in dedicated modules.
-const EVENT_MODULES=[
-  "./js/looper-events.js",
-  "./js/practice-events.js",
-  "./js/chopper-events.js",
-  "./js/drums-events.js"
-];
-
+// Cross-app wiring only. Feature-specific bindings are loaded as static scripts
+// after this file so they can reuse switchTab() and openFilePicker().
 function switchTab(name){
   if(!["looper","chopper"].includes(name)) return;
 
@@ -51,16 +45,6 @@ function reportInitFailure(name,error){
 function safeInit(name,fn){
   try{ return fn(); }
   catch(error){ reportInitFailure(name,error); return null; }
-}
-
-function loadEventModule(src){
-  return new Promise((resolve,reject)=>{
-    const script=document.createElement("script");
-    script.src=src;
-    script.onload=resolve;
-    script.onerror=()=>reject(new Error(`Unable to load ${src}`));
-    document.head.appendChild(script);
-  });
 }
 
 function bindSharedEvents(){
@@ -130,11 +114,8 @@ function initializeAppUI(){
     });
 }
 
-async function bootEventModules(){
+async function bootSharedEvents(){
   try{
-    for(const src of EVENT_MODULES){
-      await loadEventModule(src);
-    }
     bindSharedEvents();
     await initializeAppUI();
     if(window.__SP){
@@ -146,4 +127,8 @@ async function bootEventModules(){
   }
 }
 
-bootEventModules();
+if(document.readyState==="loading"){
+  document.addEventListener("DOMContentLoaded",bootSharedEvents,{once:true});
+}else{
+  bootSharedEvents();
+}
