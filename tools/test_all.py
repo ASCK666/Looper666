@@ -7,12 +7,12 @@ import sys
 
 ROOT = Path(__file__).resolve().parents[1]
 
-# Keep this list short and trustworthy. Historical version-regression scripts and
-# the retired css/src builder are intentionally not part of the maintained suite.
+# Keep this list short and trustworthy. Historical version-regression scripts,
+# the retired css/src builder, and the old bundled-WAV fixture check are not part
+# of the maintained suite. Browser tests generate their own local WAV fixtures.
 STEPS = [
     ["tests/resource_paths.py"],
     ["tests/assets_health.py"],
-    ["tests/audio_assets.py"],
     ["tests/js_health.py"],
     ["tests/core_unit.js"],
     ["tests/css_health.py"],
