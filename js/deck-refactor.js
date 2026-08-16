@@ -15,7 +15,7 @@
   const FLASH_MS = 150;
   const $id = id => document.getElementById(id);
   let installed = false;
-  let intervalId = null;
+  let stateObserver = null;
   let flashTimer = null;
 
   function prepareDeckAsset(){
@@ -179,6 +179,26 @@
     hint.textContent=!loaded ? "LOAD A BEAT TO START" : playing ? "PLAYING" : "READY • PRESS PLAY";
   }
 
+  function refreshDeckState(){
+    refreshLoopCounter();
+    refreshHint();
+    refreshArtworkTransport();
+  }
+
+  function observeDeckState(){
+    stateObserver?.disconnect();
+    stateObserver=new MutationObserver(refreshDeckState);
+
+    const deck=document.querySelector(".cassetteDeck");
+    if(deck)stateObserver.observe(deck,{attributes:true,attributeFilter:["class"]});
+
+    const autoStatus=$id("autoLooperCompactStatus");
+    if(autoStatus)stateObserver.observe(autoStatus,{childList:true,characterData:true,subtree:true});
+
+    const autoButton=$id("autoLooperToggle");
+    if(autoButton)stateObserver.observe(autoButton,{attributes:true,attributeFilter:["class","aria-pressed"]});
+  }
+
   function removeLegacyHardware(){
     removeDetachedCounter();
 
@@ -205,17 +225,6 @@
     }
   }
 
-  function refreshDeckState(){
-    try{
-      if(typeof refreshCassetteUI==="function")refreshCassetteUI();
-    }catch(error){
-      console.warn("Scratch Practice: cassette UI refresh failed",error);
-    }
-    refreshLoopCounter();
-    refreshHint();
-    refreshArtworkTransport();
-  }
-
   function boot(){
     if(installed)return true;
     if(!document.querySelector(".deckHardwareGrid"))return false;
@@ -231,10 +240,9 @@
     buildLoopCounter();
     buildArtworkTransport();
     document.querySelector(".deckTransport")?.classList.add("deckTransport--legacy");
+    refreshCassetteUI();
     refreshDeckState();
-
-    if(intervalId)clearInterval(intervalId);
-    intervalId=setInterval(refreshDeckState,120);
+    observeDeckState();
     return true;
   }
 
