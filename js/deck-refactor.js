@@ -181,10 +181,6 @@
     host.appendChild(transport);
   }
 
-  function removeLegacyCounterMarkup(){
-    document.querySelectorAll("#looper .loopCounterModule, #looper .tapeCounterModule")
-      .forEach(element => element.remove());
-  }
 
   function buildLoopCounter(host){
     if(!host || host.querySelector(".loopCounterModule--integrated")) return;
@@ -276,7 +272,6 @@
     if(!host) return false;
 
     installed = true;
-    removeLegacyCounterMarkup();
     prepareDeckArtwork();
     buildBacklights(host);
     installTransport(host);

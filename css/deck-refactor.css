@@ -95,7 +95,6 @@
   object-fit: fill !important;
 }
 
-.tapeCounterModule,
 .deckHardwareGrid > .loopCounterModule {
   display: none !important;
 }
