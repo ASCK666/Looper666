@@ -224,7 +224,7 @@ async function refreshDrumsAfterFolderChange(kind,count,origin){
       }else if(modeBefore==="full" && sampleBuffer){
         const events=gridEventsForRender();
         if(events.some(Boolean)){
-          renderedFlip=await renderSequence(events,sampleBuffer);
+          renderedFlip=await renderSequence(events,sampleBuffer,markers);
           lastPreviewMode="full";
           await playRendered(renderedFlip);
         }
@@ -398,7 +398,7 @@ async function rerenderPreviewMode(mode=lastPreviewMode){
   if(mode==="full" && sampleBuffer){
     const events=gridEventsForRender();
     if(events.some(Boolean)){
-      renderedFlip=await renderSequence(events,sampleBuffer);
+      renderedFlip=await renderSequence(events,sampleBuffer,markers);
       lastPreviewMode="full";
       await playRendered(renderedFlip);
       return true;
@@ -973,7 +973,7 @@ async function renderDrumsOnly(){
   return finalizeLoopBuffer(await offline.startRendering());
 }
 
-async function renderSequence(events,sourceBuffer){
+async function renderSequence(events,sourceBuffer,cueMarkers){
   if(!sourceBuffer)throw new Error("Charge un sample");
   const bpm=Math.max(40,Number($("sampleBpm").value)||90);
   const stepDur=(60/bpm)/2; // eighth note
@@ -988,7 +988,7 @@ async function renderSequence(events,sourceBuffer){
   const placed=[];
   for(let step=0;step<16;step++){
     const chop=Number(events[step])||0;
-    if(chop>=1 && chop<markers.length)placed.push({step,chop});
+    if(chop>=1 && chop<cueMarkers.length)placed.push({step,chop});
   }
   if(!placed.length)throw new Error("Place au moins un PAD sur la grille");
 
@@ -999,7 +999,7 @@ async function renderSequence(events,sourceBuffer){
     const startTime=ev.step*stepDur;
     const nextTime=e+1<placed.length?placed[e+1].step*stepDur:targetDur;
     const idx=ev.chop-1;
-    const sampleStart=markers[idx];
+    const sampleStart=cueMarkers[idx];
     const available=Math.max(.01,sourceBuffer.duration-sampleStart);
     const wanted=Math.max(.01,nextTime-startTime);
 
