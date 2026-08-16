@@ -477,6 +477,7 @@ function renderDrumEditor(){
     label.className="drumEditLabel";
     label.textContent=labelText;
     grid.appendChild(label);
+
     const arr=drumArrayForLane(lane);
 
     for(let visualStep=0;visualStep<visibleSteps;visualStep++){
