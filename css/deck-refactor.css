@@ -1,4 +1,65 @@
-/* Looper deck refactor – keep every live overlay in the V95 artwork coordinate space. */
+/* Looper deck refactor – keep every live overlay in the artwork coordinate space. */
+
+/*
+ * DECK ARTWORK GEOMETRY CONTRACT
+ * ------------------------------
+ * Everything that depends on the pixels of the current deck artwork lives here.
+ * To replace the deck PNG, recalibrate this profile instead of hunting through
+ * component selectors. All coordinates are percentages of the full artwork.
+ *
+ * Keep responsive/layout concerns outside this block: the artwork scales as one
+ * canvas and its internal geometry must remain in the same coordinate space.
+ */
+#looper .cassetteDeck {
+  --deck-artwork-ratio: 1536 / 1024;
+
+  --deck-door-cavity-x: 11.1%;
+  --deck-door-cavity-y: 10.8%;
+  --deck-door-cavity-w: 59.9%;
+  --deck-door-cavity-h: 55.8%;
+  --deck-door-clip-top: 10.8%;
+  --deck-door-clip-right: 28.9%;
+  --deck-door-clip-bottom: 33.4%;
+  --deck-door-clip-left: 11.1%;
+  --deck-door-glass-x: 12.0%;
+  --deck-door-glass-y: 11.8%;
+  --deck-door-glass-w: 57.7%;
+  --deck-door-glass-h: 52.9%;
+  --deck-door-lip-x: 23.0%;
+  --deck-door-lip-y: 53.2%;
+  --deck-door-lip-w: 35.8%;
+  --deck-door-lip-h: 7.0%;
+
+  --deck-reel-y: 41.9922%;
+  --deck-reel-left-x: 27.7344%;
+  --deck-reel-right-x: 54.9479%;
+  --deck-reel-size: 10.8%;
+
+  --deck-counter-x: 73.7%;
+  --deck-counter-y: 35.0%;
+  --deck-counter-w: 14.7%;
+
+  --deck-hint-left: 37.2%;
+  --deck-hint-right: 49.0%;
+  --deck-hint-bottom: 52.0%;
+
+  --deck-hit-y: 77.8%;
+  --deck-hit-h: 13.2%;
+  --deck-hit-prev-x: 12.1%;
+  --deck-hit-prev-w: 13.5%;
+  --deck-hit-play-x: 28.0%;
+  --deck-hit-play-w: 13.0%;
+  --deck-hit-stop-x: 43.6%;
+  --deck-hit-stop-w: 13.0%;
+  --deck-hit-next-x: 59.0%;
+  --deck-hit-next-w: 13.1%;
+  --deck-hit-auto-x: 74.6%;
+  --deck-hit-auto-w: 13.0%;
+
+  --deck-label-x: 29.5%;
+  --deck-label-y: 20.8%;
+  --deck-label-w: 41%;
+}
 
 .deckHardwareGrid {
   grid-template-columns: minmax(0, 1fr) 148px !important;
@@ -15,7 +76,7 @@
 
 .cassetteMechanismCrop {
   width: 100% !important;
-  aspect-ratio: 1536 / 1024 !important;
+  aspect-ratio: var(--deck-artwork-ratio) !important;
   overflow: hidden !important;
 }
 
@@ -40,45 +101,44 @@
 }
 
 .cassetteDoorCavity {
-  left: 11.1% !important;
-  top: 10.8% !important;
-  width: 59.9% !important;
-  height: 55.8% !important;
+  left: var(--deck-door-cavity-x) !important;
+  top: var(--deck-door-cavity-y) !important;
+  width: var(--deck-door-cavity-w) !important;
+  height: var(--deck-door-cavity-h) !important;
   translate: none !important;
 }
 
 .cassetteDoorAssembly {
   inset: 0 !important;
-  clip-path: inset(10.8% 28.9% 33.4% 11.1% round 3px) !important;
+  clip-path: inset(
+    var(--deck-door-clip-top)
+    var(--deck-door-clip-right)
+    var(--deck-door-clip-bottom)
+    var(--deck-door-clip-left)
+    round 3px
+  ) !important;
   translate: none !important;
 }
 
 .cassetteDoorGlass {
-  left: 12.0% !important;
-  top: 11.8% !important;
-  width: 57.7% !important;
-  height: 52.9% !important;
+  left: var(--deck-door-glass-x) !important;
+  top: var(--deck-door-glass-y) !important;
+  width: var(--deck-door-glass-w) !important;
+  height: var(--deck-door-glass-h) !important;
 }
 
 .cassetteDoorLip {
-  left: 23.0% !important;
-  top: 53.2% !important;
-  width: 35.8% !important;
-  height: 7.0% !important;
+  left: var(--deck-door-lip-x) !important;
+  top: var(--deck-door-lip-y) !important;
+  width: var(--deck-door-lip-w) !important;
+  height: var(--deck-door-lip-h) !important;
 }
 
-/* Measured against the actual V95 deck + V81 reel sprite. Anchor each reel by
-   its centre so scaling never shifts the rotation axis. Use the independent
-   `translate` property for centering so the existing reel animation remains
-   free to animate `transform: rotate(...)`.
-
-   The V81 sprite is intentionally rendered much smaller and dimmer than its
-   native artwork. At the previous ~90px / 96% opacity it read as a separate
-   disc pasted on top of the cassette. Around 72px with reduced contrast/color
-   keeps only the motion cue and lets the V95 mechanism remain visually dominant. */
+/* Reels are anchored by their centres so scaling never shifts the rotation axis.
+   `translate` remains independent from `transform`, which is owned by animation. */
 .cassetteReel {
-  top: 41.9922% !important;
-  width: 4.6875% !important;
+  top: var(--deck-reel-y) !important;
+  width: var(--deck-reel-size) !important;
   height: auto !important;
   margin: 0 !important;
   translate: -50% -50% !important;
@@ -86,8 +146,8 @@
   filter: brightness(.72) contrast(.86) saturate(.45) sepia(.12) !important;
   mix-blend-mode: screen;
 }
-.cassetteReelLeft { left: 27.7344% !important; }
-.cassetteReelRight { left: 54.9479% !important; }
+.cassetteReelLeft { left: var(--deck-reel-left-x) !important; }
+.cassetteReelRight { left: var(--deck-reel-right-x) !important; }
 .cassetteDeck.playing .cassetteReel {
   opacity: .55 !important;
   animation-timing-function: steps(24,end) !important;
@@ -97,9 +157,9 @@
   position: absolute !important;
   z-index: 7 !important;
   pointer-events: none !important;
-  left: 73.7% !important;
-  top: 35.0% !important;
-  width: 14.7% !important;
+  left: var(--deck-counter-x) !important;
+  top: var(--deck-counter-y) !important;
+  width: var(--deck-counter-w) !important;
   max-width: none !important;
   min-width: 0 !important;
   display: flex !important;
@@ -113,9 +173,9 @@
 }
 
 .cassetteDeckHint {
-  left: 37.2% !important;
-  right: 49.0% !important;
-  bottom: 52.0% !important;
+  left: var(--deck-hint-left) !important;
+  right: var(--deck-hint-right) !important;
+  bottom: var(--deck-hint-bottom) !important;
 }
 
 /* Full-canvas PNG overlays prepared for recessed hardware backlighting. */
@@ -171,6 +231,8 @@
 .artworkTransportHit {
   position: absolute;
   pointer-events: auto;
+  top: var(--deck-hit-y);
+  height: var(--deck-hit-h);
   margin: 0;
   padding: 0;
   border: 0;
@@ -187,11 +249,11 @@
   outline-offset: -3px;
 }
 
-.artworkTransportPrev { left: 12.1%; top: 77.8%; width: 13.5%; height: 13.2%; }
-.artworkTransportPlay { left: 28.0%; top: 77.8%; width: 13.0%; height: 13.2%; }
-.artworkTransportStop { left: 43.6%; top: 77.8%; width: 13.0%; height: 13.2%; }
-.artworkTransportNext { left: 59.0%; top: 77.8%; width: 13.1%; height: 13.2%; }
-.artworkTransportAuto { left: 74.6%; top: 77.8%; width: 13.0%; height: 13.2%; }
+.artworkTransportPrev { left: var(--deck-hit-prev-x); width: var(--deck-hit-prev-w); }
+.artworkTransportPlay { left: var(--deck-hit-play-x); width: var(--deck-hit-play-w); }
+.artworkTransportStop { left: var(--deck-hit-stop-x); width: var(--deck-hit-stop-w); }
+.artworkTransportNext { left: var(--deck-hit-next-x); width: var(--deck-hit-next-w); }
+.artworkTransportAuto { left: var(--deck-hit-auto-x); width: var(--deck-hit-auto-w); }
 
 .deckTransport--legacy {
   position: absolute !important;
@@ -277,17 +339,21 @@
   }
 }
 
+@media (max-width:760px) {
+  /* Preserve the existing small-screen optical correction for the printed label.
+     It is still expressed through the same artwork profile variables. */
+  #looper .cassetteDeck {
+    --deck-label-x: 28.5%;
+    --deck-label-y: 20.4%;
+    --deck-label-w: 43%;
+  }
+}
+
 @media (max-width:680px) {
   .deckHardwareGrid {
     grid-template-columns: minmax(0,1fr) !important;
     grid-template-areas: "mechanism" "imports" !important;
     gap: 8px !important;
-  }
-
-  .cassetteDeckStage > .loopCounterModule.loopCounterModule--integrated {
-    left: 73.7% !important;
-    top: 35.0% !important;
-    width: 14.7% !important;
   }
 
   .loopCounterLabel { font-size: 5px !important; }
