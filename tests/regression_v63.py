@@ -130,7 +130,7 @@ with tempfile.TemporaryDirectory() as td:
 
         # Import two LOOPER beats.
         page.set_input_files('#beatFiles',[str(beat_a),str(beat_b)])
-        page.wait_for_function('libraryRows.length >= 2 && deckBuffer !== null',timeout=10000)
+        page.wait_for_function("document.querySelectorAll('#library .track .danger').length >= 2 && deckBuffer !== null",timeout=10000)
 
         # 6) NEXT/PREV preserves transport state.
         page.click('#stopBeat')
