@@ -74,6 +74,11 @@ const MAX_DRUM_FOLDER_FILES = 5000;
 const MAX_BEAT_CACHE_BYTES = 384 * 1024 * 1024;
 const MAX_BEAT_CACHE_FILES = 200;
 
+function setMasterVolumePercent(value){
+  masterVolumePercent=Number(value)||0;
+  return masterVolumePercent;
+}
+
 function isAudioFile(file){
   return !!file && ((file.type && file.type.startsWith("audio/")) || audioExt.test(file.name||""));
 }
