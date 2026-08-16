@@ -1297,7 +1297,7 @@ a, .blue {
 }
 .cassetteDeck.playing .cassetteDeckHint {opacity:0!important}
 
-:is(.deckLoadKey,.deckHotspot) {
+.deckLoadKey {
   --key-light:#e2ad5f;
   position:relative;
   border:1px solid #604e3a!important;
@@ -1315,7 +1315,7 @@ a, .blue {
   transition:transform .06s ease,border-color .08s ease,box-shadow .08s ease,background .08s ease!important;
 }
 
-:is(.deckLoadKey,.deckHotspot):hover {
+.deckLoadKey:hover {
   border-color:#755a35!important;
   box-shadow:
     inset 0 1px #6a5238,
@@ -1325,9 +1325,9 @@ a, .blue {
     0 0 10px color-mix(in srgb,var(--key-light) 17%,transparent)!important;
 }
 
-:is(.deckLoadKey,.deckHotspot):focus-visible {outline:1px solid var(--key-light)!important;outline-offset:2px}
+.deckLoadKey:focus-visible {outline:1px solid var(--key-light)!important;outline-offset:2px}
 
-:is(.deckLoadKey,.deckHotspot):active {transform:translateY(2px);box-shadow:inset 0 4px 8px rgba(0,0,0,.32),0 1px 0 #020202!important}
+.deckLoadKey:active {transform:translateY(2px);box-shadow:inset 0 4px 8px rgba(0,0,0,.32),0 1px 0 #020202!important}
 
 .deckLoadKey strong {font:800 9px/1.1 var(--font-mono);letter-spacing:.6px}
 .deckLoadKey small {color:#b39267!important;font:700 7px/1 var(--font-mono);letter-spacing:.8px}
@@ -1353,27 +1353,6 @@ a, .blue {
   background:color-mix(in srgb,var(--key-light) 76%,#1a130a);
   box-shadow:0 0 5px color-mix(in srgb,var(--key-light) 28%,transparent);
 }
-
-.deckTransport {
-  display:grid;
-  grid-template-columns:repeat(5,minmax(0,1fr));
-  gap:10px;
-  width:100%;
-}
-
-.deckHotspot {
-  display:flex;
-  min-width:0;
-  min-height:84px;
-  flex-direction:column;
-  align-items:center;
-  justify-content:center;
-  gap:7px;
-  padding:8px 6px;
-}
-.deckHotspot>span {color:#c49b67;font:900 18px/1 var(--font-mono)}
-.deckHotspot>strong {font:800 9px/1 var(--font-mono);letter-spacing:1px}
-.deckHotspot>small {color:#b18e62!important;font:700 6px/1.15 var(--font-mono);letter-spacing:.35px}
 
 .cassetteDeck.playing #playBeat {
   border-color:#9d733a!important;
@@ -1433,15 +1412,6 @@ body:has(#looper.active) .headerDeckPill {display:none}
   }
   .looperImportDock {grid-template-columns:1fr 1fr;gap:8px}
   .deckLoadKey {min-height:76px}
-  .deckTransport {grid-template-columns:repeat(4,minmax(0,1fr));gap:8px}
-  .deckHotspot {min-height:78px}
-  .deckAutoHotspot {
-    grid-column:1 / -1;
-    min-height:58px;
-    flex-direction:row;
-    gap:12px;
-  }
-  .deckAutoHotspot>small {font-size:7px!important}
   .looperVu {width:92px!important;gap:1px}
   .beatImportStatus {font-size:7px}
 }
@@ -1452,9 +1422,6 @@ body:has(#looper.active) .headerDeckPill {display:none}
   .deckReadoutAuto em {font-size:5px}
   .deckLoadKey strong {font-size:7px}
   .deckLoadKey small {font-size:6px!important}
-  .deckHotspot {min-height:70px}
-  .deckHotspot>span {font-size:15px}
-  .deckHotspot>strong {font-size:7px}
   .looperPanelOutput b {display:none}
 }
 
