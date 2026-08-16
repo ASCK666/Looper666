@@ -1,6 +1,6 @@
 # Current state and dependency map
 
-This document describes the **current runtime on `main` after the incremental ownership moves through PR #35**. It is intentionally descriptive, not aspirational. `TARGET_ARCHITECTURE.md` defines where the project should converge.
+This document describes the **current runtime on `main` after the incremental ownership moves through PR #37**. It is intentionally descriptive, not aspirational. `TARGET_ARCHITECTURE.md` defines where the project should converge.
 
 The map should be refreshed when a completed architecture step makes a listed writer, dependency or priority materially false. Documentation updates must remain separate from runtime ownership changes.
 
@@ -35,7 +35,7 @@ This still produces two different notions of ownership:
 - **physical declaration ownership:** mostly `core.js`;
 - **behavioral ownership:** increasingly concentrated in `looper.js`, `chopper.js` and `drums.js`.
 
-PR #33 moved the drums-vs-full rerender decision out of Events. PR #35 moved the preview STOP lifecycle beside `playRendered()` in the current combined-render implementation. Events now delegates rerender and stop operations instead of implementing those Renderer state transitions itself.
+PR #33 moved the drums-vs-full rerender decision out of Events. PR #35 moved the preview STOP lifecycle beside `playRendered()` in the current combined-render implementation. PR #37 moved the complete drums-only preview-start action there as `playDrumsPreview()`. Events now delegates rerender, drums-only PLAY and STOP operations instead of implementing those Renderer state transitions itself.
 
 The refactor should continue making physical and behavioral ownership converge without changing behavior.
 
@@ -50,6 +50,7 @@ The following P1 ownership moves are complete on `main`:
 - combined-preview rerender mode selection and replay are delegated to `rerenderPreviewMode()` in the current renderer implementation;
 - Drum edit rerenders reuse that same preview transition instead of duplicating the drums/full decision;
 - preview STOP source/transport/mode/playhead cleanup is delegated to `stopCurrentBeat()` in the current renderer implementation;
+- drums-only preview start is delegated to `playDrumsPreview()`, including audition stop, Drum selection, render, Renderer state/status and playback;
 - maintained project checks run in GitHub Actions with real browser coverage for these paths.
 
 These changes did **not** relocate feature state out of `core.js`, extract a renderer file, introduce modules or change audio algorithms.
@@ -66,8 +67,8 @@ These changes did **not** relocate feature state out of `core.js`, extract a ren
 | chop audition/playhead state | `core.js` | `chopper.js` | Chopper, renderer play/stop lifecycle | Chopper | Physical ownership mismatch remains; renderer interacts with playhead behavior during preview start/stop |
 | `loopGridEvents` | `core.js` | Chopper grid logic | Chopper, combined renderer, limited Events workflows | Chopper | Renderer consumes mutable Chopper state implicitly |
 | drum folder handles / entries / files / decode cache | `core.js` | `drums.js` | Drums | Drums | Physical ownership mismatch only |
-| `currentDrumSelection`, generation number, velocities/edit state | `core.js` | `drums.js` | Drums, combined renderer, limited Events orchestration | Drums | CLEAR is Drums-owned, but NEW DRUMS while-playing orchestration still leaks through Events |
-| `renderedFlip`, `flipSource`, `lastPreviewMode`, `isLoopPlaying`, loop playhead state | `core.js` | mainly `drums.js`, with remaining `events.js` preview-start/invalidation/save paths | Events, Chopper/Drums UI paths | Renderer | Rerender and STOP are renderer-owned; preview start and a few invalidation/save writes are still split with Events |
+| `currentDrumSelection`, generation number, velocities/edit state | `core.js` | `drums.js` | Drums, combined renderer, limited Events orchestration | Drums | CLEAR and drums-only PLAY are Drums/current-renderer owned, but NEW DRUMS while-playing orchestration still leaks through Events |
+| `renderedFlip`, `flipSource`, `lastPreviewMode`, `isLoopPlaying`, loop playhead state | `core.js` | mainly `drums.js`, with remaining `events.js` full-preview/invalidation/save paths | Events, Chopper/Drums UI paths | Renderer | Rerender, drums-only PLAY and STOP are renderer-owned; full-preview start and a few invalidation/save writes are still split with Events |
 | Practice drill state | `practice.js` | `practice.js` | Events through Practice functions | Practice | Keep frozen during architecture work |
 
 ## Current dependency graph
@@ -91,6 +92,7 @@ These changes did **not** relocate feature state out of `core.js`, extract a ren
                 │              combined renderer
                 │              currently in drums.js
                 │              + rerenderPreviewMode()
+                │              + playDrumsPreview()
                 │              + stopCurrentBeat()
                 │                      │
                 └──────────────┬───────┘
@@ -99,12 +101,12 @@ These changes did **not** relocate feature state out of `core.js`, extract a ren
                          │ events.js │
                          │ wiring +  │
                          │ remaining │
-                         │ preview   │
-                         │ start/orchestration
+                         │ full PLAY │
+                         │ /orchestration
                          └───────────┘
 ```
 
-The runtime still does not have a single clean dependency direction, but Events no longer owns the combined rerender decision or the STOP state transition.
+The runtime still does not have a single clean dependency direction, but Events no longer owns the combined rerender decision, drums-only preview start or the STOP state transition.
 
 ## Observed cross-domain violations
 
@@ -118,29 +120,30 @@ Target: Core keeps only shared infrastructure; state moves gradually to its conc
 
 ### V2 — Events still contains feature/control orchestration
 
-Events no longer performs the Chopper sample-load, immediate volume, immediate pitch, Drum-clear, combined rerender or preview STOP state transitions.
+Events no longer performs the Chopper sample-load, immediate volume, immediate pitch, Drum-clear, combined rerender, drums-only PLAY or preview STOP state transitions.
 
 Remaining violations include:
 
 - direct mutation of `masterVolumePercent`;
 - direct inspection of playback/preview state such as `isLoopPlaying`, `lastPreviewMode` and `sampleBuffer` in several handlers;
-- preview-start workflows such as drums-only PLAY and full `playCurrentBeat()`;
+- the cross-domain full-preview `playCurrentBeat()` workflow;
 - multi-step workflows such as NEW DRUMS while playing and save/render flows;
-- remaining renderer-state writes such as preview-start mode/buffer assignment, PUNCH invalidation and saved-render assignment;
+- remaining renderer-state writes such as full-preview mode/buffer assignment, PUNCH invalidation and saved-render assignment;
 - status/error presentation coupled to those workflows.
 
 Target: Events should translate a DOM input to one public domain/renderer call and own no product state or business transition.
 
 ### V3 — Combined-preview lifecycle is only partially renderer-owned
 
-The previous violation was broader: Events implemented both rerender decisions and STOP state cleanup. Those parts are now fixed.
+The previous violation was broader: Events implemented rerender decisions, drums-only preview start and STOP state cleanup. Those parts are now fixed.
 
 Current state:
 
 - `drums.js::rerenderPreviewMode()` owns the drums-vs-full rerender decision, `renderedFlip` replacement, `lastPreviewMode` update and replay for rerenders;
 - `rerenderAfterDrumEdit()` delegates to that same operation;
+- `drums.js::playDrumsPreview()` owns the complete drums-only preview start, including chop-audition stop, Drum selection, rendering, mode/status update and playback;
 - `drums.js::stopCurrentBeat()` owns active preview-source shutdown plus transport/mode/playhead cleanup;
-- Events still implements the drums-only PLAY handler and `playCurrentBeat()`, including preview buffer/mode assignment before `playRendered()`;
+- Events still implements full `playCurrentBeat()`, including grid collection, full rendering, preview buffer/mode assignment, status and playback;
 - some Events handlers still inspect renderer state before deciding whether to request a rerender or invalidate a rendered preview.
 
 Target: continue shrinking Events toward wiring while keeping the renderer physically in `drums.js` until its inputs are explicit.
@@ -177,7 +180,7 @@ Not every relationship requires movement.
 - Looper persistence, folder scanning and beat-library behavior already live in `looper.js`; the main problem is the state they depend on being globally declared and some transport inspection in Events.
 - Chopper waveform/marker algorithms and the immediate sample load/volume/pitch transitions live in `chopper.js`.
 - Drum library loading, patterns, editing, velocities and CLEAR behavior mostly live in `drums.js`.
-- The current combined renderer, its rerender transition and its STOP lifecycle now live together in `drums.js`.
+- The current combined renderer, its rerender transition, drums-only PLAY and STOP lifecycle now live together in `drums.js`.
 - Practice is isolated enough to remain frozen.
 
 The migration should **not** split files simply to make the tree look more architectural.
@@ -193,12 +196,13 @@ Completed:
 3. Chopper immediate sample-volume transition;
 4. Chopper immediate sample-pitch transition;
 5. combined-preview rerender transition;
-6. preview STOP lifecycle.
+6. preview STOP lifecycle;
+7. drums-only preview-start lifecycle.
 
 Remaining high-value boundaries:
 
-1. preview-start lifecycle still implemented in Events, starting with the narrower drums-only PLAY path before the cross-domain full-preview path;
-2. NEW DRUMS while-playing orchestration;
+1. NEW DRUMS while-playing orchestration;
+2. full `playCurrentBeat()` preview-start lifecycle, after the smaller Drum-owned workflow above;
 3. master-volume path, but only when a complete responsibility can move — do **not** add a setter that merely hides the global assignment;
 4. remaining save/transport workflows where Events still knows domain internals.
 
@@ -254,19 +258,20 @@ Each architecture PR should make at least one of these counts go down and none g
 
 ## Current recommended runtime boundary
 
-**Move the drums-only preview start transition out of `events.js` without extracting `renderer.js` yet.**
+**Move the complete NEW DRUMS while-playing action out of `events.js` into Drums without extracting `renderer.js` yet.**
 
-This is narrower than the full `playCurrentBeat()` path: Events currently performs Drum selection, drums-only rendering, `renderedFlip`/`lastPreviewMode` assignment and `playRendered()` orchestration for one button. Consolidating that transition beside the existing renderer lifecycle can remove Renderer internals from Events without yet solving the more cross-domain full-preview input problem.
+This is smaller and more domain-cohesive than moving the full `playCurrentBeat()` path next. Events currently stops Chopper audition, snapshots Renderer playback/mode state, regenerates the Drum selection, requests a rerender when playback was active, and owns the success/error presentation for one Drum command. Because the current Renderer implementation already lives in `drums.js`, consolidating this action there can remove another complete workflow from Events without introducing a new runtime dependency or solving full-preview Chopper inputs prematurely.
 
 The step must remain narrow:
 
-- one complete drums-only preview-start operation owned by the current renderer implementation;
-- Events may keep presentation/status handling if the operation can return the minimal information it needs;
+- one complete NEW DRUMS action owned in `drums.js`;
+- preserve the exact while-playing rerender behavior and visible status/error behavior;
+- no full-preview `playCurrentBeat()` ownership change;
 - no new runtime file;
 - no state relocation;
 - no visual change;
 - no audio algorithm change;
-- explicit behavioral test for the moved operation;
+- explicit behavioral test for NEW DRUMS while a preview is running;
 - full `Project checks` green before merge.
 
 This continues the same incremental strategy: remove one hidden relationship at a time before changing the physical file topology.
