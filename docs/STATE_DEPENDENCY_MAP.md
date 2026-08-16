@@ -1,6 +1,6 @@
 # Current state and dependency map
 
-This document describes the **current runtime on `main` after the incremental ownership moves through PR #39**. It is intentionally descriptive, not aspirational. `TARGET_ARCHITECTURE.md` defines where the project should converge.
+This document describes the **current runtime on `main` after the incremental ownership and dependency moves through PR #41**. It is intentionally descriptive, not aspirational. `TARGET_ARCHITECTURE.md` defines where the project should converge.
 
 The map should be refreshed when a completed architecture step makes a listed writer, dependency or priority materially false. Documentation updates must remain separate from runtime ownership changes.
 
@@ -35,9 +35,9 @@ This still produces two different notions of ownership:
 - **physical declaration ownership:** mostly `core.js`;
 - **behavioral ownership:** increasingly concentrated in `looper.js`, `chopper.js` and `drums.js`.
 
-PR #33 moved the drums-vs-full rerender decision out of Events. PR #35 moved the preview STOP lifecycle beside `playRendered()` in the current combined-render implementation. PR #37 moved the complete drums-only preview-start action there as `playDrumsPreview()`. PR #39 moved the complete NEW DRUMS action, including its while-playing rerender rule, into `drums.js` as `generateNewDrums()`. Events now delegates these operations instead of implementing their state transitions itself.
+PR #33 moved the drums-vs-full rerender decision out of Events. PR #35 moved the preview STOP lifecycle beside `playRendered()` in the current combined-render implementation. PR #37 moved the complete drums-only preview-start action there as `playDrumsPreview()`. PR #39 moved the complete NEW DRUMS action, including its while-playing rerender rule, into `drums.js` as `generateNewDrums()`. PR #41 made the Chopper sample buffer an explicit `renderSequence()` input instead of a hidden renderer global read. Events now delegates the completed transitions while the renderer API is starting to expose its real data flow.
 
-The next source of complexity is no longer primarily handler placement. `renderSequence(events)` still hides important Chopper and Drum dependencies behind globals and DOM reads. The refactor should now favor making those dependencies explicit, one simple input at a time, before moving more cross-domain workflows or extracting files.
+The next source of complexity is no longer primarily handler placement. `renderSequence(events, sourceBuffer)` still hides marker/cue positions, pitch, gain/conditioning, Drum selection and tempo behind globals or DOM reads. The refactor should continue making those dependencies explicit, one simple input at a time, before moving more cross-domain workflows or extracting files.
 
 ## Progress since the first inventory
 
@@ -52,6 +52,7 @@ The following P1 ownership moves are complete on `main`:
 - preview STOP source/transport/mode/playhead cleanup is delegated to `stopCurrentBeat()` in the current renderer implementation;
 - drums-only preview start is delegated to `playDrumsPreview()`, including audition stop, Drum selection, render, Renderer state/status and playback;
 - NEW DRUMS is delegated to `generateNewDrums()`, including audition stop, selection regeneration and while-playing rerender in the previous preview mode;
+- the combined renderer receives the Chopper sample buffer explicitly as `renderSequence(events, sourceBuffer)`;
 - maintained project checks run in GitHub Actions with real browser coverage for these paths.
 
 These changes did **not** relocate feature state out of `core.js`, extract a renderer file, introduce modules or change audio algorithms.
@@ -63,7 +64,7 @@ These changes did **not** relocate feature state out of `core.js`, extract a ren
 | `ctx`, `liveBus`, `masterAnalyser`, meter runtime | `core.js` | `core.js`, master-volume UI path | all audio domains | Core | Mostly correct; master-volume state is still mutated directly from Events and its UI/gain refresh is not cleanly owned |
 | `deckSource`, `deckBuffer`, `currentTrack`, `deckOutputGain` | `core.js` | `looper.js`, some `events.js` transport handlers | Looper UI, Events | Looper | Feature state physically lives in Core and transport state is still inspected from Events |
 | AUTO Looper state and tape counter | `core.js` | `looper.js` | Looper UI, Events | Looper | Feature state physically lives in Core |
-| `sampleBuffer`, `sampleName`, `markers`, `transients`, `selectedMarker` | `core.js` | `chopper.js` | Chopper, combined renderer, limited Events readers | Chopper | Behavioral writes are mostly Chopper-owned, but state is still declared in Core and renderer reads mutable Chopper state implicitly |
+| `sampleBuffer`, `sampleName`, `markers`, `transients`, `selectedMarker` | `core.js` | `chopper.js` | Chopper, combined renderer, limited Events readers | Chopper | Sample buffer is now passed explicitly to `renderSequence()`, but markers and other Chopper state remain implicit and all are still declared in Core |
 | sample pitch / volume / condition profile | `core.js` | `chopper.js` | Chopper, combined renderer, Events status/rerender triggers | Chopper | Immediate control transitions are Chopper-owned; physical ownership and renderer reads remain unresolved |
 | chop audition/playhead state | `core.js` | `chopper.js` | Chopper, renderer play/stop lifecycle | Chopper | Physical ownership mismatch remains; renderer interacts with playhead behavior during preview start/stop |
 | `loopGridEvents` | `core.js` | Chopper grid logic | Chopper, combined renderer, limited Events workflows | Chopper | Renderer consumes mutable Chopper state implicitly |
@@ -107,7 +108,7 @@ These changes did **not** relocate feature state out of `core.js`, extract a ren
                          └───────────┘
 ```
 
-The runtime still does not have a single clean dependency direction, but Events no longer owns the combined rerender decision, drums-only preview start, NEW DRUMS while-playing rule or STOP state transition.
+The runtime still does not have a single clean dependency direction, but Events no longer owns the combined rerender decision, drums-only preview start, NEW DRUMS while-playing rule or STOP state transition, and the combined renderer no longer hides its sample-buffer dependency.
 
 ## Observed cross-domain violations
 
@@ -154,16 +155,15 @@ Target: keep the renderer physically in `drums.js` until its inputs are explicit
 
 ### V4 — Drums contains the combined Chopper + Drums renderer
 
-`drums.js::renderSequence(events)` directly reads Chopper state such as:
+`drums.js::renderSequence(events, sourceBuffer)` now receives the Chopper sample buffer explicitly, but still directly reads Chopper state such as:
 
-- `sampleBuffer`;
-- `markers`;
+- `markers` / cue positions;
 - sample pitch;
 - sample volume/conditioner state.
 
 It also reads tempo from the DOM and obtains Drum state internally through `ensureDrumSelection()`.
 
-The function signature therefore understates its real dependencies and makes the renderer harder for a human reader to reason about.
+The signature is more truthful after PR #41, but it still understates the remaining dependencies and makes the renderer harder for a human reader to reason about.
 
 Target: Renderer receives explicit inputs from Chopper and Drums rather than reaching into their mutable globals. Introduce these as ordinary function arguments one at a time; do **not** create a `RenderContext`, dependency container, service object or snapshot framework to solve this.
 
@@ -214,15 +214,18 @@ The master-volume guard still applies: do **not** add a setter that merely hides
 
 This is now the recommended active phase.
 
-Refactor `renderSequence()` through small, ordinary arguments, one dependency at a time. Suggested order:
+Completed:
 
-1. Chopper sample buffer;
-2. marker/cue positions;
-3. pitch and sample gain/conditioning values;
-4. Drum selection;
-5. tempo/effects only where doing so removes a real hidden read.
+1. Chopper sample buffer is explicit as `sourceBuffer` in `renderSequence(events, sourceBuffer)`.
 
-`events`/grid events are already an explicit argument and should stay that way.
+Continue through small, ordinary arguments, one dependency at a time. Suggested order:
+
+1. marker/cue positions;
+2. pitch and sample gain/conditioning values;
+3. Drum selection;
+4. tempo/effects only where doing so removes a real hidden read.
+
+`events`/grid events and the source buffer are already explicit arguments and should stay that way.
 
 Do not introduce a broad render-state object. A longer but truthful function signature is preferable to an opaque context object while the dependency set is still being understood.
 
@@ -268,16 +271,16 @@ A useful human-readability test is also required: after a PR, a reader should be
 
 ## Current recommended runtime boundary
 
-**Make the Chopper sample buffer an explicit argument of `renderSequence()` while the renderer remains in `drums.js`.**
+**Make marker/cue positions an explicit argument of `renderSequence()` while the renderer remains in `drums.js`.**
 
-Today `renderSequence(events)` validates, measures and assigns `sampleBuffer` even though that dependency is absent from its signature. This is a small but important hidden relationship. Making the source buffer explicit improves the truthfulness of the renderer API without inventing a new abstraction.
+Today `renderSequence(events, sourceBuffer)` still filters placed chops against global `markers.length` and resolves every chop start through global `markers[idx]`. That dependency is absent from the signature even though it determines which triggers render and where each sample slice starts.
 
 The step must remain narrow:
 
-- change `renderSequence()` to receive the current Chopper sample buffer as a plain argument;
-- use that argument for sample validation, duration calculations and rendered source assignment;
-- update existing call sites explicitly, preserving their current behavior;
-- leave markers, pitch, volume/conditioning, Drum selection and tempo for later PRs;
+- add marker/cue positions as one plain `renderSequence()` argument;
+- use that argument for trigger validation and `sampleStart` lookup;
+- update existing call sites and direct renderer tests explicitly, preserving current behavior;
+- leave pitch, volume/conditioning, Drum selection and tempo for later PRs;
 - no `RenderContext`, config/service object or dependency container;
 - no full `playCurrentBeat()` ownership move;
 - no new runtime file;
@@ -286,4 +289,4 @@ The step must remain narrow:
 - targeted/static coverage where useful plus the existing full-render behavioral regressions;
 - full `Project checks` green before merge.
 
-This is the point where the refactor shifts from moving complete handlers to making hidden data flow visible. That is the safer route toward lower coupling without turning the project into an architecture exercise.
+This continues the dependency-first phase: one hidden input becomes visible at a time, with no architecture machinery added around it.
