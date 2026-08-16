@@ -1,5 +1,5 @@
 "use strict";
-window.__SP={version:"113-dev-no-sw",ready:false,errors:[]};
+window.__SP={version:"114-dev-no-sw",ready:false,errors:[]};
 window.__SP.report=(scope,error)=>{
   const message=error?.message||String(error||"Unknown error");
   const item={scope,message,time:new Date().toISOString()};
@@ -30,6 +30,133 @@ if("caches" in window){
     .then(keys=>Promise.all(keys.filter(key=>key.startsWith("scratch-practice-")).map(key=>caches.delete(key))))
     .catch(error=>console.warn("Scratch Practice cache cleanup failed:",error));
 }
+
+/*
+ * CHOPPER DOM CONTRACT
+ * --------------------
+ * The current HTML came from a simplified UI pass, while chopper.js/events.js
+ * still use the established control IDs. Normalize that markup before deferred
+ * application scripts bind their events. This is intentionally centralized so
+ * the compatibility layer can disappear when index.html is cleaned up.
+ */
+function normalizeChopperMarkup(){
+  const chopper=document.getElementById("chopper");
+  if(!chopper)return;
+
+  const rename=(from,to)=>{
+    if(document.getElementById(to))return document.getElementById(to);
+    const element=document.getElementById(from);
+    if(element)element.id=to;
+    return element;
+  };
+
+  rename("markerSnap","snapMode");
+  rename("pitch","samplePitch");
+  rename("pitchVal","samplePitchReadout");
+  rename("sampleVol","sampleVolume");
+  rename("sampleVolVal","sampleVolumeReadout");
+  rename("sequenceGrid","loopGrid");
+  rename("seqPlay","previewFlip");
+  rename("seqStop","stopFlip");
+  rename("seqClear","clearGrid");
+  rename("seqRecord","addFlipLibrary");
+
+  const snapMode=document.getElementById("snapMode");
+  if(snapMode){
+    [...snapMode.options].forEach(option=>{
+      if(option.value==="off")option.value="free";
+      if(option.value==="zero")option.value="transient";
+    });
+  }
+
+  const screen=chopper.querySelector(".samplerScreenModule")||chopper;
+  const controls=chopper.querySelector(".samplerControlModule")||chopper;
+
+  const ensureElement=(id,tag="span",parent=controls)=>{
+    let element=document.getElementById(id);
+    if(element)return element;
+    element=document.createElement(tag);
+    element.id=id;
+    element.className="compatHidden";
+    parent.appendChild(element);
+    return element;
+  };
+
+  const sampleBpm=ensureElement("sampleBpm","input");
+  sampleBpm.type="number";
+  sampleBpm.min="40";
+  sampleBpm.max="220";
+  sampleBpm.step="0.1";
+  sampleBpm.value=sampleBpm.value||"90";
+
+  const gridDivision=ensureElement("gridDivision","select");
+  if(!gridDivision.options.length){
+    gridDivision.innerHTML='<option value="0.0625" selected>1/16 beat</option>';
+  }
+
+  const transientRadius=ensureElement("transientRadius","select");
+  if(!transientRadius.options.length){
+    transientRadius.innerHTML='<option value="80" selected>80 ms</option>';
+  }
+
+  let chopStatus=document.getElementById("chopStatus");
+  if(!chopStatus){
+    chopStatus=document.createElement("div");
+    chopStatus.id="chopStatus";
+    chopStatus.className="status drumEngineStatus";
+    chopStatus.textContent="READY";
+    screen.appendChild(chopStatus);
+  }
+
+  const defaults={
+    snareReverbMix:["input","25"],
+    punchMode:["select","warm"],
+    drumEditView:["select","16"],
+    drumMode:["select","auto"],
+    snareReverbType:["select","plate"]
+  };
+  for(const [id,[tag,value]] of Object.entries(defaults)){
+    const element=ensureElement(id,tag);
+    if(tag==="input"){
+      element.type="range";
+      element.value=value;
+    }else if(!element.options.length){
+      element.innerHTML=`<option value="${value}" selected>${value}</option>`;
+    }
+  }
+
+  const snareReverbOn=ensureElement("snareReverbOn","input");
+  snareReverbOn.type="checkbox";
+  ensureElement("snareReverbMixReadout").textContent="25%";
+  ensureElement("punchDesc");
+  ensureElement("beatSaveStatus");
+  ensureElement("drumEditor");
+  ensureElement("drumSelectionStatus");
+  ensureElement("currentKick");
+  ensureElement("currentSnare");
+  ensureElement("currentHat");
+  ensureElement("currentPattern");
+
+  for(const id of ["clearDrumEdits","newDrums","playDrumsOnly"]){
+    ensureElement(id,"button").type="button";
+  }
+
+  let libraryCta=document.getElementById("loadDrumLibraryCTA");
+  if(!libraryCta){
+    libraryCta=ensureElement("loadDrumLibraryCTA","button");
+    libraryCta.innerHTML='<span class="loadDrumLibraryArrow"></span><span><b></b><small></small></span>';
+  }
+
+  for(const kind of ["kick","snare","hat"]){
+    ensureElement(`${kind}FolderStatus`);
+    ensureElement(`${kind}FolderBtn`,"button").type="button";
+    const fallback=ensureElement(`${kind}FolderFallback`,"input");
+    fallback.type="file";
+    fallback.multiple=true;
+  }
+}
+
+normalizeChopperMarkup();
 
 // Transitional loader: chopper-layout.js is the last resource still absent from
 // index.html. Once the static load chain is versioned, this can move there too.
