@@ -144,7 +144,7 @@
   function installTransport(host){
     if(!host) return;
 
-    // Remove the old visible/hidden transport before reusing its public IDs.
+    // Remove the old transport before reusing its public IDs on the real artwork controls.
     document.querySelector("#looper .deckTransport")?.remove();
     host.querySelector(".artworkTransport")?.remove();
 
@@ -171,8 +171,8 @@
         ?.classList.remove("is-hover");
     }, true);
 
-    // Capture phase keeps the visual feedback independent from the transport
-    // handlers that events.js attaches to the buttons later in the boot chain.
+    // Capture phase keeps visual feedback independent from the transport handlers
+    // that events.js attaches to the buttons later in the boot chain.
     transport.addEventListener("click", event => {
       const button = event.target.closest?.(".artworkTransportHit");
       if(button) flashBacklight(button.id);
@@ -312,6 +312,8 @@
     observeDeckState();
     return true;
   }
+
+  if(boot()) return;
 
   let attempts = 0;
   const bootTimer = setInterval(() => {
