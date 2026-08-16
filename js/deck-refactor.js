@@ -113,16 +113,6 @@
       button.setAttribute("aria-pressed", String(control.pressed));
     }
 
-    // looper.js still writes its compact AUTO progress here. Keeping that tiny
-    // compatibility node inside the real AUTO button avoids a second transport.
-    if(control.id === "autoLooperToggle"){
-      const status = document.createElement("small");
-      status.id = "autoLooperCompactStatus";
-      status.className = "compatHidden";
-      status.setAttribute("aria-hidden", "true");
-      button.appendChild(status);
-    }
-
     return button;
   }
 
@@ -253,15 +243,12 @@
     const deck = document.querySelector("#looper .cassetteDeck");
     if(deck) stateObserver.observe(deck, {attributes:true, attributeFilter:["class"]});
 
-    const autoStatus = $id("autoLooperCompactStatus");
-    if(autoStatus){
-      stateObserver.observe(autoStatus, {childList:true, characterData:true, subtree:true});
-    }
-
     const autoButton = $id("autoLooperToggle");
     if(autoButton){
       stateObserver.observe(autoButton, {attributes:true, attributeFilter:["class", "aria-pressed"]});
     }
+
+    window.addEventListener("sp:auto-looper-state", refreshDeckState);
   }
 
   function boot(){
