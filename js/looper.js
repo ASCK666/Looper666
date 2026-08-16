@@ -708,11 +708,10 @@ function deckRate(){
 
 function refreshAutoLooperCompact(){
   const btn=$("autoLooperToggle");
-  const status=$("autoLooperCompactStatus");
   const deck=$("looperDropzoneBtn");
   const speed=$("deckSpeedReadout");
   const auto=$("deckAutoReadout");
-  if(!btn || !status) return;
+  if(!btn) return;
 
   // Compact cassette tape moves at 4.75 cm/s. Keep the visual reels tied to
   // the actual deck playback rate instead of using a decorative fixed spin.
@@ -730,6 +729,9 @@ function refreshAutoLooperCompact(){
   status.textContent=autoLooperEnabledState
     ? `ON • ${autoLooperLoopCount}/${AUTO_LOOP_BATCH} LOOPS`
     : `OFF • +${AUTO_SPEED_INCREMENT_PERCENT}% / ${AUTO_LOOP_BATCH} LOOPS`;
+  if(typeof CustomEvent==="function" && typeof window.dispatchEvent==="function"){
+    window.dispatchEvent(new CustomEvent("sp:auto-looper-state"));
+  }
 }
 
 function resetAutoLooperProgress(){
