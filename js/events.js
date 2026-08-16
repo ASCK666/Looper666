@@ -272,24 +272,6 @@ async function playCurrentBeat(){
   }
 }
 
-function stopCurrentBeat(){
-  if(flipSource){
-    try{flipSource.stop()}catch{}
-    flipSource=null;
-  }
-
-  isLoopPlaying=false;
-  lastPreviewMode=null;
-  loopPlayheadState=null;
-  loopPlayheadStartedAt=0;
-
-  if(chopAuditionSource){
-    startPlayheadAnimation();
-  }else{
-    stopPlayheadAnimation(true);
-  }
-}
-
 $("previewFlip").onclick=playCurrentBeat;
 $("stopFlip").onclick=stopCurrentBeat;
 document.addEventListener("keydown",async ev=>{
