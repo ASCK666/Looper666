@@ -46,6 +46,12 @@ forbidden = {
     "debugger statement": re.compile(r"\bdebugger\s*;"),
     "console.log": re.compile(r"\bconsole\.log\s*\("),
     "TODO/FIXME marker": re.compile(r"\b(?:TODO|FIXME)\b"),
+    "legacy tape-counter runtime": re.compile(
+        r"\b(?:tapeCounterUnits|tapeCounterTimer|tapeCounterLastCtxTime|"
+        r"formatTapeCounter|refreshTapeCounter|resetTapeCounter|"
+        r"startTapeCounter|stopTapeCounter|TAPE_COUNTER_INTERVAL_MS|"
+        r"STANDARD_TAPE_SPEED_CM_PER_SECOND|TAPE_COUNTER_CM_PER_UNIT)\b"
+    ),
 }
 forbidden_hits = [name for name, pattern in forbidden.items() if pattern.search(RUNTIME)]
 
@@ -57,7 +63,7 @@ if dead_functions:
 if dead_bindings:
     failures.append(f"unreferenced top-level bindings: {', '.join(dead_bindings)}")
 if forbidden_hits:
-    failures.append(f"forbidden debug residue: {', '.join(forbidden_hits)}")
+    failures.append(f"forbidden debug/runtime residue: {', '.join(forbidden_hits)}")
 
 if failures:
     for failure in failures:
