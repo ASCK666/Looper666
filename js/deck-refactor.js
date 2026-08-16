@@ -204,18 +204,6 @@
     host.appendChild(module);
   }
 
-  function disableLegacyTapeCounter(){
-    try{
-      if(typeof stopTapeCounter === "function") stopTapeCounter();
-      if(typeof startTapeCounter === "function") startTapeCounter = () => {};
-      if(typeof stopTapeCounter === "function") stopTapeCounter = () => {};
-      if(typeof resetTapeCounter === "function") resetTapeCounter = () => {};
-      if(typeof refreshTapeCounter === "function") refreshTapeCounter = () => {};
-    }catch(error){
-      console.warn("Scratch Practice: legacy tape counter cleanup skipped", error);
-    }
-  }
-
   function refreshTransportState(){
     const playing = document.querySelector("#looper .cassetteDeck")?.classList.contains("playing");
     const autoButton = $id("autoLooperToggle");
@@ -289,7 +277,6 @@
 
     installed = true;
     removeLegacyCounterMarkup();
-    disableLegacyTapeCounter();
     prepareDeckArtwork();
     buildBacklights(host);
     installTransport(host);
