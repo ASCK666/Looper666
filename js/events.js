@@ -165,27 +165,6 @@ $("masterVolume").oninput=()=>{
 
 $("sampleVolume").oninput=()=>updateSampleVolume($("sampleVolume").value);
 
-async function rerenderPreviewMode(mode=lastPreviewMode){
-  if(mode==="drums"){
-    renderedFlip=await renderDrumsOnly();
-    lastPreviewMode="drums";
-    await playRendered(renderedFlip);
-    return true;
-  }
-
-  if(mode==="full" && sampleBuffer){
-    const events=gridEventsForRender();
-    if(events.some(Boolean)){
-      renderedFlip=await renderSequence(events);
-      lastPreviewMode="full";
-      await playRendered(renderedFlip);
-      return true;
-    }
-  }
-
-  return false;
-}
-
 $("sampleVolume").onchange=async()=>{
   // If the full loop is already playing, rebuild once when the user releases
   // the fader so sample/drum balance updates immediately.
