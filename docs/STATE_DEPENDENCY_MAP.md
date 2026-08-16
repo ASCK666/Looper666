@@ -1,8 +1,8 @@
 # Current state and dependency map
 
-This document describes the **current runtime as observed after the proven dead-code cleanup**. It is intentionally descriptive, not aspirational. `TARGET_ARCHITECTURE.md` defines where the project should converge.
+This document describes the **current runtime on `main` after the first incremental ownership moves**. It is intentionally descriptive, not aspirational. `TARGET_ARCHITECTURE.md` defines where the project should converge.
 
-No runtime change belongs in the same PR as this first inventory.
+The map should be refreshed when a completed architecture step makes a listed writer, dependency or priority materially false. Documentation updates must remain separate from runtime ownership changes.
 
 ## Current script topology
 
@@ -28,29 +28,41 @@ The arrows above are load-order dependencies, not clean module boundaries. Later
 
 ## Main finding
 
-`core.js` currently acts as both shared audio infrastructure **and** the physical declaration site for state owned conceptually by Looper, Chopper, Drums and the combined renderer.
+`core.js` still acts as both shared audio infrastructure **and** the physical declaration site for state owned conceptually by Looper, Chopper, Drums and the combined renderer.
 
-This produces two different notions of ownership:
+This still produces two different notions of ownership:
 
 - **physical declaration ownership:** mostly `core.js`;
-- **behavioral ownership:** spread across `looper.js`, `chopper.js`, `drums.js` and `events.js`.
+- **behavioral ownership:** increasingly concentrated in `looper.js`, `chopper.js` and `drums.js`, but combined-preview behavior still leaks into `events.js`.
 
 The refactor should make those two notions converge without changing behavior.
+
+## Progress since the first inventory
+
+The following P1 ownership moves are now complete on `main`:
+
+- sample loading is delegated by Events to `loadChopperSample()`;
+- clearing Drum edits is delegated by Events to `clearDrumEdits()`;
+- immediate sample-volume state/readout/live-audition gain handling is delegated to `updateSampleVolume()`;
+- immediate sample-pitch state/audition/UI/waveform handling is delegated to `updateSamplePitch()`;
+- the maintained project checks now run in GitHub Actions and include browser coverage for the Chopper volume/pitch paths.
+
+These changes did **not** relocate feature state out of `core.js`, extract a renderer file, introduce modules or change audio algorithms. They only reduced feature knowledge and direct state transitions in `events.js`.
 
 ## State inventory
 
 | State family | Declared today | Main writers today | Main readers today | Target owner | Current issue |
 |---|---|---|---|---|---|
-| `ctx`, `liveBus`, `masterAnalyser`, meter runtime | `core.js` | `core.js`, master-volume UI path | all audio domains | Core | Mostly correct; master volume mutation is currently wired from Events/Chopper UI code |
-| `deckSource`, `deckBuffer`, `currentTrack`, `deckOutputGain` | `core.js` | `looper.js`, some `events.js` handlers | Looper UI, Events | Looper | Feature state physically lives in Core and is directly inspected from Events |
+| `ctx`, `liveBus`, `masterAnalyser`, meter runtime | `core.js` | `core.js`, master-volume UI path | all audio domains | Core | Mostly correct; master-volume state is still mutated directly from Events and its UI/gain refresh is not cleanly owned |
+| `deckSource`, `deckBuffer`, `currentTrack`, `deckOutputGain` | `core.js` | `looper.js`, some `events.js` transport handlers | Looper UI, Events | Looper | Feature state physically lives in Core and transport state is still inspected from Events |
 | AUTO Looper state and tape counter | `core.js` | `looper.js` | Looper UI, Events | Looper | Feature state physically lives in Core |
-| `sampleBuffer`, `sampleName`, `markers`, `transients`, `selectedMarker` | `core.js` | `chopper.js` and `events.js` sample-load handlers | Chopper, Drums renderer, Events | Chopper | Direct cross-file mutation; renderer reaches into Chopper mutable state |
-| sample pitch / volume / condition profile | `core.js` | `events.js`, `chopper.js` | Chopper, Drums renderer | Chopper | Events implements state transitions instead of delegating one domain call |
+| `sampleBuffer`, `sampleName`, `markers`, `transients`, `selectedMarker` | `core.js` | `chopper.js` | Chopper, combined renderer, Events readers | Chopper | Behavioral writes are now mostly Chopper-owned, but state is still declared in Core and renderer reads mutable Chopper state implicitly |
+| sample pitch / volume / condition profile | `core.js` | `chopper.js` | Chopper, combined renderer, Events rerender/status paths | Chopper | Immediate control transitions are Chopper-owned; physical ownership and renderer reads remain unresolved |
 | chop audition/playhead state | `core.js` | `chopper.js` | Chopper | Chopper | Physical ownership mismatch only; comparatively low-risk |
-| `loopGridEvents` | `core.js` | Chopper grid logic | Chopper, Drums renderer, Events | Chopper | Renderer consumes mutable Chopper state implicitly |
-| drum folder handles / entries / files / decode cache | `core.js` | `drums.js` | Drums | Drums | Physical ownership mismatch only; good first candidate for ownership grouping after Events cleanup |
-| `currentDrumSelection`, generation number, velocities/edit state | `core.js` | `drums.js` | Drums, renderer, Events | Drums | Renderer and Events depend on mutable Drum state implicitly |
-| `renderedFlip`, `flipSource`, `lastPreviewMode`, `isLoopPlaying`, loop playhead state | `core.js` | `drums.js` and `events.js` | Events, Chopper/Drums UI paths | Renderer | Combined-render state has no explicit domain and is mutated from Events |
+| `loopGridEvents` | `core.js` | Chopper grid logic | Chopper, combined renderer, Events | Chopper | Renderer consumes mutable Chopper state implicitly |
+| drum folder handles / entries / files / decode cache | `core.js` | `drums.js` | Drums | Drums | Physical ownership mismatch only; good candidate for ownership grouping after Events cleanup |
+| `currentDrumSelection`, generation number, velocities/edit state | `core.js` | `drums.js` | Drums, combined renderer, limited Events orchestration | Drums | Direct CLEAR mutation has been removed from Events, but renderer and some orchestration still depend on Drum state indirectly |
+| `renderedFlip`, `flipSource`, `lastPreviewMode`, `isLoopPlaying`, loop playhead state | `core.js` | `drums.js` and `events.js` | Events, Chopper/Drums UI paths | Renderer | Combined-render state still has no explicit boundary and is heavily mutated from Events |
 | Practice drill state | `practice.js` | `practice.js` | Events through Practice functions | Practice | Keep frozen during architecture work |
 
 ## Current dependency graph
@@ -79,12 +91,12 @@ The refactor should make those two notions converge without changing behavior.
                          ┌───────────┐
                          │ events.js │
                          │ wiring +  │
-                         │ business  │
-                         │ mutations │
+                         │ preview   │
+                         │ orchestration
                          └───────────┘
 ```
 
-The diagram is intentionally uncomfortable: the runtime does not currently have a single clean dependency direction.
+The diagram is still intentionally uncomfortable: the runtime does not yet have a single clean dependency direction. The important improvement is that several Chopper and Drum state transitions no longer live in Events.
 
 ## Observed cross-domain violations
 
@@ -96,27 +108,26 @@ Consequence: a file can appear to depend only on Core while actually depending o
 
 Target: Core keeps only shared infrastructure; state moves gradually to its conceptual owner.
 
-### V2 — Events directly mutates Chopper state
+### V2 — Events still contains feature/control orchestration
 
-The sample-load and control handlers in `events.js` directly assign values including:
+Events no longer performs the Chopper sample-load, immediate volume, immediate pitch or Drum-clear state transitions.
 
-- `sampleBuffer`;
-- `sampleName`;
-- `sampleConditionProfile`;
-- `samplePitchSemitones`;
-- `transients`;
-- `sampleVolumePercent`;
-- `masterVolumePercent`.
+Remaining violations include:
 
-`events.js` also performs feature workflows such as marker reset/placement and preview rerender decisions.
+- direct mutation of `masterVolumePercent`;
+- direct inspection of playback/preview state such as `isLoopPlaying`, `lastPreviewMode` and `sampleBuffer` to decide rerenders;
+- multi-step Chopper/Drum workflows such as NEW DRUMS and combined preview/play/stop behavior;
+- status/error presentation coupled to those workflows.
 
-Target: Events should translate DOM input to one Chopper/Core public call and own no product state.
+Target: Events should translate a DOM input to one public domain/renderer call and own no product state or business transition.
 
 ### V3 — Events directly owns combined-preview orchestration
 
-`events.js` reads/writes `renderedFlip`, `lastPreviewMode` and `isLoopPlaying`, and decides whether to call `renderDrumsOnly()` or `renderSequence()`.
+`events.js` reads/writes `renderedFlip`, `lastPreviewMode`, `isLoopPlaying`, `flipSource` and loop playhead state, and decides whether to call `renderDrumsOnly()` or `renderSequence()`.
 
-Target: move this behavior behind an explicit renderer/preview API. Do not create `renderer.js` until its inputs are explicit.
+`rerenderPreviewMode()`, `playCurrentBeat()` and `stopCurrentBeat()` are the clearest remaining concentration of this problem.
+
+Target: move this behavior behind an explicit renderer/preview API. Do not create `renderer.js` until its inputs are explicit enough that extraction is mechanical rather than architectural invention.
 
 ### V4 — Drums contains the combined Chopper + Drums renderer
 
@@ -147,31 +158,32 @@ Target: first establish small domain APIs while keeping classic scripts. ES modu
 
 Not every relationship requires movement.
 
-- Looper persistence, folder scanning and beat-library behavior already live in `looper.js`; the main problem is the state they depend on being globally declared.
-- Chopper waveform/marker algorithms mostly live in `chopper.js`.
-- Drum library loading, patterns, editing and velocities mostly live in `drums.js`.
+- Looper persistence, folder scanning and beat-library behavior already live in `looper.js`; the main problem is the state they depend on being globally declared and some transport inspection in Events.
+- Chopper waveform/marker algorithms and the immediate sample load/volume/pitch transitions now live in `chopper.js`.
+- Drum library loading, patterns, editing, velocities and CLEAR behavior mostly live in `drums.js`.
 - Practice is already isolated enough to remain frozen.
 
 This matters because the migration should **not** split files simply to make the tree look more architectural.
 
 ## Priority order derived from the graph
 
-### P1 — Remove feature-state mutation from `events.js`
+### P1 — Finish removing feature-state mutation/orchestration from `events.js`
 
-Why first:
-
-- it immediately establishes the target rule that Events owns no product state;
-- it reduces cross-domain writers without changing the module system;
-- it exposes the public functions each domain actually needs.
-
-Recommended sequence inside P1:
+Completed:
 
 1. Chopper sample-load workflow;
-2. Chopper pitch/volume setters and rerender trigger boundary;
-3. master-volume setter into Core;
-4. combined-preview rerender orchestration behind a temporary explicit API owned by the current renderer implementation.
+2. Drum CLEAR transition;
+3. Chopper immediate sample-volume transition;
+4. Chopper immediate sample-pitch transition.
 
-Do not move renderer code to a new file during the same passes.
+Remaining high-value boundaries:
+
+1. combined-preview rerender/play/stop orchestration;
+2. NEW DRUMS while-playing orchestration;
+3. master-volume path, but only when a complete responsibility can move — do **not** add a setter that merely hides the global assignment;
+4. remaining save/transport workflows where Events still knows domain internals.
+
+Do not move renderer code to a new file during these passes.
 
 ### P2 — Make Renderer inputs explicit while it still lives in `drums.js`
 
@@ -213,6 +225,7 @@ Only after P1–P4. If the remaining dependencies are already obvious through sm
 Do not optimize line count. Track these instead:
 
 - number of product-state writes performed by `events.js`;
+- number of complete feature workflows implemented by `events.js` instead of delegated through one public call;
 - number of Chopper mutable globals read directly by the combined renderer;
 - number of feature-state variables physically declared in `core.js`;
 - number of direct cross-domain mutations;
@@ -220,17 +233,20 @@ Do not optimize line count. Track these instead:
 
 Each architecture PR should make at least one of these counts go down and none go up without explicit justification.
 
-## First recommended runtime PR
+## Current recommended runtime boundary
 
-**Move the Chopper sample-load workflow out of `events.js` and behind one Chopper-owned function, without moving state declarations yet.**
+**Move one combined-preview transition out of `events.js` without extracting `renderer.js` yet.**
 
-This is deliberately small:
+The best next candidates are the existing rerender/play/stop paths because Events currently decides render mode and directly mutates renderer-owned state.
 
-- no new file;
+The step must remain narrow:
+
+- one public operation owned by the current renderer implementation;
+- no new runtime file;
+- no state relocation;
 - no visual change;
 - no audio algorithm change;
-- no state relocation;
-- same event handler input/output behavior;
-- one fewer business workflow owned by Events.
+- explicit behavioral test for the moved preview transition;
+- full `Project checks` green before merge.
 
-That PR should be the first proof that the target architecture can be reached incrementally rather than through a rewrite.
+This continues the same incremental strategy: remove one hidden relationship at a time before changing the physical file topology.
