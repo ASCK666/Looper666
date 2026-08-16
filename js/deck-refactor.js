@@ -204,14 +204,20 @@
     host.appendChild(module);
   }
 
-  function ensureEjectCompatibilityBridge(){
-    if($id("cassetteDoorEject")) return;
+  function ensureLegacyEventAnchors(){
+    if($id("deckLegacyBridge")) return;
 
+    // events.js still binds these historical IDs during startup. Keep inert
+    // anchors until those Looper-only bindings are removed from the shared event file.
     const bridge = document.createElement("span");
     bridge.id = "deckLegacyBridge";
     bridge.hidden = true;
     bridge.setAttribute("aria-hidden", "true");
-    bridge.innerHTML = '<span id="cassetteDoorEject"></span><span id="cassetteDoorAction"></span>';
+    bridge.innerHTML = [
+      '<span id="cassetteDoorEject"></span>',
+      '<span id="cassetteDoorAction"></span>',
+      '<span id="tapeCounterReset"></span>'
+    ].join("");
     document.body.appendChild(bridge);
   }
 
@@ -300,7 +306,7 @@
 
     installed = true;
     removeLegacyCounterMarkup();
-    ensureEjectCompatibilityBridge();
+    ensureLegacyEventAnchors();
     disableLegacyTapeCounter();
     prepareDeckArtwork();
     buildBacklights(host);
