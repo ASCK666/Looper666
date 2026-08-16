@@ -74,17 +74,16 @@ It observes meaningful DOM state changes:
 
 That observer updates visual-only state such as the integrated loop counter, hint and backlights.
 
-The old four-digit tape-counter runtime has been removed. There is no tape-counter timer, state, reset/start/stop API or monkey-patch in the JavaScript runtime. The integrated loop counter is the current counter contract and follows `autoLooperLoopCount`.
+The old four-digit tape-counter runtime and source UI have been removed. There is no tape-counter timer, state, reset/start/stop API, monkey-patch, HTML module or presentation block. The integrated loop counter is the current counter contract and follows `autoLooperLoopCount`.
 
 ## Remaining compatibility debt
 
 These pieces are intentionally still transitional:
 
 1. `autoLooperCompactStatus` remains as a hidden child of the real AUTO button because `looper.js` still writes loop progress into it and `deck-refactor.js` observes that text.
-2. The old tape-counter markup and most of its presentation rules still exist in `index.html` / `css/base.css`; `deck-refactor.js` removes that markup at boot. The runtime engine itself is gone. Remove this source-only markup/CSS debt separately rather than reintroducing runtime compatibility.
-3. The old transport markup still exists in `index.html`, but is removed before event binding. The final cleanup should move the artwork transport markup into the HTML source or otherwise remove the obsolete source markup.
+2. The old transport markup still exists in `index.html`, but is removed before event binding. The final cleanup should move the artwork transport markup into the HTML source or otherwise remove the obsolete source markup.
 
-`deckLegacyBridge`, `cassetteDoorEject`, `cassetteDoorAction` and the legacy tape-counter JavaScript API are no longer compatibility contracts. Do not reintroduce them.
+`deckLegacyBridge`, `cassetteDoorEject`, `cassetteDoorAction` and the legacy tape-counter JavaScript/source UI are no longer compatibility contracts. Do not reintroduce them.
 
 ## Readability rules for future deck work
 
