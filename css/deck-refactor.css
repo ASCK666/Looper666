@@ -134,6 +134,11 @@
   height: var(--deck-door-lip-h) !important;
 }
 
+@keyframes deckReelSpin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
 /* Reels are anchored by their centres so scaling never shifts the rotation axis.
    `translate` remains independent from `transform`, which is owned by animation. */
 .cassetteReel {
@@ -143,15 +148,21 @@
   margin: 0 !important;
   translate: -50% -50% !important;
   transform-origin: 50% 50% !important;
-  filter: brightness(.72) contrast(.86) saturate(.45) sepia(.12) !important;
-  mix-blend-mode: screen;
+  filter: brightness(.90) contrast(.96) saturate(.78) sepia(.06) !important;
+  mix-blend-mode: normal !important;
 }
 .cassetteReelLeft { left: var(--deck-reel-left-x) !important; }
 .cassetteReelRight { left: var(--deck-reel-right-x) !important; }
 .cassetteDeck.playing .cassetteReel {
-  opacity: .55 !important;
-  animation-timing-function: steps(24,end) !important;
+  opacity: .90 !important;
+  animation-name: deckReelSpin !important;
+  animation-timing-function: linear !important;
+  animation-iteration-count: infinite !important;
+  animation-direction: reverse !important;
+  animation-play-state: running !important;
 }
+.cassetteDeck.playing .cassetteReelLeft { animation-duration: 2.91s !important; }
+.cassetteDeck.playing .cassetteReelRight { animation-duration: 1.46s !important; }
 
 .cassetteDeckStage > .loopCounterModule.loopCounterModule--integrated {
   position: absolute !important;
@@ -361,4 +372,10 @@
   .loopCounterTotal { font-size: clamp(10px,3vw,16px) !important; }
   .loopCounterSlash { font-size: clamp(8px,2.2vw,12px) !important; }
   .loopCounterLegend { font-size: 4px !important; gap: 2px !important; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .cassetteDeck.playing .cassetteReel {
+    animation: none !important;
+  }
 }
