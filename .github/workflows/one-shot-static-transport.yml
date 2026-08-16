@@ -40,14 +40,15 @@ jobs:
           if not match:
               raise SystemExit("legacy deck transport block not found")
 
-          transport = '''                      <div class="artworkTransport" role="group" aria-label="Transport du Looper">
-                        <button id="prevBeat" class="artworkTransportHit artworkTransportPrev" type="button" aria-label="Beat précédent"></button>
-                        <button id="playBeat" class="artworkTransportHit artworkTransportPlay" type="button" aria-label="Lecture"></button>
-                        <button id="stopBeat" class="artworkTransportHit artworkTransportStop" type="button" aria-label="Stop"></button>
-                        <button id="nextBeat" class="artworkTransportHit artworkTransportNext" type="button" aria-label="Beat suivant"></button>
-                        <button id="autoLooperToggle" class="artworkTransportHit artworkTransportAuto" type="button" aria-label="Accélération automatique" aria-pressed="false"></button>
-                      </div>
-'''
+          transport = (
+              '                      <div class="artworkTransport" role="group" aria-label="Transport du Looper">\n'
+              '                        <button id="prevBeat" class="artworkTransportHit artworkTransportPrev" type="button" aria-label="Beat précédent"></button>\n'
+              '                        <button id="playBeat" class="artworkTransportHit artworkTransportPlay" type="button" aria-label="Lecture"></button>\n'
+              '                        <button id="stopBeat" class="artworkTransportHit artworkTransportStop" type="button" aria-label="Stop"></button>\n'
+              '                        <button id="nextBeat" class="artworkTransportHit artworkTransportNext" type="button" aria-label="Beat suivant"></button>\n'
+              '                        <button id="autoLooperToggle" class="artworkTransportHit artworkTransportAuto" type="button" aria-label="Accélération automatique" aria-pressed="false"></button>\n'
+              '                      </div>\n'
+          )
           replacement = match.group("hint") + transport + match.group("stageclose")
           source = source[:match.start()] + replacement + source[match.end():]
 
