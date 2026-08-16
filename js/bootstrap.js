@@ -1,5 +1,5 @@
 "use strict";
-window.__SP={version:"111-dev-no-sw",ready:false,errors:[]};
+window.__SP={version:"112-dev-no-sw",ready:false,errors:[]};
 window.__SP.report=(scope,error)=>{
   const message=error?.message||String(error||"Unknown error");
   const item={scope,message,time:new Date().toISOString()};
@@ -31,18 +31,25 @@ if("caches" in window){
     .catch(error=>console.warn("Scratch Practice cache cleanup failed:",error));
 }
 
-// Transitional loaders: these two resources are not declared in index.html yet.
-// Keep them versioned here until the static load chain is consolidated. Resources
-// already present in index.html must never be injected a second time from here.
+// Transitional loaders: only resources absent from index.html belong here.
+// Once the static load chain is versioned, these calls can move there and this
+// bootstrap can return to boot/error responsibilities only.
 const DEV_ASSET_VERSION=Date.now();
 const versioned=path=>`${path}?v=${DEV_ASSET_VERSION}`;
 
-const chopperLayoutScript=document.createElement("script");
-chopperLayoutScript.src=versioned("./js/chopper-layout.js");
-chopperLayoutScript.defer=true;
-document.head.appendChild(chopperLayoutScript);
+function loadVersionedScript(path){
+  const script=document.createElement("script");
+  script.src=versioned(path);
+  script.defer=true;
+  document.head.appendChild(script);
+}
 
-const deckMotionStyle=document.createElement("link");
-deckMotionStyle.rel="stylesheet";
-deckMotionStyle.href=versioned("./css/deck-motion-fix.css");
-document.head.appendChild(deckMotionStyle);
+function loadVersionedStyle(path){
+  const link=document.createElement("link");
+  link.rel="stylesheet";
+  link.href=versioned(path);
+  document.head.appendChild(link);
+}
+
+loadVersionedScript("./js/chopper-layout.js");
+loadVersionedStyle("./css/deck-motion-fix.css");
