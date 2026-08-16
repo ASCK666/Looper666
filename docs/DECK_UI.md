@@ -6,9 +6,10 @@ This document describes the current deck boundary in human terms.
 
 The Looper deck is one artwork canvas with live HTML controls layered on top of it.
 
+- `index.html` owns the semantic transport controls and stable public IDs.
 - `css/deck-refactor.css` owns artwork geometry and deck presentation.
 - `js/looper.js` owns audio, playback, loop progress and transport state.
-- `js/deck-refactor.js` owns the DOM that visually sits on the deck artwork.
+- `js/deck-refactor.js` owns visual deck enhancement such as backlights, loop counter and artwork-state wiring.
 - `js/looper-events.js` binds Looper user actions to the public control IDs.
 - `js/events.js` owns only cross-app wiring and shared initialization.
 - `js/looper-polish.js` still contains the incremental AUTO SPEED enhancement and cassette metadata treatment.
@@ -36,9 +37,7 @@ When a new deck PNG changes physical positions, recalibrate this block first. Do
 
 ## Transport controls
 
-The five controls drawn into the artwork are described once by `TRANSPORT_CONTROLS` in `js/deck-refactor.js`.
-
-At boot, `deck-refactor.js` removes the old transport markup and creates the real buttons directly over the artwork with the public IDs:
+The five real transport buttons live directly inside `.cassetteDeckStage` in `index.html`:
 
 - `prevBeat`
 - `playBeat`
@@ -46,9 +45,11 @@ At boot, `deck-refactor.js` removes the old transport markup and creates the rea
 - `nextBeat`
 - `autoLooperToggle`
 
-`looper-events.js` then binds behavior directly to those buttons. There is no proxy click from an artwork hotspot to a hidden transport button.
+They use the `.artworkTransportHit` classes whose positions are defined by the artwork geometry profile in `css/deck-refactor.css`.
 
-Backlight filenames live beside each control in `TRANSPORT_CONTROLS`, so adding or changing a transport control has one obvious entry point.
+`deck-refactor.js` no longer removes an old transport or creates replacement buttons. It only wires visual hover/click feedback onto the existing `.artworkTransport` container. `looper-events.js` binds behavior directly to the same static controls.
+
+`TRANSPORT_CONTROLS` in `deck-refactor.js` is now a visual-state table only: it maps the five stable IDs to their backlight assets and latched-state behavior.
 
 ## Boot order
 
@@ -56,11 +57,11 @@ The relevant scripts are loaded in this order:
 
 1. `looper.js` defines the Looper engine.
 2. `looper-polish.js` schedules its optional enhancement attachment.
-3. `deck-refactor.js` installs the artwork UI immediately when the engine is available.
+3. `deck-refactor.js` enhances the static artwork UI already present in the HTML.
 4. `events.js` defines shared helpers and cross-app initialization.
-5. `looper-events.js` binds Looper actions to the IDs created by the deck UI.
+5. `looper-events.js` binds Looper actions to the static transport IDs.
 
-`deck-refactor.js` only retries on a short timer when its dependencies are genuinely not ready. The normal path is synchronous installation before Looper event binding.
+`deck-refactor.js` only retries on a short timer when its dependencies are genuinely not ready. The normal path is synchronous enhancement before Looper event binding.
 
 ## State updates
 
@@ -71,22 +72,28 @@ It observes meaningful DOM state changes:
 - `.cassetteDeck` class changes for loaded/playing state;
 - AUTO button class / `aria-pressed` changes.
 
-AUTO loop progress is no longer transported through hidden DOM. `looper.js` emits the `sp:auto-looper-state` event whenever the compact AUTO state refreshes, and `deck-refactor.js` uses that explicit state event to refresh the integrated loop counter.
+AUTO loop progress is no longer transported through hidden DOM. `looper.js` emits the `sp:auto-looper-state` event whenever the AUTO state refreshes, and `deck-refactor.js` uses that explicit state event to refresh the integrated loop counter.
 
 The old four-digit tape-counter runtime and source UI have been removed. There is no tape-counter timer, state, reset/start/stop API, monkey-patch, HTML module or presentation block. The integrated loop counter is the current counter contract and follows `autoLooperLoopCount`.
 
-## Remaining compatibility debt
+## Compatibility debt already removed
 
-One deck compatibility layer remains intentionally transitional:
+These are no longer compatibility contracts and must not be reintroduced:
 
-1. The old transport markup still exists in `index.html`, but is removed before event binding. The final cleanup should move the artwork transport markup into the HTML source or otherwise remove the obsolete source markup.
+- `deckLegacyBridge`
+- `cassetteDoorEject`
+- `cassetteDoorAction`
+- `autoLooperCompactStatus`
+- the legacy tape-counter JavaScript/source UI
+- dynamic transport replacement through `createTransportButton` / `installTransport`
+- legacy `.deckTransport` source markup
 
-`deckLegacyBridge`, `cassetteDoorEject`, `cassetteDoorAction`, `autoLooperCompactStatus` and the legacy tape-counter JavaScript/source UI are no longer compatibility contracts. Do not reintroduce them.
+The deck transport itself no longer has a known DOM compatibility bridge. Remaining Looper refactor work should focus on broader engine/UI boundaries rather than rebuilding proxy controls.
 
 ## Readability rules for future deck work
 
 - Prefer one named configuration table over parallel arrays or repeated selectors.
-- Prefer small functions named after intent (`installTransport`, `buildBacklights`) over comments explaining clever code.
+- Prefer small functions named after intent (`wireTransport`, `buildBacklights`) over comments explaining clever code.
 - Comments should explain architectural constraints or surprising reasons, not restate syntax.
 - Keep audio/state changes in `looper.js`; keep deck DOM/presentation in the deck UI module.
 - Avoid `!important` for new rules unless an existing migration constraint makes it unavoidable.
