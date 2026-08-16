@@ -130,13 +130,13 @@ with tempfile.TemporaryDirectory() as td:
 
         # Import two LOOPER beats.
         page.set_input_files('#beatFiles',[str(beat_a),str(beat_b)])
-        page.wait_for_function('libraryRows.length >= 2 && deckBuffer !== null',timeout=10000)
+        page.wait_for_function("document.querySelectorAll('#library .track .danger').length >= 2 && deckBuffer !== null",timeout=10000)
 
         # 6) NEXT/PREV preserves transport state.
         page.click('#stopBeat')
         before=page.evaluate('currentTrack.id')
         page.click('#nextBeat')
-        page.wait_for_function('(window.__navBefore || null) !== currentTrack?.id',arg=None) if False else None
+        page.wait_for_function('(id) => currentTrack?.id !== id',arg=before)
         after=page.evaluate('currentTrack.id')
         assert after != before
         assert page.evaluate('deckSource === null') is True
@@ -145,7 +145,7 @@ with tempfile.TemporaryDirectory() as td:
         page.wait_for_function('deckSource !== null')
         before_playing=page.evaluate('currentTrack.id')
         page.click('#prevBeat')
-        page.wait_for_function('deckSource !== null')
+        page.wait_for_function('(id) => currentTrack?.id !== id && deckSource !== null',arg=before_playing)
         after_playing=page.evaluate('currentTrack.id')
         assert after_playing != before_playing
         assert page.evaluate('deckSource !== null') is True
