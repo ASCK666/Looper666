@@ -11,8 +11,12 @@ rules,keyframes=parse_stylesheet(CSS)
 selectors=[selector for rule in rules for selector in rule.selectors]
 
 def impossible(selector):
-    required=(re.findall(r'[#.]([A-Za-z_][\w-]*)',selector)
-              +re.findall(r'\[\s*([A-Za-z_][\w-]*)',selector))
+    # Tokens inside :not(...) are exclusions, not requirements for a selector
+    # to match. Ignoring them prevents valid selectors from being flagged dead
+    # merely because the excluded class/attribute no longer exists.
+    required_selector=re.sub(r':not\([^)]*\)','',selector)
+    required=(re.findall(r'[#.]([A-Za-z_][\w-]*)',required_selector)
+              +re.findall(r'\[\s*([A-Za-z_][\w-]*)',required_selector))
     def known(token):
         if token in TOKENS: return True
         if token.startswith('data-'):
@@ -21,6 +25,9 @@ def impossible(selector):
             return dataset_name in TOKENS
         return False
     return any(not known(token) for token in required)
+
+assert not impossible('.trackSource:not(.class-that-does-not-exist)')
+assert impossible('.class-that-does-not-exist')
 
 dead=[selector for selector in selectors if impossible(selector)]
 assert not dead,dead[:20]
