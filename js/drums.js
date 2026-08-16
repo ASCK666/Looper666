@@ -756,6 +756,7 @@ function makePunchMaster(offline){
   const clip=offline.createWaveShaper();
   clip.curve=makeSoftClipCurve(preset.drive);
   clip.oversample="4x";
+
   const makeup=offline.createGain();
   makeup.gain.value=preset.makeup;
 
