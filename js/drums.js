@@ -224,7 +224,7 @@ async function refreshDrumsAfterFolderChange(kind,count,origin){
       }else if(modeBefore==="full" && sampleBuffer){
         const events=gridEventsForRender();
         if(events.some(Boolean)){
-          renderedFlip=await renderSequence(events);
+          renderedFlip=await renderSequence(events,sampleBuffer);
           lastPreviewMode="full";
           await playRendered(renderedFlip);
         }
@@ -398,7 +398,7 @@ async function rerenderPreviewMode(mode=lastPreviewMode){
   if(mode==="full" && sampleBuffer){
     const events=gridEventsForRender();
     if(events.some(Boolean)){
-      renderedFlip=await renderSequence(events);
+      renderedFlip=await renderSequence(events,sampleBuffer);
       lastPreviewMode="full";
       await playRendered(renderedFlip);
       return true;
@@ -973,8 +973,8 @@ async function renderDrumsOnly(){
   return finalizeLoopBuffer(await offline.startRendering());
 }
 
-async function renderSequence(events){
-  if(!sampleBuffer)throw new Error("Charge un sample");
+async function renderSequence(events,sourceBuffer){
+  if(!sourceBuffer)throw new Error("Charge un sample");
   const bpm=Math.max(40,Number($("sampleBpm").value)||90);
   const stepDur=(60/bpm)/2; // eighth note
   const bars=2;
@@ -1000,11 +1000,11 @@ async function renderSequence(events){
     const nextTime=e+1<placed.length?placed[e+1].step*stepDur:targetDur;
     const idx=ev.chop-1;
     const sampleStart=markers[idx];
-    const available=Math.max(.01,sampleBuffer.duration-sampleStart);
+    const available=Math.max(.01,sourceBuffer.duration-sampleStart);
     const wanted=Math.max(.01,nextTime-startTime);
 
     const src=offline.createBufferSource();
-    src.buffer=sampleBuffer;
+    src.buffer=sourceBuffer;
     src.playbackRate.value=pitchRate;
     src.connect(sampleConditioner.input);
     src.start(startTime,sampleStart);
