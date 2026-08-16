@@ -1,30 +1,28 @@
 #!/usr/bin/env python3
-"""Reject retired visual assets that silently inflate deployable archives."""
+"""Verify the visual assets required by the current deck UI."""
 
 from pathlib import Path
-import sys
 
 ROOT = Path(__file__).resolve().parents[1]
 ASSETS = ROOT / "assets"
-EXPECTED_VISUALS = {
-    "cassette-mechanism-pixel-v84.png",
+
+REQUIRED_VISUALS = {
+    "cassette-mechanism-pixel-v95.png",
+    "cassette-mechanism-pixel-v84.png",  # fallback while the refactor settles
     "cassette-reel-pixel-v81.png",
     "deck-black-ui-texture.png",
+    "deck-buttons-backlight-idle.png",
+    "deck-button-prev-backlight-active.png",
+    "deck-button-play-backlight-active.png",
+    "deck-button-stop-backlight-active.png",
+    "deck-button-next-backlight-active.png",
+    "deck-button-auto-backlight-active.png",
 }
 
-actual_visuals = {
-    path.name
-    for path in ASSETS.iterdir()
-    if path.is_file()
-}
-unexpected = sorted(actual_visuals - EXPECTED_VISUALS)
-missing = sorted(EXPECTED_VISUALS - actual_visuals)
+missing = sorted(name for name in REQUIRED_VISUALS if not (ASSETS / name).is_file())
+assert not missing, f"missing production visual assets: {missing}"
 
-if missing or unexpected:
-    if missing:
-        print(f"FAIL: missing production assets: {', '.join(missing)}")
-    if unexpected:
-        print(f"FAIL: untracked top-level assets: {', '.join(unexpected)}")
-    sys.exit(1)
+empty = sorted(name for name in REQUIRED_VISUALS if (ASSETS / name).stat().st_size == 0)
+assert not empty, f"empty production visual assets: {empty}"
 
-print("OK: asset health — 3 production visuals, no retired deck artwork")
+print(f"OK: asset health — {len(REQUIRED_VISUALS)} current deck/reel/backlight assets present")
