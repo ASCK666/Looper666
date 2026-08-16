@@ -9,7 +9,7 @@
   const BACKLIGHT_IDLE = "assets/deck-buttons-backlight-idle.png";
 
   // One human-readable contract for every control drawn into the deck artwork.
-  // events.js binds behavior by these IDs after this module has created the DOM.
+  // looper-events.js binds behavior by these IDs after this module has created the DOM.
   const TRANSPORT_CONTROLS = [
     {
       id: "prevBeat",
@@ -172,7 +172,7 @@
     }, true);
 
     // Capture phase keeps visual feedback independent from the transport handlers
-    // that events.js attaches to the buttons later in the boot chain.
+    // that looper-events.js attaches to the buttons later in the boot chain.
     transport.addEventListener("click", event => {
       const button = event.target.closest?.(".artworkTransportHit");
       if(button) flashBacklight(button.id);
@@ -202,23 +202,6 @@
       <div class="loopCounterLegend"><span>CURRENT</span><span>TOTAL</span></div>
     `;
     host.appendChild(module);
-  }
-
-  function ensureLegacyEventAnchors(){
-    if($id("deckLegacyBridge")) return;
-
-    // events.js still binds these historical IDs during startup. Keep inert
-    // anchors until those Looper-only bindings are removed from the shared event file.
-    const bridge = document.createElement("span");
-    bridge.id = "deckLegacyBridge";
-    bridge.hidden = true;
-    bridge.setAttribute("aria-hidden", "true");
-    bridge.innerHTML = [
-      '<span id="cassetteDoorEject"></span>',
-      '<span id="cassetteDoorAction"></span>',
-      '<span id="tapeCounterReset"></span>'
-    ].join("");
-    document.body.appendChild(bridge);
   }
 
   function disableLegacyTapeCounter(){
@@ -306,7 +289,6 @@
 
     installed = true;
     removeLegacyCounterMarkup();
-    ensureLegacyEventAnchors();
     disableLegacyTapeCounter();
     prepareDeckArtwork();
     buildBacklights(host);
