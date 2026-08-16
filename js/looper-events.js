@@ -53,16 +53,6 @@ $("headerCrateToggle").onclick=()=>{
   );
 };
 
-$("cassetteDoorEject").onclick=(ev)=>{
-  ev.stopPropagation();
-  if(deckSource)stopDeck();
-  pulseCassetteDoor();
-  openFilePicker("beatFiles");
-};
-$("tapeCounterReset").onclick=(ev)=>{
-  ev.stopPropagation();
-  resetTapeCounter();
-};
 $("looperDropzoneBtn").addEventListener("dragover",ev=>{
   ev.preventDefault();
   $("looperDropzoneBtn").classList.add("dragging");
@@ -78,7 +68,10 @@ $("looperDropzoneBtn").addEventListener("drop",async ev=>{
   await handleBeatImport(files,"IMPORT");
 });
 
-$("importBeatsBtn").onclick=()=>openFilePicker("beatFiles");
+$("importBeatsBtn").onclick=()=>{
+  pulseCassetteDoor();
+  openFilePicker("beatFiles");
+};
 $("importFolderBtn").onclick=()=>openFilePicker("beatFolder");
 $("beatFiles").onchange=()=>handleBeatImport($("beatFiles").files,"IMPORT");
 $("beatFolder").onchange=()=>handleBeatImport($("beatFolder").files,"FOLDER IMPORT");
