@@ -41,6 +41,19 @@ with tempfile.TemporaryDirectory() as td, sync_playwright() as p:
     page.click('[data-tab="chopper"]')
     page.set_input_files('#sampleFile',str(sample));page.wait_for_timeout(150)
     assert page.evaluate('sampleBuffer !== null && sampleName === "chopper-ui.wav"')
+    # SAMPLE VOL is one Chopper operation: state, readout and active audition gain stay aligned.
+    page.fill('#sampleVolume','37');page.dispatch_event('#sampleVolume','input')
+    assert page.evaluate('sampleVolumePercent')==37
+    assert page.locator('#sampleVolumeReadout').inner_text()=='37%'
+    volume=page.evaluate('''() => {
+      const previous=chopAuditionGain;
+      chopAuditionGain={gain:{value:-1}};
+      updateSampleVolume(42);
+      const result={actual:chopAuditionGain.gain.value,expected:sampleVolumeGain()*sampleConditionTrimGain()};
+      chopAuditionGain=previous;
+      return result;
+    }''')
+    assert abs(volume['actual']-volume['expected'])<1e-9,volume
     # AUTO CHOP must still populate the sixteen-pad workstation.
     page.click('#autoMarkers');page.wait_for_timeout(50)
     state=page.evaluate('''() => ({
@@ -64,4 +77,4 @@ with tempfile.TemporaryDirectory() as td, sync_playwright() as p:
     assert all(x['w']>20 and x['h']>20 for x in boxes),boxes
     assert not errors,errors
     page.close();browser.close()
-print('OK: Chopper UI — sample import, AUTO CHOP, 16 pads, 16x16 grid, place/clear and clickable controls')
+print('OK: Chopper UI — sample import/volume, AUTO CHOP, 16 pads, 16x16 grid, place/clear and clickable controls')
