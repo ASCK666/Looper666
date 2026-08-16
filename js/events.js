@@ -246,18 +246,7 @@ $("newDrums").onclick=async()=>{
   }
 };
 
-$("playDrumsOnly").onclick=async()=>{
-  stopChopAudition();
-  try{
-    const selection=await ensureDrumSelection();
-    renderedFlip=await renderDrumsOnly();
-    lastPreviewMode="drums";
-    $("chopStatus").textContent=`DRUMS • ${$("sampleBpm").value} BPM • ${selection.mode.toUpperCase()}`;
-    await playRendered(renderedFlip);
-  }catch(e){
-    $("chopStatus").textContent="DRUM ERROR: "+e.message;
-  }
-};
+$("playDrumsOnly").onclick=playDrumsPreview;
 async function playCurrentBeat(){
   stopChopAudition();
   try{

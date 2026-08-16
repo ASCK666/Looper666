@@ -44,9 +44,27 @@ with sync_playwright() as p:
     assert page.evaluate('currentDrumSelection.mode !== "off"') is True
     assert 'PATTERN' not in page.locator('#currentPattern').inner_text() or page.locator('#currentPattern').inner_text()!='PATTERN —'
 
-    # Editing while a drums-only preview is playing must rebuild the buffer and keep transport running.
+    # Drums-only PLAY is one renderer-owned transition and must stop any active chop audition first.
+    page.evaluate('''() => {
+      window.__drumsPreviewAuditionStopped=false;
+      chopAuditionSource={stop(){window.__drumsPreviewAuditionStopped=true;}};
+      chopAuditionGain={gain:{value:1}};
+      chopAuditionPad=0;
+    }''')
     page.click('#playDrumsOnly')
     page.wait_for_function('isLoopPlaying === true && lastPreviewMode === "drums" && renderedFlip !== null',timeout=10000)
+    preview=page.evaluate('''() => ({
+      auditionStopped:window.__drumsPreviewAuditionStopped,
+      sourceCleared:chopAuditionSource===null,
+      gainCleared:chopAuditionGain===null,
+      status:document.getElementById('chopStatus').textContent,
+      bpm:document.getElementById('sampleBpm').value,
+      mode:currentDrumSelection.mode.toUpperCase()
+    })''')
+    assert preview['auditionStopped'] and preview['sourceCleared'] and preview['gainCleared'],preview
+    assert preview['status']==f"DRUMS • {preview['bpm']} BPM • {preview['mode']}",preview
+
+    # Editing while a drums-only preview is playing must rebuild the buffer and keep transport running.
     page.evaluate('window.__drumPreviewBeforeEdit=renderedFlip')
     page.locator('#drumEditor .drumEditStep.snare').last.click()
     page.wait_for_function('renderedFlip !== window.__drumPreviewBeforeEdit && isLoopPlaying === true && lastPreviewMode === "drums"',timeout=10000)
@@ -128,4 +146,4 @@ with sync_playwright() as p:
     mobile.close()
     browser.close()
 
-print('OK: Drum UI — selection, live rerender/stop, 16/8 step editor, toggle/velocity, clear, FX/PUNCH, libraries and mobile stacking')
+print('OK: Drum UI — selection, renderer-owned drums PLAY/rerender/stop, 16/8 step editor, toggle/velocity, clear, FX/PUNCH, libraries and mobile stacking')
