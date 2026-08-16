@@ -1,5 +1,5 @@
 "use strict";
-window.__SP={version:"110-dev-no-sw",ready:false,errors:[]};
+window.__SP={version:"111-dev-no-sw",ready:false,errors:[]};
 window.__SP.report=(scope,error)=>{
   const message=error?.message||String(error||"Unknown error");
   const item={scope,message,time:new Date().toISOString()};
@@ -31,9 +31,9 @@ if("caches" in window){
     .catch(error=>console.warn("Scratch Practice cache cleanup failed:",error));
 }
 
-// During active UI development, use a fresh query token on every reload.
-// This avoids stale CSS/JS from the browser/CDN cache without hand-bumping a
-// version number for each visual tweak.
+// Transitional loaders: these two resources are not declared in index.html yet.
+// Keep them versioned here until the static load chain is consolidated. Resources
+// already present in index.html must never be injected a second time from here.
 const DEV_ASSET_VERSION=Date.now();
 const versioned=path=>`${path}?v=${DEV_ASSET_VERSION}`;
 
@@ -42,27 +42,7 @@ chopperLayoutScript.src=versioned("./js/chopper-layout.js");
 chopperLayoutScript.defer=true;
 document.head.appendChild(chopperLayoutScript);
 
-const looperPolishStyle=document.createElement("link");
-looperPolishStyle.rel="stylesheet";
-looperPolishStyle.href=versioned("./css/looper-polish.css");
-document.head.appendChild(looperPolishStyle);
-
-const looperPolishScript=document.createElement("script");
-looperPolishScript.src=versioned("./js/looper-polish.js");
-looperPolishScript.defer=true;
-document.head.appendChild(looperPolishScript);
-
-const deckRefactorStyle=document.createElement("link");
-deckRefactorStyle.rel="stylesheet";
-deckRefactorStyle.href=versioned("./css/deck-refactor.css");
-document.head.appendChild(deckRefactorStyle);
-
 const deckMotionStyle=document.createElement("link");
 deckMotionStyle.rel="stylesheet";
 deckMotionStyle.href=versioned("./css/deck-motion-fix.css");
 document.head.appendChild(deckMotionStyle);
-
-const deckRefactorScript=document.createElement("script");
-deckRefactorScript.src=versioned("./js/deck-refactor.js");
-deckRefactorScript.defer=true;
-document.head.appendChild(deckRefactorScript);
