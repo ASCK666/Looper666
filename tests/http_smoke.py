@@ -13,7 +13,8 @@ with serve_project() as base_url:
         "/css/chopper.css": ("text/css", b"#chopper .samplerWaveToolbar"),
         "/css/deck-refactor.css": ("text/css", b"DECK ARTWORK GEOMETRY CONTRACT"),
         "/js/chopper-layout.js": ("javascript", b"arrangeChopper"),
-        "/js/deck-refactor.js": ("javascript", b"TRANSPORT_CONTROLS"),
+        "/js/deck-refactor.js": ("javascript", b"sp:auto-looper-state"),
+        "/js/looper.js": ("javascript", b"sp:auto-looper-state"),
         "/js/events.js": ("javascript", b"bootSharedEvents"),
         "/js/looper-events.js": ("javascript", b"runLooperAction"),
         "/js/practice-events.js": ("javascript", b"practiceOverlayOpen"),
@@ -33,6 +34,8 @@ with serve_project() as base_url:
 
     with urlopen(base_url + "/index.html", timeout=5) as response:
         html = response.read()
+
+    assert b"autoLooperCompactStatus" not in html
 
     event_scripts = [
         b'./js/events.js',
@@ -58,4 +61,4 @@ with serve_project() as base_url:
             )
             assert int(response.headers["Content-Length"]) > 100, path
 
-print("OK: HTTP smoke — real HTML, CSS, static split event JS and current deck assets serve locally")
+print("OK: HTTP smoke — real HTML, CSS, direct AUTO state event, static split event JS and current deck assets serve locally")
