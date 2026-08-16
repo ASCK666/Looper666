@@ -9,7 +9,8 @@ The Looper deck is one artwork canvas with live HTML controls layered on top of 
 - `css/deck-refactor.css` owns artwork geometry and deck presentation.
 - `js/looper.js` owns audio, playback, loop progress and transport state.
 - `js/deck-refactor.js` owns the DOM that visually sits on the deck artwork.
-- `js/events.js` binds user actions to the public control IDs.
+- `js/looper-events.js` binds Looper user actions to the public control IDs.
+- `js/events.js` owns only cross-app wiring and shared initialization.
 - `js/looper-polish.js` still contains the incremental AUTO SPEED enhancement and cassette metadata treatment.
 
 The important rule is: **audio state must not depend on artwork coordinates, and artwork coordinates must not be spread through behavior code.**
@@ -45,7 +46,7 @@ At boot, `deck-refactor.js` removes the old transport markup and creates the rea
 - `nextBeat`
 - `autoLooperToggle`
 
-`events.js` then binds behavior directly to those buttons. There is no proxy click from an artwork hotspot to a hidden transport button.
+`looper-events.js` then binds behavior directly to those buttons. There is no proxy click from an artwork hotspot to a hidden transport button.
 
 Backlight filenames live beside each control in `TRANSPORT_CONTROLS`, so adding or changing a transport control has one obvious entry point.
 
@@ -56,9 +57,10 @@ The relevant scripts are loaded in this order:
 1. `looper.js` defines the Looper engine.
 2. `looper-polish.js` schedules its optional enhancement attachment.
 3. `deck-refactor.js` installs the artwork UI immediately when the engine is available.
-4. `events.js` binds actions to the IDs created by the deck UI.
+4. `events.js` defines shared helpers and cross-app initialization.
+5. `looper-events.js` binds Looper actions to the IDs created by the deck UI.
 
-`deck-refactor.js` only retries on a short timer when its dependencies are genuinely not ready. The normal path is synchronous installation before `events.js` binds controls.
+`deck-refactor.js` only retries on a short timer when its dependencies are genuinely not ready. The normal path is synchronous installation before Looper event binding.
 
 ## State updates
 
@@ -72,16 +74,17 @@ It observes meaningful DOM state changes:
 
 That observer updates visual-only state such as the integrated loop counter, hint and backlights.
 
+The old four-digit tape-counter runtime has been removed. There is no tape-counter timer, state, reset/start/stop API or monkey-patch in the JavaScript runtime. The integrated loop counter is the current counter contract and follows `autoLooperLoopCount`.
+
 ## Remaining compatibility debt
 
 These pieces are intentionally still transitional:
 
-1. `autoLooperCompactStatus` remains as a hidden child of the real AUTO button because `looper.js` still writes loop progress into it.
-2. `deckLegacyBridge` preserves `cassetteDoorEject` / `cassetteDoorAction` because `refreshCassetteUI()` and old event wiring still expect those IDs.
-3. Legacy tape-counter functions are disabled by `deck-refactor.js`; they should eventually be removed from `looper.js` instead of monkey-patched.
-4. The old transport markup still exists in `index.html`, but is removed before event binding. The final cleanup should move the artwork transport markup into the HTML source or otherwise remove the obsolete source markup.
+1. `autoLooperCompactStatus` remains as a hidden child of the real AUTO button because `looper.js` still writes loop progress into it and `deck-refactor.js` observes that text.
+2. The old tape-counter markup and most of its presentation rules still exist in `index.html` / `css/base.css`; `deck-refactor.js` removes that markup at boot. The runtime engine itself is gone. Remove this source-only markup/CSS debt separately rather than reintroducing runtime compatibility.
+3. The old transport markup still exists in `index.html`, but is removed before event binding. The final cleanup should move the artwork transport markup into the HTML source or otherwise remove the obsolete source markup.
 
-Do not add new compatibility bridges. Remove these one by one as their callers are cleaned up.
+`deckLegacyBridge`, `cassetteDoorEject`, `cassetteDoorAction` and the legacy tape-counter JavaScript API are no longer compatibility contracts. Do not reintroduce them.
 
 ## Readability rules for future deck work
 
