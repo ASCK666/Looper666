@@ -153,33 +153,7 @@ $("newPattern").onclick=makePractice;
 $("startPractice").onclick=startPractice;
 
 $("loadSampleBtn").onclick=()=>openFilePicker("sampleFile");
-$("sampleFile").onchange=async()=>{
-  stopChopAudition();
-  const file=$("sampleFile").files[0];
-  if(!file)return;
-
-  try{
-    $("chopStatus").textContent="LOADING SAMPLE…";
-    assertLocalFileSize(file,MAX_SAMPLE_FILE_BYTES,"sample");
-    sampleBuffer=await decodeFile(file);
-    sampleName=file.name;
-    sampleConditionProfile=analyzeSampleCondition(sampleBuffer);
-    samplePitchSemitones=0;
-    $("samplePitch").value=0;
-    $("sampleBpm").value=90;
-    transients=detectTransients(sampleBuffer);
-    $("waveZoom").value=1;
-    $("waveScroll").value=0;
-    setMarkers(Number($("sliceCount").value)||16);
-    autoPlaceMarkers();
-    refreshSamplePitchUI();
-    renderPads();
-    $("chopStatus").textContent=`SAMPLE READY • ${file.name} • ${sampleConditionProfile.label}`;
-  }catch(e){
-    console.error("Sample load:",e);
-    $("chopStatus").textContent=`SAMPLE ERROR • ${safeErrorMessage(e)}`;
-  }
-};
+$("sampleFile").onchange=()=>loadChopperSample($("sampleFile").files[0]);
 $("sliceCount").onchange=()=>{
   stopChopAudition();
   autoPlaceMarkers();
