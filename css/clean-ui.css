@@ -58,26 +58,10 @@
   display: none !important;
 }
 
-/* Looper: guide the first obvious action without adding instructions. */
-@keyframes looperPlayHint {
-  0%, 100% { filter: brightness(1); }
-  50% { filter: brightness(1.35); }
-}
-
-#looper.active #playBeat:not(:active) {
-  animation: looperPlayHint 1.8s ease-in-out infinite;
-}
-
 /* These labels duplicate information already visible on the deck. */
 #looper .titleMeta,
 #looper #beatImportStatus {
   display: none !important;
-}
-
-@media (prefers-reduced-motion: reduce) {
-  #looper.active #playBeat {
-    animation: none !important;
-  }
 }
 
 /* Remove decorative / explanatory Chopper chrome. */
