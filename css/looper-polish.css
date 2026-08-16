@@ -6,15 +6,15 @@
   display: none !important;
 }
 
-/* Printed directly into the cassette artwork area. The glass stays above this
-   layer, so the type inherits the cassette reflections instead of reading as
-   a floating HTML overlay. */
+/* Printed directly into the cassette artwork area. Position comes from the deck
+   artwork geometry contract so replacing the PNG does not require editing this
+   presentation layer. */
 #looper .cassettePrintedLabel {
   position: absolute;
   z-index: 2;
-  left: 29.5%;
-  top: 20.8%;
-  width: 41%;
+  left: var(--deck-label-x);
+  top: var(--deck-label-y);
+  width: var(--deck-label-w);
   min-width: 0;
   display: grid;
   grid-template-columns: minmax(0,1fr) auto;
@@ -79,12 +79,6 @@
 }
 
 @media (max-width: 760px) {
-  #looper .cassettePrintedLabel {
-    left: 28.5%;
-    top: 20.4%;
-    width: 43%;
-  }
-
   #looper .cassettePrintedTitle {
     font-size: clamp(6px,2.15vw,11px);
   }
