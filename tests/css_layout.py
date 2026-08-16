@@ -64,9 +64,10 @@ with sync_playwright() as p:
           columns:document.querySelectorAll('#library .cassetteRackColumn').length,
           slots:document.querySelectorAll('#library .cassetteRackSlot').length,
           tracks:document.querySelectorAll('#library .track').length,
+          empty:document.querySelectorAll('#library .libraryEmptyMessage').length,
           spine:(()=>{const r=document.querySelector('#library .cassetteRackSlot').getBoundingClientRect();return r.width/r.height})()
         })''')
-        assert rack['columns'] >= 3 and rack['slots'] >= 12 and rack['tracks'] >= 3, rack
+        assert rack['columns'] >= 3 and rack['slots'] >= 12 and rack['tracks'] == 0 and rack['empty'] == 1, rack
         assert 6.35 <= rack['spine'] <= 6.45, rack
 
         # Chopper must reveal its real workstation blocks and hide the looper.
@@ -101,4 +102,4 @@ with sync_playwright() as p:
         page.close()
     browser.close()
 
-print('OK: CSS layout — unified deck width, cassette rack, Chopper and Practice overlay')
+print('OK: CSS layout — unified deck width, empty cassette rack, Chopper and Practice overlay')
