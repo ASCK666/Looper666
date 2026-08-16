@@ -64,10 +64,10 @@ with sync_playwright() as p:
           columns:document.querySelectorAll('#library .cassetteRackColumn').length,
           slots:document.querySelectorAll('#library .cassetteRackSlot').length,
           tracks:document.querySelectorAll('#library .track').length,
-          spine:(()=>{const r=document.querySelector('#library .track').getBoundingClientRect();return r.width/r.height})()
+          spine:(()=>{const r=document.querySelector('#library .cassetteRackSlot').getBoundingClientRect();return r.width/r.height})()
         })''')
         assert rack['columns'] >= 3 and rack['slots'] >= 12 and rack['tracks'] >= 3, rack
-        assert 6.15 <= rack['spine'] <= 6.65, rack
+        assert 6.35 <= rack['spine'] <= 6.45, rack
 
         # Chopper must reveal its real workstation blocks and hide the looper.
         page.click('[data-tab="chopper"]')
