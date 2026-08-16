@@ -8,41 +8,30 @@
   const DECK_ASSET_FALLBACK = "assets/cassette-mechanism-pixel-v84.png";
   const BACKLIGHT_IDLE = "assets/deck-buttons-backlight-idle.png";
 
-  // One human-readable contract for every control drawn into the deck artwork.
-  // looper-events.js binds behavior by these IDs after this module has created the DOM.
+  // Visual state for the five transport controls declared directly in index.html.
+  // looper-events.js binds behavior by these IDs later in the boot chain.
   const TRANSPORT_CONTROLS = [
     {
       id: "prevBeat",
-      className: "artworkTransportPrev",
-      label: "Beat précédent",
       backlight: "assets/deck-button-prev-backlight-active.png"
     },
     {
       id: "playBeat",
-      className: "artworkTransportPlay",
-      label: "Lecture",
       backlight: "assets/deck-button-play-backlight-active.png",
       latched: true
     },
     {
       id: "stopBeat",
-      className: "artworkTransportStop",
-      label: "Stop",
       backlight: "assets/deck-button-stop-backlight-active.png"
     },
     {
       id: "nextBeat",
-      className: "artworkTransportNext",
-      label: "Beat suivant",
       backlight: "assets/deck-button-next-backlight-active.png"
     },
     {
       id: "autoLooperToggle",
-      className: "artworkTransportAuto",
-      label: "Accélération automatique",
       backlight: "assets/deck-button-auto-backlight-active.png",
-      latched: true,
-      pressed: false
+      latched: true
     }
   ];
 
@@ -102,20 +91,6 @@
     host.appendChild(layer);
   }
 
-  function createTransportButton(control){
-    const button = document.createElement("button");
-    button.id = control.id;
-    button.type = "button";
-    button.className = `artworkTransportHit ${control.className}`;
-    button.setAttribute("aria-label", control.label);
-
-    if(control.pressed !== undefined){
-      button.setAttribute("aria-pressed", String(control.pressed));
-    }
-
-    return button;
-  }
-
   function flashBacklight(controlId){
     const control = TRANSPORT_CONTROLS.find(item => item.id === controlId);
     if(control?.latched) return;
@@ -131,22 +106,11 @@
     }, FLASH_MS);
   }
 
-  function installTransport(host){
-    if(!host) return;
+  function wireTransport(host){
+    const transport = host?.querySelector(".artworkTransport");
+    if(!transport || transport.dataset.deckWired === "1") return Boolean(transport);
 
-    // Remove the old transport before reusing its public IDs on the real artwork controls.
-    document.querySelector("#looper .deckTransport")?.remove();
-    host.querySelector(".artworkTransport")?.remove();
-
-    const transport = document.createElement("div");
-    transport.className = "artworkTransport";
-    transport.setAttribute("role", "group");
-    transport.setAttribute("aria-label", "Transport du Looper");
-
-    for(const control of TRANSPORT_CONTROLS){
-      transport.appendChild(createTransportButton(control));
-    }
-
+    transport.dataset.deckWired = "1";
     transport.addEventListener("pointerenter", event => {
       const button = event.target.closest?.(".artworkTransportHit");
       if(!button) return;
@@ -162,15 +126,14 @@
     }, true);
 
     // Capture phase keeps visual feedback independent from the transport handlers
-    // that looper-events.js attaches to the buttons later in the boot chain.
+    // that looper-events.js attaches to the static buttons later in the boot chain.
     transport.addEventListener("click", event => {
       const button = event.target.closest?.(".artworkTransportHit");
       if(button) flashBacklight(button.id);
     }, true);
 
-    host.appendChild(transport);
+    return true;
   }
-
 
   function buildLoopCounter(host){
     if(!host || host.querySelector(".loopCounterModule--integrated")) return;
@@ -256,12 +219,12 @@
     if(typeof refreshCassetteUI !== "function") return false;
 
     const host = deckHost();
-    if(!host) return false;
+    if(!host || !host.querySelector(".artworkTransport")) return false;
 
     installed = true;
     prepareDeckArtwork();
     buildBacklights(host);
-    installTransport(host);
+    wireTransport(host);
     buildLoopCounter(host);
 
     refreshCassetteUI();
