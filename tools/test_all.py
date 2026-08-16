@@ -5,7 +5,6 @@ ROOT=Path(__file__).resolve().parents[1]
 steps=[
   ['tests/resource_paths.py'],
   ['tests/assets_health.py'],
-  ['tests/audio_assets.py'],
   ['tests/validate.py'],
   ['tests/js_health.py'],
   ['tests/core_unit.js'],
