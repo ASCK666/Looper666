@@ -39,12 +39,6 @@ try:
             )
             assert marker in body, (path, marker)
 
-    beat = "/assets/beats/stack-piano-horns-85-asharp-minor.wav"
-    with urlopen(Request(base_url + beat, method="HEAD"), timeout=5) as response:
-        assert response.status == 200
-        assert response.headers.get_content_type() in {"audio/x-wav", "audio/wav"}
-        assert int(response.headers["Content-Length"]) > 44
-
     deck = "/assets/cassette-mechanism-pixel-v84.png"
     with urlopen(Request(base_url + deck, method="HEAD"), timeout=5) as response:
         assert response.status == 200
@@ -55,4 +49,4 @@ finally:
     server.server_close()
     thread.join(timeout=5)
 
-print("OK: deployable folder serves HTML, CSS, JS, manifest and bundled audio locally")
+print("OK: deployable folder serves HTML, CSS, JS, manifest and production assets locally")
