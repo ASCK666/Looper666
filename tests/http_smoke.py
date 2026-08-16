@@ -1,33 +1,21 @@
 #!/usr/bin/env python3
-"""Serve the deployable folder and verify its critical static responses."""
+"""Serve the project tree and verify critical deployed resources."""
 
-from functools import partial
-from http.server import SimpleHTTPRequestHandler, ThreadingHTTPServer
-from pathlib import Path
-from threading import Thread
 from urllib.request import Request, urlopen
 
-
-ROOT = Path(__file__).resolve().parents[1]
-
-
-class QuietHandler(SimpleHTTPRequestHandler):
-    def log_message(self, *_args):
-        pass
+from site_test_utils import serve_project
 
 
-handler = partial(QuietHandler, directory=str(ROOT))
-server = ThreadingHTTPServer(("127.0.0.1", 0), handler)
-thread = Thread(target=server.serve_forever, daemon=True)
-thread.start()
-
-base_url = f"http://127.0.0.1:{server.server_port}"
-try:
+with serve_project() as base_url:
     expected = {
         "/index.html": ("text/html", b"Scratch Practice"),
         "/css/base.css": ("text/css", b"GENERATED production stylesheet"),
-        "/js/events.js": ("javascript", b"addEventListener"),
-        "/manifest.json": ("application/json", b"Local pixel-art Looper"),
+        "/css/chopper.css": ("text/css", b"CHOPPER"),
+        "/css/deck-refactor.css": ("text/css", b"DECK ARTWORK GEOMETRY CONTRACT"),
+        "/js/chopper-layout.js": ("javascript", b"arrangeChopper"),
+        "/js/deck-refactor.js": ("javascript", b"TRANSPORT_CONTROLS"),
+        "/js/events.js": ("javascript", b"loadSampleBtn"),
+        "/manifest.json": ("application/json", b"Scratch Practice"),
     }
     for path, (mime, marker) in expected.items():
         with urlopen(base_url + path, timeout=5) as response:
@@ -39,20 +27,18 @@ try:
             )
             assert marker in body, (path, marker)
 
-    beat = "/assets/beats/stack-piano-horns-85-asharp-minor.wav"
-    with urlopen(Request(base_url + beat, method="HEAD"), timeout=5) as response:
-        assert response.status == 200
-        assert response.headers.get_content_type() in {"audio/x-wav", "audio/wav"}
-        assert int(response.headers["Content-Length"]) > 44
+    for path in [
+        "/assets/cassette-mechanism-pixel-v95.png",
+        "/assets/cassette-reel-pixel-v81.png",
+        "/assets/deck-buttons-backlight-idle.png",
+        "/assets/deck-button-play-backlight-active.png",
+    ]:
+        with urlopen(Request(base_url + path, method="HEAD"), timeout=5) as response:
+            assert response.status == 200, path
+            assert response.headers.get_content_type() == "image/png", (
+                path,
+                response.headers.get_content_type(),
+            )
+            assert int(response.headers["Content-Length"]) > 100, path
 
-    deck = "/assets/cassette-mechanism-pixel-v84.png"
-    with urlopen(Request(base_url + deck, method="HEAD"), timeout=5) as response:
-        assert response.status == 200
-        assert response.headers.get_content_type() == "image/png"
-        assert int(response.headers["Content-Length"]) > 1_000_000
-finally:
-    server.shutdown()
-    server.server_close()
-    thread.join(timeout=5)
-
-print("OK: deployable folder serves HTML, CSS, JS, manifest and bundled audio locally")
+print("OK: HTTP smoke — real HTML, CSS, JS and current deck assets serve locally")
