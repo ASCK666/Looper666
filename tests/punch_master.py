@@ -97,7 +97,7 @@ with sync_playwright() as p:
       const stats={};
       for(const mode of ['off','warm','knock','hard']){
         document.getElementById('punchMode').value=mode;
-        const b=await renderSequence(ev,sampleBuffer,markers);
+        const b=await renderSequence(ev,sampleBuffer,markers,samplePitchRate());
         let sum=0,peak=0,n=0,checksum=0;
         for(let c=0;c<b.numberOfChannels;c++){
           const d=b.getChannelData(c);

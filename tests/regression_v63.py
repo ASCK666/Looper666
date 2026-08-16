@@ -211,8 +211,8 @@ with tempfile.TemporaryDirectory() as td:
           document.getElementById('snareReverbMix').value='35';
           document.getElementById('punchMode').value='off';
           const events=new Array(16).fill(0); events[0]=1; events[8]=1;
-          const a=await renderSequence(events,sampleBuffer,markers);
-          const b=await renderSequence(events,sampleBuffer,markers);
+          const a=await renderSequence(events,sampleBuffer,markers,samplePitchRate());
+          const b=await renderSequence(events,sampleBuffer,markers,samplePitchRate());
           let max=0,sum=0;
           for(let ch=0;ch<2;ch++){
             const da=a.getChannelData(ch),db=b.getChannelData(ch);

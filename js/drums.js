@@ -224,7 +224,7 @@ async function refreshDrumsAfterFolderChange(kind,count,origin){
       }else if(modeBefore==="full" && sampleBuffer){
         const events=gridEventsForRender();
         if(events.some(Boolean)){
-          renderedFlip=await renderSequence(events,sampleBuffer,markers);
+          renderedFlip=await renderSequence(events,sampleBuffer,markers,samplePitchRate());
           lastPreviewMode="full";
           await playRendered(renderedFlip);
         }
@@ -398,7 +398,7 @@ async function rerenderPreviewMode(mode=lastPreviewMode){
   if(mode==="full" && sampleBuffer){
     const events=gridEventsForRender();
     if(events.some(Boolean)){
-      renderedFlip=await renderSequence(events,sampleBuffer,markers);
+      renderedFlip=await renderSequence(events,sampleBuffer,markers,samplePitchRate());
       lastPreviewMode="full";
       await playRendered(renderedFlip);
       return true;
@@ -973,7 +973,7 @@ async function renderDrumsOnly(){
   return finalizeLoopBuffer(await offline.startRendering());
 }
 
-async function renderSequence(events,sourceBuffer,cueMarkers){
+async function renderSequence(events,sourceBuffer,cueMarkers,pitchRate){
   if(!sourceBuffer)throw new Error("Charge un sample");
   const bpm=Math.max(40,Number($("sampleBpm").value)||90);
   const stepDur=(60/bpm)/2; // eighth note
@@ -982,7 +982,6 @@ async function renderSequence(events,sourceBuffer,cueMarkers){
   const rate=44100;
   const offline=new OfflineAudioContext(2,Math.ceil(targetDur*rate),rate);
   const master=makePunchMaster(offline);
-  const pitchRate=samplePitchRate();
   const sampleConditioner=makeSampleConditioner(offline,master.input,.72*sampleVolumeGain());
 
   const placed=[];
