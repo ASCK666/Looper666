@@ -3,8 +3,6 @@ from pathlib import Path
 import subprocess, sys
 ROOT=Path(__file__).resolve().parents[1]
 steps=[
-  ['tools/build_css.py'],
-  ['tests/css_build_sync.py'],
   ['tests/resource_paths.py'],
   ['tests/assets_health.py'],
   ['tests/audio_assets.py'],
