@@ -155,6 +155,35 @@ function refreshMasterVolumeUI(){
   document.documentElement.style.setProperty("--masterpct", String(masterVolumePercent));
 }
 
+async function loadChopperSample(file){
+  stopChopAudition();
+  if(!file)return false;
+
+  try{
+    $("chopStatus").textContent="LOADING SAMPLE…";
+    assertLocalFileSize(file,MAX_SAMPLE_FILE_BYTES,"sample");
+    sampleBuffer=await decodeFile(file);
+    sampleName=file.name;
+    sampleConditionProfile=analyzeSampleCondition(sampleBuffer);
+    samplePitchSemitones=0;
+    $("samplePitch").value=0;
+    $("sampleBpm").value=90;
+    transients=detectTransients(sampleBuffer);
+    $("waveZoom").value=1;
+    $("waveScroll").value=0;
+    setMarkers(Number($("sliceCount").value)||16);
+    autoPlaceMarkers();
+    refreshSamplePitchUI();
+    renderPads();
+    $("chopStatus").textContent=`SAMPLE READY • ${file.name} • ${sampleConditionProfile.label}`;
+    return true;
+  }catch(error){
+    console.error("Sample load:",error);
+    $("chopStatus").textContent=`SAMPLE ERROR • ${safeErrorMessage(error)}`;
+    return false;
+  }
+}
+
 function viewWindow(){
   if(!sampleBuffer)return {start:0,dur:1,end:1};
   const zoom=Math.max(1,Number($("waveZoom").value)||1);
