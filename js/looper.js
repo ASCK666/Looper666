@@ -16,9 +16,6 @@ const AUTO_LOOP_BATCH=8;
 const AUTO_SPEED_INCREMENT_PERCENT=1;
 const AUTO_SPEED_MAX_PERCENT=200;
 const AUTO_PROGRESS_INTERVAL_MS=200;
-const TAPE_COUNTER_INTERVAL_MS=100;
-const STANDARD_TAPE_SPEED_CM_PER_SECOND=4.75;
-const TAPE_COUNTER_CM_PER_UNIT=4.75;
 const SUPPLY_REEL_CYCLE_SECONDS=2.91;
 const TAKEUP_REEL_CYCLE_SECONDS=1.46;
 
@@ -709,63 +706,6 @@ function deckRate(){
   return autoLooperSpeedPercent / 100;
 }
 
-function formatTapeCounter(value){
-  const normalized=Math.floor(Math.max(0,Number(value)||0))%10000;
-  return String(normalized).padStart(4,"0");
-}
-
-function refreshTapeCounter(animate=true){
-  const counter=$("tapeCounter");
-  if(!counter)return;
-  const display=formatTapeCounter(tapeCounterUnits);
-  if(counter.dataset.value===display)return;
-  counter.dataset.value=display;
-  const wheels=[...counter.querySelectorAll(".counterWheel")];
-  wheels.forEach((wheel,index)=>{
-    const digit=Number(display[index]);
-    const glyph=wheel.querySelector(".counterGlyph");
-    if(wheel.dataset.digit===String(digit))return;
-    wheel.dataset.digit=String(digit);
-    wheel.dataset.prev=String((digit+9)%10);
-    wheel.dataset.next=String((digit+1)%10);
-    if(glyph)glyph.textContent=String(digit);
-    wheel.classList.remove("rolling");
-    if(animate){
-      void wheel.offsetWidth;
-      wheel.classList.add("rolling");
-    }
-  });
-  counter.setAttribute("aria-label",`Compteur de bande ${display}`);
-}
-
-function resetTapeCounter(){
-  tapeCounterUnits=0;
-  refreshTapeCounter(false);
-}
-
-function stopTapeCounter(){
-  if(tapeCounterTimer){
-    clearInterval(tapeCounterTimer);
-    tapeCounterTimer=null;
-  }
-  tapeCounterLastCtxTime=0;
-}
-
-function startTapeCounter(){
-  stopTapeCounter();
-  if(!ctx)return;
-  tapeCounterLastCtxTime=ctx.currentTime;
-  tapeCounterTimer=setInterval(()=>{
-    if(!deckSource||!ctx)return;
-    const now=ctx.currentTime;
-    const delta=Math.max(0,now-tapeCounterLastCtxTime);
-    tapeCounterLastCtxTime=now;
-    const unitsPerSecond=(STANDARD_TAPE_SPEED_CM_PER_SECOND/TAPE_COUNTER_CM_PER_UNIT)*deckRate();
-    tapeCounterUnits+=delta*unitsPerSecond;
-    refreshTapeCounter();
-  },TAPE_COUNTER_INTERVAL_MS);
-}
-
 function refreshAutoLooperCompact(){
   const btn=$("autoLooperToggle");
   const status=$("autoLooperCompactStatus");
@@ -890,7 +830,6 @@ async function playDeck(){
   deckOutputGain.connect(liveBus);
 
   deckSource.start(0);
-  startTapeCounter();
   if(autoLooperEnabledState)startAutoLooperProgress();
   else stopAutoLooperProgress();
   setLamp("lampPlay",true);
@@ -903,7 +842,6 @@ async function playDeck(){
 function stopDeck({cancelPendingPlay=true}={}){
   if(cancelPendingPlay)deckTransportSequence++;
   stopAutoLooperProgress();
-  stopTapeCounter();
   if(deckSource){
     try{deckSource.stop()}catch{}
     try{deckSource.disconnect()}catch{}
