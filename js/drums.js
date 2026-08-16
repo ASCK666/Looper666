@@ -976,6 +976,7 @@ async function renderSequence(events){
     const sampleStart=markers[idx];
     const available=Math.max(.01,sampleBuffer.duration-sampleStart);
     const wanted=Math.max(.01,nextTime-startTime);
+
     const src=offline.createBufferSource();
     src.buffer=sampleBuffer;
     src.playbackRate.value=pitchRate;
