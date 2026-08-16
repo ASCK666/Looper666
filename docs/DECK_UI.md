@@ -69,21 +69,19 @@ The deck UI does not poll every 120 ms anymore.
 It observes meaningful DOM state changes:
 
 - `.cassetteDeck` class changes for loaded/playing state;
-- AUTO button class / `aria-pressed` changes;
-- the compact AUTO progress node while that compatibility path still exists.
+- AUTO button class / `aria-pressed` changes.
 
-That observer updates visual-only state such as the integrated loop counter, hint and backlights.
+AUTO loop progress is no longer transported through hidden DOM. `looper.js` emits the `sp:auto-looper-state` event whenever the compact AUTO state refreshes, and `deck-refactor.js` uses that explicit state event to refresh the integrated loop counter.
 
 The old four-digit tape-counter runtime and source UI have been removed. There is no tape-counter timer, state, reset/start/stop API, monkey-patch, HTML module or presentation block. The integrated loop counter is the current counter contract and follows `autoLooperLoopCount`.
 
 ## Remaining compatibility debt
 
-These pieces are intentionally still transitional:
+One deck compatibility layer remains intentionally transitional:
 
-1. `autoLooperCompactStatus` remains as a hidden child of the real AUTO button because `looper.js` still writes loop progress into it and `deck-refactor.js` observes that text.
-2. The old transport markup still exists in `index.html`, but is removed before event binding. The final cleanup should move the artwork transport markup into the HTML source or otherwise remove the obsolete source markup.
+1. The old transport markup still exists in `index.html`, but is removed before event binding. The final cleanup should move the artwork transport markup into the HTML source or otherwise remove the obsolete source markup.
 
-`deckLegacyBridge`, `cassetteDoorEject`, `cassetteDoorAction` and the legacy tape-counter JavaScript/source UI are no longer compatibility contracts. Do not reintroduce them.
+`deckLegacyBridge`, `cassetteDoorEject`, `cassetteDoorAction`, `autoLooperCompactStatus` and the legacy tape-counter JavaScript/source UI are no longer compatibility contracts. Do not reintroduce them.
 
 ## Readability rules for future deck work
 
