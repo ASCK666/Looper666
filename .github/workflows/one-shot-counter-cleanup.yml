@@ -37,7 +37,7 @@ jobs:
           index = root / "index.html"
           html = index.read_text(encoding="utf-8")
           html, count = re.subn(
-              r'\n\s*<aside class="tapeCounterModule"\b.*?</aside>\n',
+              r'\n\s*<aside class="tapeCounterModule"[^>]*>.*?</aside>\n',
               "\n",
               html,
               count=1,
