@@ -726,9 +726,6 @@ function refreshAutoLooperCompact(){
   if(speed)speed.textContent=`${autoLooperSpeedPercent}%`;
   if(auto)auto.textContent=autoLooperEnabledState ? "ON" : "OFF";
 
-  status.textContent=autoLooperEnabledState
-    ? `ON • ${autoLooperLoopCount}/${AUTO_LOOP_BATCH} LOOPS`
-    : `OFF • +${AUTO_SPEED_INCREMENT_PERCENT}% / ${AUTO_LOOP_BATCH} LOOPS`;
   if(typeof CustomEvent==="function" && typeof window.dispatchEvent==="function"){
     window.dispatchEvent(new CustomEvent("sp:auto-looper-state"));
   }
