@@ -10,7 +10,7 @@ with serve_project() as base_url:
     expected = {
         "/index.html": ("text/html", b"Scratch Practice"),
         "/css/base.css": ("text/css", b"GENERATED production stylesheet"),
-        "/css/chopper.css": ("text/css", b"CHOPPER"),
+        "/css/chopper.css": ("text/css", b"#chopper .samplerWaveToolbar"),
         "/css/deck-refactor.css": ("text/css", b"DECK ARTWORK GEOMETRY CONTRACT"),
         "/js/chopper-layout.js": ("javascript", b"arrangeChopper"),
         "/js/deck-refactor.js": ("javascript", b"TRANSPORT_CONTROLS"),
