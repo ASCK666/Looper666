@@ -1,6 +1,13 @@
 "use strict";
 
-// Cross-app wiring only. Feature-specific bindings live beside their feature.
+// Cross-app wiring only. Feature-specific bindings live in dedicated modules.
+const EVENT_MODULES=[
+  "./js/looper-events.js",
+  "./js/practice-events.js",
+  "./js/chopper-events.js",
+  "./js/drums-events.js"
+];
+
 function switchTab(name){
   if(!["looper","chopper"].includes(name)) return;
 
@@ -36,49 +43,6 @@ function openFilePicker(id){
   input.click();
 }
 
-document.querySelectorAll(".mainModeTabs .tab").forEach(b=>b.onclick=()=>switchTab(b.dataset.tab));
-
-try{
-  const savedMainTab=localStorage.getItem("scratch-practice-main-tab");
-  if(savedMainTab==="chopper")switchTab("chopper");
-  else switchTab("looper");
-}catch{
-  switchTab("looper");
-}
-
-$("masterVolume").oninput=()=>{
-  masterVolumePercent=Number($("masterVolume").value)||0;
-  refreshMasterVolumeUI();
-};
-
-document.addEventListener("keydown",async ev=>{
-  if(ev.code!=="Space" || ev.repeat)return;
-
-  const target=ev.target;
-  const tag=target?.tagName?.toLowerCase();
-  const interactive=
-    tag==="input" || tag==="textarea" || tag==="select" || tag==="button" || tag==="a" ||
-    target?.isContentEditable || target?.closest?.('[role="button"],[role="slider"]');
-  if(interactive)return;
-  if($("practice")?.classList.contains("overlayOpen"))return;
-
-  ev.preventDefault();
-
-  if($("looper")?.classList.contains("active")){
-    if(deckSource)stopDeck();
-    else await playDeck();
-    return;
-  }
-
-  if(!$("chopper")?.classList.contains("active"))return;
-  if(isLoopPlaying){
-    stopCurrentBeat();
-    $("chopStatus").textContent="STOP";
-    return;
-  }
-  await playCurrentBeat();
-});
-
 function reportInitFailure(name,error){
   console.error(`INIT ${name}:`,error);
   if(window.__SP?.report)window.__SP.report(`INIT ${name}`,error);
@@ -89,28 +53,97 @@ function safeInit(name,fn){
   catch(error){ reportInitFailure(name,error); return null; }
 }
 
-[
-  ["meters",ensureMeterElements],
-  ["practice",makePractice],
-  ["drum-selection",updateDrumSelectionUI],
-  ["drum-library-cta",refreshLoadDrumLibraryCTA],
-  ["auto-looper",refreshAutoLooperCompact],
-  ["tape-counter",refreshTapeCounter],
-  ["master-volume",refreshMasterVolumeUI],
-  ["punch",refreshPunchUI],
-  ["loop-grid",renderLoopGrid],
-  ["waveform",drawWave]
-].forEach(([name,fn])=>safeInit(name,fn));
+function loadEventModule(src){
+  return new Promise((resolve,reject)=>{
+    const script=document.createElement("script");
+    script.src=src;
+    script.onload=resolve;
+    script.onerror=()=>reject(new Error(`Unable to load ${src}`));
+    document.head.appendChild(script);
+  });
+}
 
-Promise.resolve()
-  .then(()=>refreshLibrary(false))
-  .catch(error=>{
-    reportInitFailure("beat-library",error);
-    return refreshLibrary(false).catch(e=>reportInitFailure("beat-library-fallback",e));
-  })
-  .finally(()=>{
+function bindSharedEvents(){
+  document.querySelectorAll(".mainModeTabs .tab").forEach(b=>b.onclick=()=>switchTab(b.dataset.tab));
+
+  try{
+    const savedMainTab=localStorage.getItem("scratch-practice-main-tab");
+    if(savedMainTab==="chopper")switchTab("chopper");
+    else switchTab("looper");
+  }catch{
+    switchTab("looper");
+  }
+
+  $("masterVolume").oninput=()=>{
+    masterVolumePercent=Number($("masterVolume").value)||0;
+    refreshMasterVolumeUI();
+  };
+
+  document.addEventListener("keydown",async ev=>{
+    if(ev.code!=="Space" || ev.repeat)return;
+
+    const target=ev.target;
+    const tag=target?.tagName?.toLowerCase();
+    const interactive=
+      tag==="input" || tag==="textarea" || tag==="select" || tag==="button" || tag==="a" ||
+      target?.isContentEditable || target?.closest?.('[role="button"],[role="slider"]');
+    if(interactive)return;
+    if($("practice")?.classList.contains("overlayOpen"))return;
+
+    ev.preventDefault();
+
+    if($("looper")?.classList.contains("active")){
+      if(deckSource)stopDeck();
+      else await playDeck();
+      return;
+    }
+
+    if(!$("chopper")?.classList.contains("active"))return;
+    if(isLoopPlaying){
+      stopCurrentBeat();
+      $("chopStatus").textContent="STOP";
+      return;
+    }
+    await playCurrentBeat();
+  });
+}
+
+function initializeAppUI(){
+  [
+    ["meters",ensureMeterElements],
+    ["practice",makePractice],
+    ["drum-selection",updateDrumSelectionUI],
+    ["drum-library-cta",refreshLoadDrumLibraryCTA],
+    ["auto-looper",refreshAutoLooperCompact],
+    ["tape-counter",refreshTapeCounter],
+    ["master-volume",refreshMasterVolumeUI],
+    ["punch",refreshPunchUI],
+    ["loop-grid",renderLoopGrid],
+    ["waveform",drawWave]
+  ].forEach(([name,fn])=>safeInit(name,fn));
+
+  return Promise.resolve()
+    .then(()=>refreshLibrary(false))
+    .catch(error=>{
+      reportInitFailure("beat-library",error);
+      return refreshLibrary(false).catch(e=>reportInitFailure("beat-library-fallback",e));
+    });
+}
+
+async function bootEventModules(){
+  try{
+    for(const src of EVENT_MODULES){
+      await loadEventModule(src);
+    }
+    bindSharedEvents();
+    await initializeAppUI();
     if(window.__SP){
       window.__SP.ready=true;
       document.documentElement.dataset.appReady="1";
     }
-  });
+  }catch(error){
+    reportInitFailure("events",error);
+  }
+}
+
+bootEventModules();
