@@ -255,24 +255,7 @@ $("drumEditView").onchange=()=>{
   renderDrumEditor();
 };
 
-$("clearDrumEdits").onclick=async()=>{
-  try{
-    await ensureDrumSelection();
-    currentDrumSelection.kicks=[];
-    currentDrumSelection.snares=[];
-    currentDrumSelection.ghosts=[];
-    currentDrumSelection.hatSteps=[];
-    currentDrumSelection.kickVelocity={};
-    currentDrumSelection.snareVelocity={};
-    currentDrumSelection.hatVelocity={};
-    markDrumSelectionEdited();
-    renderDrumEditor();
-    await rerenderAfterDrumEdit();
-    $("chopStatus").textContent="DRUMS CLEARED ✓";
-  }catch(e){
-    $("chopStatus").textContent="DRUM EDIT ERROR: "+e.message;
-  }
-};
+$("clearDrumEdits").onclick=clearDrumEdits;
 
 $("newDrums").onclick=async()=>{
   stopChopAudition();
