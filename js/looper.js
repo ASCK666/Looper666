@@ -104,8 +104,6 @@ function openDb(){
     req.onblocked=()=>fail(new Error("IndexedDB upgrade blocked by another tab"));
   });
   dbPromise=attempt;
-  // A synchronous indexedDB.open() failure happens before the outer assignment.
-  // Clear the cached promise from a microtask so a later call may retry cleanly.
   void attempt.catch(()=>{ if(dbPromise===attempt)dbPromise=null; });
   return attempt;
 }
@@ -129,8 +127,6 @@ async function runBeatStoreTransaction(mode,operation){
       return;
     }
     tx.oncomplete=()=>resolve(request?.result);
-    // Request errors are more specific than transaction AbortError values
-    // (notably QuotaExceededError, which keeps persistent rows visible).
     tx.onabort=()=>reject(transactionError(tx,request,"IndexedDB transaction aborted"));
     tx.onerror=()=>reject(transactionError(tx,request,"IndexedDB transaction failed"));
   });
@@ -153,7 +149,6 @@ async function dbPut(row,{flashLamp=true}={}){
       await runBeatStoreTransaction("readwrite",store=>store.put(row));
       memoryBeatStore.delete(row.id);
     }catch(e){
-      // Quota exhaustion must not hide the existing persistent library.
       if(e?.name==="QuotaExceededError"){
         console.warn("Scratch Practice: storage quota reached; keeping item in session memory");
         memoryBeatStore.set(row.id,row);
@@ -180,7 +175,6 @@ async function dbAll(){
   if(dbFallbackMode)return [...memoryBeatStore.values()];
   try{
     const persistent=await runBeatStoreTransaction("readonly",store=>store.getAll())||[];
-    // Session-memory rows (e.g. quota overflow) overlay persistent rows by id.
     const merged=new Map(persistent.map(row=>[row.id,row]));
     for(const [id,row] of memoryBeatStore)merged.set(id,row);
     return [...merged.values()];
@@ -283,8 +277,6 @@ async function normalizeBeatDirectoryHandle(selectedHandle){
     return selectedHandle;
   }
 
-  // If the user selected K:\ (or another parent), only accept it if the
-  // required beat_scratch child really exists. Never silently save elsewhere.
   try{
     return await selectedHandle.getDirectoryHandle("beat_scratch",{create:false});
   }catch{
@@ -330,7 +322,6 @@ async function scanBeatDirectory(){
       }
     }
 
-    // Only replace the old cache after a complete successful directory scan.
     beatDirectoryRows=nextRows;
     await clearBeatDirectoryCache();
     let cached=0;
@@ -398,7 +389,6 @@ function safeBeatFilename(name){
     .replace(/[ .]+$/g,"")
     .slice(0,90);
 
-  // Windows device names remain reserved even with an extension.
   if(/^(CON|PRN|AUX|NUL|COM[1-9]|LPT[1-9])(?:\.|$)/i.test(out))out=`_${out}`;
   return out || "SCRATCH_BEAT";
 }
@@ -447,7 +437,6 @@ async function saveBlobToBeatDirectory(blob,baseName){
     throw new Error("le fichier créé est vide");
   }
 
-  // Cache the just-written beat immediately, then rescan the real folder.
   await cacheBeatDirectoryFile(savedFile);
   await scanBeatDirectory();
   await refreshLibrary(false);
@@ -490,7 +479,6 @@ async function importBeatFiles(files){
     }
   }
 
-  // LOAD -> ready immediately. Do not autoplay: user still decides with PLAY.
   if(firstImported && loadRequest===trackLoadSequence){
     if(deckSource)stopDeck();
     commitLoadedTrack(firstImported.row,firstImported.buffer);
@@ -685,7 +673,6 @@ function commitLoadedTrack(row,decoded){
   deckBuffer=decoded;
   row.duration=deckBuffer.duration;
 
-  // Imported beats start at original speed.
   autoLooperSpeedPercent=100;
   stopAutoLooperProgress();
   $("deckTrack").textContent=row.name;
@@ -698,8 +685,6 @@ async function loadTrack(row,{preservePlayback=false}={}){
   const decoded=await decodeTrackAudio(row);
   if(request!==trackLoadSequence)return false;
 
-  // Read the transport state after decoding: a STOP pressed during a slow
-  // decode must stay stopped, while an active deck should resume the new beat.
   const resumePlayback=preservePlayback && !!deckSource;
   if(resumePlayback)stopDeck();
   commitLoadedTrack(row,decoded);
@@ -775,14 +760,17 @@ function startTapeCounter(){
 
 function refreshAutoLooperCompact(){
   const btn=$("autoLooperToggle");
-  const status=$("autoLooperCompactStatus");
+  const legacyStatus=$("autoLooperCompactStatus");
   const deck=$("looperDropzoneBtn");
   const speed=$("deckSpeedReadout");
   const auto=$("deckAutoReadout");
-  if(!btn || !status) return;
+  if(!btn)return;
 
-  // Compact cassette tape moves at 4.75 cm/s. Keep the visual reels tied to
-  // the actual deck playback rate instead of using a decorative fixed spin.
+  // Expose state on the real AUTO control. Deck UI can observe these attributes
+  // without depending on hidden legacy markup or polling Looper internals.
+  btn.dataset.loopCount=String(autoLooperLoopCount);
+  btn.dataset.speedPercent=String(autoLooperSpeedPercent);
+
   if(deck){
     const rate=Math.max(.01,deckRate());
     deck.style.setProperty("--supply-reel-cycle",`${(SUPPLY_REEL_CYCLE_SECONDS/rate).toFixed(3)}s`);
@@ -794,9 +782,12 @@ function refreshAutoLooperCompact(){
   if(speed)speed.textContent=`${autoLooperSpeedPercent}%`;
   if(auto)auto.textContent=autoLooperEnabledState ? "ON" : "OFF";
 
-  status.textContent=autoLooperEnabledState
-    ? `ON • ${autoLooperLoopCount}/${AUTO_LOOP_BATCH} LOOPS`
-    : `OFF • +${AUTO_SPEED_INCREMENT_PERCENT}% / ${AUTO_LOOP_BATCH} LOOPS`;
+  // Keep this during the transition so older markup still displays correctly.
+  if(legacyStatus){
+    legacyStatus.textContent=autoLooperEnabledState
+      ? `ON • ${autoLooperLoopCount}/${AUTO_LOOP_BATCH} LOOPS`
+      : `OFF • +${AUTO_SPEED_INCREMENT_PERCENT}% / ${AUTO_LOOP_BATCH} LOOPS`;
+  }
 }
 
 function resetAutoLooperProgress(){
@@ -899,34 +890,31 @@ async function playDeck(){
   deckSource.start(0);
   startTapeCounter();
   if(autoLooperEnabledState)startAutoLooperProgress();
-  else stopAutoLooperProgress();
-  setLamp("lampPlay",true);
-  ensureMeterElements();
-  startMeterAnimation();
   refreshCassetteUI();
+  refreshAutoLooperCompact();
   return true;
 }
 
 function stopDeck({cancelPendingPlay=true}={}){
   if(cancelPendingPlay)deckTransportSequence++;
-  stopAutoLooperProgress();
-  stopTapeCounter();
   if(deckSource){
-    try{deckSource.stop()}catch{}
-    try{deckSource.disconnect()}catch{}
+    try{ deckSource.stop(); }catch{}
+    try{ deckSource.disconnect(); }catch{}
     deckSource=null;
   }
   if(deckOutputGain){
-    try{deckOutputGain.disconnect()}catch{}
+    try{ deckOutputGain.disconnect(); }catch{}
     deckOutputGain=null;
   }
-  setLamp("lampPlay",false);
+  stopTapeCounter();
+  stopAutoLooperProgress();
   refreshCassetteUI();
 }
 
-
 async function selectRelative(delta){
-  if(!visibleLibraryRowsState.length)return;
-  const idx=relativeTrackIndex(visibleLibraryRowsState,currentTrack?.id,delta);
-  await switchTrack(visibleLibraryRowsState[idx]);
+  if(!visibleLibraryRowsState.length)await refreshLibrary(false);
+  const rows=visibleLibraryRowsState;
+  const index=relativeTrackIndex(rows,currentTrack?.id,delta);
+  if(index<0)return false;
+  return switchTrack(rows[index]);
 }
