@@ -233,7 +233,7 @@ async function playCurrentBeat(){
   try{
     const events=gridEventsForRender();
     await ensureDrumSelection();
-    renderedFlip=await renderSequence(events,sampleBuffer);
+    renderedFlip=await renderSequence(events,sampleBuffer,markers);
     lastPreviewMode="full";
     $("chopStatus").textContent=`READY • ${events.filter(Boolean).length} chop triggers • ${samplePitchSemitones>0?"+":""}${samplePitchSemitones} st`;
     await playRendered(renderedFlip);
@@ -280,7 +280,7 @@ function validateCurrentBeatForSave(){
 
 async function renderCurrentBeatForSave(events=validateCurrentBeatForSave()){
   // Always render the CURRENT grid/settings. SAVE never reuses a stale preview.
-  return await renderSequence(events,sampleBuffer);
+  return await renderSequence(events,sampleBuffer,markers);
 }
 
 async function prepareBeatFolderFromSaveGesture(){
