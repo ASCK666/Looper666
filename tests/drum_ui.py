@@ -44,6 +44,14 @@ with sync_playwright() as p:
     assert page.evaluate('currentDrumSelection.mode !== "off"') is True
     assert 'PATTERN' not in page.locator('#currentPattern').inner_text() or page.locator('#currentPattern').inner_text()!='PATTERN —'
 
+    # Editing while a drums-only preview is playing must rebuild the buffer and keep transport running.
+    page.click('#playDrumsOnly')
+    page.wait_for_function('isLoopPlaying === true && lastPreviewMode === "drums" && renderedFlip !== null',timeout=10000)
+    page.evaluate('window.__drumPreviewBeforeEdit=renderedFlip')
+    page.locator('#drumEditor .drumEditStep.snare').last.click()
+    page.wait_for_function('renderedFlip !== window.__drumPreviewBeforeEdit && isLoopPlaying === true && lastPreviewMode === "drums"',timeout=10000)
+    page.click('#stopFlip')
+
     # Clicking a drum cell toggles it, and wheel velocity changes an active step.
     cell=page.locator('#drumEditor .drumEditStep.kick').first
     before='active' in (cell.get_attribute('class') or '').split()
@@ -118,4 +126,4 @@ with sync_playwright() as p:
     mobile.close()
     browser.close()
 
-print('OK: Drum UI — selection, 16/8 step editor, toggle/velocity, clear, FX/PUNCH, libraries and mobile stacking')
+print('OK: Drum UI — selection, live rerender, 16/8 step editor, toggle/velocity, clear, FX/PUNCH, libraries and mobile stacking')
