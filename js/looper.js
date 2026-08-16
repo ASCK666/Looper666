@@ -29,12 +29,10 @@ function refreshCassetteUI(){
   const zone=$("looperDropzoneBtn");
   const name=$("cassetteBeatName");
   const hint=$("cassetteHint");
-  const door=$("cassetteDoorEject");
-  const action=$("cassetteDoorAction");
   const transportState=$("deckTransportState");
   const speedReadout=$("deckSpeedReadout");
   const autoReadout=$("deckAutoReadout");
-  if(!zone || !name || !hint || !door || !action) return;
+  if(!zone || !name || !hint) return;
 
   const currentName=($("deckTrack")?.textContent || "NO BEAT LOADED").trim();
   name.textContent=shortName(currentName.toUpperCase(),32);
@@ -44,21 +42,16 @@ function refreshCassetteUI(){
 
   zone.classList.toggle("loaded",loaded);
   zone.classList.toggle("playing",playing);
-  action.textContent=loaded ? "REPLACE" : "LOAD";
   if(transportState)transportState.textContent=!loaded ? "EMPTY" : playing ? "PLAYING" : "READY";
   if(speedReadout)speedReadout.textContent=`${autoLooperSpeedPercent}%`;
   if(autoReadout)autoReadout.textContent=autoLooperEnabledState ? "ON" : "OFF";
-  door.setAttribute("aria-label",loaded
-    ? "Éjecter la cassette et choisir un autre beat"
-    : "Ouvrir la porte cassette et charger un beat"
-  );
 
   if(!loaded){
-    hint.textContent="PRESS EJECT TO LOAD A BEAT";
+    hint.textContent="LOAD A BEAT TO START";
   }else if(playing){
-    hint.textContent="PLAYING • EJECT STOPS";
+    hint.textContent="PLAYING";
   }else{
-    hint.textContent="READY • PLAY OR EJECT";
+    hint.textContent="READY • PRESS PLAY";
   }
 }
 
