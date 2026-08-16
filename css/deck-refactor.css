@@ -266,19 +266,6 @@
 .artworkTransportNext { left: var(--deck-hit-next-x); width: var(--deck-hit-next-w); }
 .artworkTransportAuto { left: var(--deck-hit-auto-x); width: var(--deck-hit-auto-w); }
 
-.deckTransport--legacy {
-  position: absolute !important;
-  width: 1px !important;
-  height: 1px !important;
-  margin: -1px !important;
-  padding: 0 !important;
-  overflow: hidden !important;
-  clip: rect(0 0 0 0) !important;
-  clip-path: inset(50%) !important;
-  white-space: nowrap !important;
-  border: 0 !important;
-}
-
 .loopCounterLabel {
   margin: 0 !important;
   padding: 0 1px !important;
