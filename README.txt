@@ -1,21 +1,65 @@
-SCRATCH PRACTICE — V91
-======================
+SCRATCH PRACTICE / LOOPER666
+============================
 
-Looper cassette et Chopper local construits avec Web Audio. Le projet fonctionne
-sans serveur applicatif et n'envoie pas les fichiers audio vers un service distant.
+Scratch looper et beat maker local-first construit avec Web Audio.
 
-FONCTIONS PRINCIPALES
----------------------
-- Looper avec PREV / PLAY / STOP / NEXT et AUTO +1 % toutes les 8 boucles.
-- Lecteur cassette pixel art avec compteur mécanique, porte EJECT et imports intégrés.
-- Beat Crate en tranches de boîtiers cassette, rangées dans trois colonnes de quatre slots.
-- Trois beats WAV inclus et disponibles hors connexion après mise en cache.
-- Chopper 16 pads, waveform, marqueurs, pitch, volume et grille de deux mesures.
-- Drum machine, bibliothèques locales, vélocité, reverb, PUNCH et export WAV.
-- Interface responsive pour ordinateur et téléphone.
+Le but du projet est simple : proposer une bibliothèque compacte de beats prêts à
+scratcher, puis permettre de fabriquer rapidement de nouveaux beats avec le Chopper
+et la Drum Machine pour les ajouter à cette bibliothèque.
+
+PRINCIPES DU PRODUIT
+--------------------
+- Gratuit et sans publicité.
+- Pas de compte obligatoire.
+- Pas d'analytics, de télémétrie ou de scripts tiers.
+- Les fichiers audio restent locaux : le projet ne nécessite pas d'API serveur pour
+  traiter ou envoyer les beats.
+- Interface pensée comme un petit instrument de scratch, pas comme une DAW généraliste.
+
+ÉTAT ACTUEL
+-----------
+
+LOOPER
+- Beat Crate locale avec recherche, tri et imports audio.
+- Lecture PREV / PLAY / STOP / NEXT dans une interface cassette.
+- AUTO SPEED pour faire évoluer progressivement la vitesse du beat.
+- Cache local IndexedDB et connexion optionnelle à un dossier de beats local.
+- Compteur de bande et transport adaptés au travail de scratch.
+
+CHOPPER / BEAT MAKER
+- Chargement d'un sample local avec waveform et marqueurs.
+- Détection de transients, AUTO CHOP et 16 pads.
+- Pitch, volume, grille de deux mesures et placement des chops.
+- Drum Machine avec kicks, snares et hats provenant de dossiers locaux.
+- Génération rapide de patterns, édition des steps et vélocités, effets et PUNCH.
+- Preview du beat complet ou des drums seuls.
+- Rendu et export WAV du beat courant, avec sauvegarde possible dans un dossier local.
+
+AUTRE
+- Interface responsive ordinateur / téléphone.
+- Mode Practice séparé.
+- PWA / service worker pour les ressources statiques de l'application.
+
+DIRECTION PRODUIT
+-----------------
+La cible est une bibliothèque d'environ 30 à 50 beats sélectionnés pour le scratch,
+avec un workflow très court :
+
+    choisir un beat -> scratcher
+
+ou
+
+    charger/chopper un sample -> générer/éditer les drums -> écouter -> sauvegarder
+    -> retrouver le nouveau beat dans la bibliothèque
+
+Le pack de 30 à 50 beats n'est pas encore livré dans ce dépôt. Aujourd'hui, les beats
+sont importés par l'utilisateur ou lus depuis sa bibliothèque locale. Le pack fait
+partie de la direction produit, pas de l'état actuel du runtime.
 
 LANCER LE PROJET
 ----------------
+Le projet est une application statique. Aucun serveur applicatif n'est nécessaire.
+
 Option simple : ouvrir index.html dans un navigateur moderne.
 
 Option recommandée depuis le dossier du projet :
@@ -27,29 +71,27 @@ Puis ouvrir :
     http://localhost:8080
 
 Le serveur local permet de tester correctement le manifest et le service worker.
-Chrome ou Edge est recommandé pour l'écriture directe dans un dossier local.
+Chrome ou Edge est recommandé pour les fonctions d'accès direct aux dossiers locaux.
 
-STRUCTURE
----------
-- index.html                 structure de l'interface
-- css/src/                   sources CSS par composant
-- css/base.css               feuille de style générée et déployable
-- js/core.js                 état audio partagé, vumètres et export WAV
-- js/looper.js               bibliothèque, imports et transport cassette
-- js/chopper.js              waveform, chops, pads et grille
-- js/drums.js                grooves, sons locaux, effets et rendu
-- js/events.js               liaisons UI et démarrage
-- js/practice.js             page Practice gelée en attente de refonte
-- assets/beats/              trois beats WAV inclus
+STRUCTURE ACTUELLE
+------------------
+- index.html                 structure principale de l'interface
+- css/base.css               styles principaux
+- css/clean-ui.css           ajustements d'interface actuels
+- js/bootstrap.js            démarrage de l'application
+- js/core.js                 audio partagé, utilitaires, vumètres et export WAV
+- js/looper.js               Beat Crate, imports, persistance et transport cassette
+- js/chopper.js              waveform, samples, chops, pads et grille
+- js/drums.js                drums, effets et rendu combiné Chopper + Drums
+- js/events.js               wiring UI et quelques orchestrations restantes
+- js/practice.js             mode Practice
+- assets/                    images de l'interface cassette
+- docs/                      architecture, sécurité et notes techniques
 - tests/                     validations statiques, unitaires et navigateur
-- tools/                     build CSS et lanceur de tests
+- tools/test_all.py          lanceur de la suite de tests
 
-MODIFIER LE CSS
----------------
-Ne pas modifier css/base.css directement. Modifier le fichier propriétaire dans
-css/src/, puis reconstruire :
-
-    python3 tools/build_css.py
+Il n'y a actuellement pas de pipeline de génération CSS : les feuilles déployées dans
+css/ sont les fichiers maintenus par le projet.
 
 TESTS DE NON-RÉGRESSION
 -----------------------
@@ -57,24 +99,23 @@ Lancer la suite complète :
 
     python3 tools/test_all.py
 
-La suite vérifie notamment :
-- synchronisation du build CSS et santé de la cascade ;
-- chemins de ressources, service worker et serveur HTTP local ;
-- syntaxe JavaScript, déclarations mortes et résidus de debug ;
-- utilitaires audio, garde-fous fichiers et export WAV ;
-- présence, format et durée des trois beats inclus ;
-- contrats Looper, Chopper, Drums, Practice et responsive ;
-- fumées navigateur lorsque Playwright et Chromium sont disponibles.
+La suite maintenue couvre notamment :
+- chemins de ressources et service worker ;
+- contrat runtime et santé JavaScript ;
+- utilitaires audio et export ;
+- régressions Looper / transport / AUTO ;
+- santé et responsive CSS ;
+- Chopper, Drum Machine, PUNCH et master ;
+- serveur HTTP local ;
+- démarrage et interactions dans Chromium via Playwright.
 
-FIABILITÉ LOOPER V91
---------------------
-- chargements de pistes concurrents ordonnés : la dernière sélection gagne ;
-- PLAY asynchrone annulable par STOP et double PLAY limité à une seule source ;
-- PREV/NEXT alignés sur la recherche et le tri visibles dans la Beat Crate ;
-- IndexedDB réessayable après échec, erreur de quota conservée précisément ;
-- sauvegardes horodatées à la milliseconde et écriture interrompue proprement ;
-- première piste importée réutilise le buffer déjà décodé ;
-- contrôles cassette accessibles sans bouton Delete imbriqué dans un faux bouton ;
-- anciennes couches CSS Looper devenues inopérantes supprimées ;
-- première frontière clarifiée : l'affichage cassette appartient désormais au Looper ;
-- aucune modification visuelle, CSS ou algorithmique dans cette passe.
+GitHub Actions exécute la même suite sur les pull requests et sur les pushes vers main.
+
+DONNÉES LOCALES ET CONFIDENTIALITÉ
+----------------------------------
+Les samples et beats sont choisis explicitement par l'utilisateur. Les imports peuvent
+être conservés dans IndexedDB ou dans un dossier local selon le workflow choisi.
+L'application ne contient actuellement ni analytics, ni télémétrie, ni WebSocket, ni
+appel vers une API distante, ni script tiers.
+
+Voir docs/SECURITY.md pour le modèle de sécurité et les limites des accès fichiers.
