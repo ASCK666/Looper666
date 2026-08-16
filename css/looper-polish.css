@@ -64,20 +64,6 @@
   opacity: .82;
 }
 
-/* AUTO SPEED is one compact control. The level itself is the useful state. */
-#looper .deckAutoHotspot small {
-  display: none !important;
-}
-
-#looper .deckAutoHotspot > span {
-  min-width: 2.2em;
-  font-variant-numeric: tabular-nums;
-}
-
-#looper .deckAutoHotspot.active > span {
-  color: #f0c77f !important;
-}
-
 @media (max-width: 760px) {
   #looper .cassettePrintedTitle {
     font-size: clamp(6px,2.15vw,11px);
