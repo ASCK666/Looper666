@@ -387,22 +387,30 @@ function markDrumSelectionEdited(){
   $("drumSelectionStatus").textContent="Groove modifié manuellement • NEW DRUMS pour repartir d'un nouveau pattern.";
 }
 
-async function rerenderAfterDrumEdit(){
-  if(!isLoopPlaying)return;
-  const modeBefore=lastPreviewMode;
-
-  if(modeBefore==="drums"){
+async function rerenderPreviewMode(mode=lastPreviewMode){
+  if(mode==="drums"){
     renderedFlip=await renderDrumsOnly();
     lastPreviewMode="drums";
     await playRendered(renderedFlip);
-  }else if(modeBefore==="full" && sampleBuffer){
+    return true;
+  }
+
+  if(mode==="full" && sampleBuffer){
     const events=gridEventsForRender();
     if(events.some(Boolean)){
       renderedFlip=await renderSequence(events);
       lastPreviewMode="full";
       await playRendered(renderedFlip);
+      return true;
     }
   }
+
+  return false;
+}
+
+async function rerenderAfterDrumEdit(){
+  if(!isLoopPlaying)return false;
+  return await rerenderPreviewMode();
 }
 
 async function clearDrumEdits(){
