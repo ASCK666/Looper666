@@ -36,6 +36,10 @@ with serve_project() as base_url:
         html = response.read()
 
     assert b"autoLooperCompactStatus" not in html
+    assert b'class="deckTransport"' not in html
+    assert html.count(b'class="artworkTransport"') == 1
+    for control_id in [b"prevBeat", b"playBeat", b"stopBeat", b"nextBeat", b"autoLooperToggle"]:
+        assert html.count(b'id="' + control_id + b'"') == 1, control_id
 
     event_scripts = [
         b'./js/events.js',
@@ -61,4 +65,4 @@ with serve_project() as base_url:
             )
             assert int(response.headers["Content-Length"]) > 100, path
 
-print("OK: HTTP smoke — real HTML, CSS, direct AUTO state event, static split event JS and current deck assets serve locally")
+print("OK: HTTP smoke — real HTML, static artwork transport, direct AUTO state event and current deck assets serve locally")
