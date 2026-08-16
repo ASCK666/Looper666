@@ -1,15 +1,13 @@
-/* Temporary isolated deck motion fix while the V95 refactor is stabilised. */
+/* Temporary isolated deck motion fix while the V95 refactor is stabilised.
+   Geometry now belongs exclusively to the deck artwork profile in deck-refactor.css. */
 @keyframes deckReelSpin {
   from { transform: rotate(0deg); }
   to { transform: rotate(360deg); }
 }
 
-/* V81 is the correct full reel artwork. On the 1536px-wide V95 deck, 10.8%
-   is ~166px and lines up with the large static teeth almost pixel-for-pixel.
-   Keep the centre anchoring from deck-refactor.css, but restore the reel to
-   its physical scale so the large teeth themselves are what visibly rotate. */
+/* V81 is the correct full reel artwork. Size/position are defined by the artwork
+   profile; this file owns only visual treatment and motion. */
 .cassetteReel {
-  width: 10.8% !important;
   filter: brightness(.90) contrast(.96) saturate(.78) sepia(.06) !important;
   mix-blend-mode: normal !important;
 }
