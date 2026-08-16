@@ -198,13 +198,7 @@ $("sampleVolume").onchange=async()=>{
   }
 };
 
-$("samplePitch").oninput=()=>{
-  samplePitchSemitones=Number($("samplePitch").value)||0;
-  stopChopAudition();
-  refreshMarkerEditor();
-  refreshSamplePitchUI();
-  drawWave();
-};
+$("samplePitch").oninput=()=>updateSamplePitch($("samplePitch").value);
 $("samplePitch").onchange=async()=>{
   if(isLoopPlaying && lastPreviewMode==="full" && sampleBuffer){
     try{
