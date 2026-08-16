@@ -477,7 +477,6 @@ function renderDrumEditor(){
     label.className="drumEditLabel";
     label.textContent=labelText;
     grid.appendChild(label);
-
     const arr=drumArrayForLane(lane);
 
     for(let visualStep=0;visualStep<visibleSteps;visualStep++){
@@ -1024,5 +1023,23 @@ async function playRendered(buffer){
     if(!chopAuditionSource){
       stopPlayheadAnimation(true);
     }
+  }
+}
+
+function stopCurrentBeat(){
+  if(flipSource){
+    try{flipSource.stop()}catch{}
+    flipSource=null;
+  }
+
+  isLoopPlaying=false;
+  lastPreviewMode=null;
+  loopPlayheadState=null;
+  loopPlayheadStartedAt=0;
+
+  if(chopAuditionSource){
+    startPlayheadAnimation();
+  }else{
+    stopPlayheadAnimation(true);
   }
 }
