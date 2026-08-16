@@ -19,9 +19,6 @@ let autoLooperLastCtxTime = 0;
 let autoLooperSourceSeconds = 0;
 let autoLooperLoopCount = 0;
 let autoLooperSpeedPercent = 100;
-let tapeCounterUnits = 0;
-let tapeCounterTimer = null;
-let tapeCounterLastCtxTime = 0;
 
 let sampleBuffer = null;
 let sampleName = "";
