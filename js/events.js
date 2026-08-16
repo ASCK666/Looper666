@@ -101,10 +101,17 @@ $("cassetteDoorEject").onclick=(ev)=>{
   pulseCassetteDoor();
   openFilePicker("beatFiles");
 };
-$("tapeCounterReset").onclick=(ev)=>{
-  ev.stopPropagation();
-  resetTapeCounter();
-};
+
+// The V95 deck no longer renders the legacy tape counter. Keep this binding
+// optional so removing Looper-only markup can never abort the rest of events.js.
+const tapeCounterResetButton=$("tapeCounterReset");
+if(tapeCounterResetButton){
+  tapeCounterResetButton.onclick=(ev)=>{
+    ev.stopPropagation();
+    resetTapeCounter();
+  };
+}
+
 $("looperDropzoneBtn").addEventListener("dragover",ev=>{
   ev.preventDefault();
   $("looperDropzoneBtn").classList.add("dragging");
@@ -408,120 +415,44 @@ async function renderCurrentBeatForSave(events=validateCurrentBeatForSave()){
 async function prepareBeatFolderFromSaveGesture(){
   // File/directory permission prompts must originate directly from the SAVE click.
   // Do this before the heavier OfflineAudioContext render.
-  if(!beatFolderSupported()){
-    return {direct:false,reason:"File System Access indisponible"};
-  }
-
-  if(!beatDirectoryHandle){
-    const connected=await connectBeatDirectory("readwrite");
-    return {direct:connected,reason:connected?"":"dossier non sélectionné"};
-  }
-
-  let permission=await beatFolderPermission("readwrite");
-  if(permission!=="granted" && beatDirectoryHandle.requestPermission){
-    try{
-      permission=await beatDirectoryHandle.requestPermission({mode:"readwrite"});
-    }catch(e){
-      return {direct:false,reason:e?.message||"autorisation refusée"};
-    }
-  }
-
-  return {
-    direct:permission==="granted",
-    reason:permission==="granted"?"":"autorisation écriture refusée"
-  };
+  if(beatDirectoryHandle && await beatFolderPermission("readwrite")==="granted")return true;
+  return ensureBeatDirectoryWriteAccess();
 }
 
-$("addFlipLibrary").onclick=async()=>{
-  const btn=$("addFlipLibrary");
-  btn.disabled=true;
-  setBeatSaveStatus("Préparation de la sauvegarde…");
-
-  let access={direct:false,reason:""};
+$("saveBeat").onclick=async()=>{
+  let oldText=null;
   try{
-    // Cheap musical validation must happen before any filesystem prompt.
+    // Validate synchronously before opening the directory picker.
     const events=validateCurrentBeatForSave();
+    const writeAccess=await prepareBeatFolderFromSaveGesture();
+    if(!writeAccess)return;
 
-    // Ask/restore filesystem permission before the heavier render, while the
-    // click still counts as a user gesture in Chromium.
-    access=await prepareBeatFolderFromSaveGesture();
+    const renderPromise=renderCurrentBeatForSave(events);
+    oldText=$("saveBeat").textContent;
+    $("saveBeat").disabled=true;
+    $("saveBeat").textContent="RENDERING…";
+    $("chopStatus").textContent="RENDERING BEAT…";
 
-    setBeatSaveStatus("Rendu du beat actuel…");
-    const buffer=await renderCurrentBeatForSave(events);
-    renderedFlip=buffer;
-
-    const blob=bufferToBlob(buffer);
-    const base=`FLIP_${safeBeatFilename(sampleName||"sample")}`;
-    const fallbackFilename=`${safeBeatFilename(base)}_${timestampForFilename()}.wav`;
-
-    if(access.direct){
-      setBeatSaveStatus(`Écriture dans ${beatDirectoryHandle.name}…`);
-      const saved=await saveBlobToBeatDirectory(blob,base);
-      const kb=Math.max(1,Math.round(saved.size/1024));
-      setBeatSaveStatus(`SAVED ✓ ${saved.directory}\\${saved.filename} • ${kb} KB`,"ok");
-      $("chopStatus").textContent=`SAVED ✓ ${saved.filename}`;
-    }else{
-      // Never pretend the K: save worked. Still preserve the beat as a WAV.
-      downloadBeatFallback(blob,fallbackFilename);
-      setBeatSaveStatus(`K:\\beat_scratch non accessible (${access.reason}). WAV sauvegardé dans Téléchargements à la place.`,"error");
-      $("chopStatus").textContent="DIRECT FOLDER SAVE FAILED • WAV DOWNLOADED";
-    }
+    const rendered=await renderPromise;
+    const wav=audioBufferToWav(rendered);
+    const blob=new Blob([wav],{type:"audio/wav"});
+    const saved=await saveBlobToBeatDirectory(blob,sampleName||"SCRATCH_BEAT");
+    $("chopStatus").textContent=`SAVED • ${saved.filename} • K:\\beat_scratch`;
   }catch(e){
-    setBeatSaveStatus(`SAVE ERROR: ${safeErrorMessage(e)}`,"error");
-    $("chopStatus").textContent=`SAVE ERROR: ${safeErrorMessage(e)}`;
+    console.error(e);
+    const msg=safeErrorMessage(e);
+    $("chopStatus").textContent="SAVE ERROR: "+msg;
+    setBeatSaveStatus("SAVE ERROR: "+msg,"error");
   }finally{
-    btn.disabled=false;
+    if(oldText!==null)$("saveBeat").textContent=oldText;
+    $("saveBeat").disabled=false;
   }
 };
-$("loadDrumLibraryCTA").onclick=async()=>{
-  const kind=nextMissingDrumLibrary();
-  if(kind) await chooseDrumFolder(kind);
+
+$("exportWav").onclick=()=>{
+  if(!renderedFlip){$("chopStatus").textContent="Render first";return}
+  const wav=audioBufferToWav(renderedFlip);
+  downloadBeatFallback(new Blob([wav],{type:"audio/wav"}),"scratch-practice.wav");
 };
-$("kickFolderBtn").onclick=()=>chooseDrumFolder("kick");
-$("kickFolderFallback").onchange=async()=>{await setFallbackDrumFolder("kick",$("kickFolderFallback").files);};
-$("snareFolderBtn").onclick=()=>chooseDrumFolder("snare");
-$("snareFolderFallback").onchange=async()=>{await setFallbackDrumFolder("snare",$("snareFolderFallback").files);};
-$("hatFolderBtn").onclick=()=>chooseDrumFolder("hat");
-$("hatFolderFallback").onchange=async()=>{await setFallbackDrumFolder("hat",$("hatFolderFallback").files);};
-function reportInitFailure(name,error){
-  console.error(`INIT ${name}:`,error);
-  if(window.__SP?.report)window.__SP.report(`INIT ${name}`,error);
-}
 
-function safeInit(name,fn){
-  try{ return fn(); }
-  catch(error){ reportInitFailure(name,error); return null; }
-}
-
-[
-  ["meters",ensureMeterElements],
-  ["practice",makePractice],
-  ["drum-selection",updateDrumSelectionUI],
-  ["drum-library-cta",refreshLoadDrumLibraryCTA],
-  ["auto-looper",refreshAutoLooperCompact],
-  ["tape-counter",refreshTapeCounter],
-  ["master-volume",refreshMasterVolumeUI],
-  ["punch",refreshPunchUI],
-  ["loop-grid",renderLoopGrid],
-  ["waveform",drawWave]
-].forEach(([name,fn])=>safeInit(name,fn));
-
-Promise.resolve()
-  .then(()=>refreshLibrary(false))
-  .catch(error=>{
-    reportInitFailure("beat-library",error);
-    return refreshLibrary(false).catch(e=>reportInitFailure("beat-library-fallback",e));
-  })
-  .finally(()=>{
-    if(window.__SP){
-      window.__SP.ready=true;
-      document.documentElement.dataset.appReady="1";
-    }
-  });
-
-// PWA only when served over HTTP(S). Core app also works as file://.
-const swAllowed=location.protocol==="https:" ||
-  (location.protocol==="http:" && ["localhost","127.0.0.1","[::1]"].includes(location.hostname));
-if("serviceWorker" in navigator && swAllowed){
-  navigator.serviceWorker.register("./sw.js").catch(error=>console.warn("SW:",error));
-}
+window.__SP.ready=true;
