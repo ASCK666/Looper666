@@ -141,6 +141,14 @@ function sampleVolumeGain(){
   return clamp(sampleVolumePercent/100,0,1);
 }
 
+function updateSampleVolume(value){
+  sampleVolumePercent=Number(value)||0;
+  $("sampleVolumeReadout").textContent=`${sampleVolumePercent}%`;
+  if(chopAuditionGain){
+    chopAuditionGain.gain.value=sampleVolumeGain()*sampleConditionTrimGain();
+  }
+}
+
 function masterVolumeGain(){
   return clamp(masterVolumePercent/100,0,1);
 }
