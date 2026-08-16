@@ -225,26 +225,7 @@ $("drumEditView").onchange=()=>{
 };
 
 $("clearDrumEdits").onclick=clearDrumEdits;
-
-$("newDrums").onclick=async()=>{
-  stopChopAudition();
-  try{
-    const wasPlaying=isLoopPlaying;
-    const modeBefore=lastPreviewMode;
-
-    await generateDrumSelection(true);
-
-    // If a loop is already playing, rebuild it immediately so the user
-    // actually hears NEW DRUMS without having to press STOP/PLAY.
-    if(wasPlaying){
-      await rerenderPreviewMode(modeBefore);
-    }
-
-    $("chopStatus").textContent="NEW DRUMS ✓";
-  }catch(error){
-    $("chopStatus").textContent=`DRUM ERROR: ${safeErrorMessage(error)}`;
-  }
-};
+$("newDrums").onclick=generateNewDrums;
 
 $("playDrumsOnly").onclick=playDrumsPreview;
 async function playCurrentBeat(){
