@@ -159,7 +159,7 @@ $("sliceCount").onchange=()=>{
   autoPlaceMarkers();
 };
 $("masterVolume").oninput=()=>{
-  masterVolumePercent=Number($("masterVolume").value)||0;
+  setMasterVolumePercent($("masterVolume").value);
   refreshMasterVolumeUI();
 };
 
