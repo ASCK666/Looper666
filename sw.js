@@ -14,10 +14,7 @@ const ASSETS=[
   "./js/events.js",
   "./assets/cassette-mechanism-pixel-v84.png",
   "./assets/cassette-reel-pixel-v81.png",
-  "./assets/deck-black-ui-texture.png",
-  "./assets/beats/stack-piano-horns-85-asharp-minor.wav",
-  "./assets/beats/violin-piano-92-bflat-minor.wav",
-  "./assets/beats/stack-violin-piano-89-c-minor.wav"
+  "./assets/deck-black-ui-texture.png"
 ];
 const STATIC_PATHS=new Set(ASSETS.map(path=>new URL(path,self.location.href).pathname));
 const INDEX_URL=new URL("./index.html",self.location.href).href;
