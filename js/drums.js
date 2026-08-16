@@ -1026,3 +1026,21 @@ async function playRendered(buffer){
     }
   }
 }
+
+function stopCurrentBeat(){
+  if(flipSource){
+    try{flipSource.stop()}catch{}
+    flipSource=null;
+  }
+
+  isLoopPlaying=false;
+  lastPreviewMode=null;
+  loopPlayheadState=null;
+  loopPlayheadStartedAt=0;
+
+  if(chopAuditionSource){
+    startPlayheadAnimation();
+  }else{
+    stopPlayheadAnimation(true);
+  }
+}
