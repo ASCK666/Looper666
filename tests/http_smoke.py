@@ -14,7 +14,11 @@ with serve_project() as base_url:
         "/css/deck-refactor.css": ("text/css", b"DECK ARTWORK GEOMETRY CONTRACT"),
         "/js/chopper-layout.js": ("javascript", b"arrangeChopper"),
         "/js/deck-refactor.js": ("javascript", b"TRANSPORT_CONTROLS"),
-        "/js/events.js": ("javascript", b"loadSampleBtn"),
+        "/js/events.js": ("javascript", b"EVENT_MODULES"),
+        "/js/looper-events.js": ("javascript", b"runLooperAction"),
+        "/js/practice-events.js": ("javascript", b"practiceOverlayOpen"),
+        "/js/chopper-events.js": ("javascript", b"loadSampleBtn"),
+        "/js/drums-events.js": ("javascript", b"playDrumsOnly"),
         "/manifest.json": ("application/json", b"Scratch Practice"),
     }
     for path, (mime, marker) in expected.items():
@@ -41,4 +45,4 @@ with serve_project() as base_url:
             )
             assert int(response.headers["Content-Length"]) > 100, path
 
-print("OK: HTTP smoke — real HTML, CSS, JS and current deck assets serve locally")
+print("OK: HTTP smoke — real HTML, CSS, split event JS and current deck assets serve locally")
