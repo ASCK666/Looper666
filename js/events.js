@@ -99,7 +99,6 @@ function initializeAppUI(){
     ["drum-selection",updateDrumSelectionUI],
     ["drum-library-cta",refreshLoadDrumLibraryCTA],
     ["auto-looper",refreshAutoLooperCompact],
-    ["tape-counter",refreshTapeCounter],
     ["master-volume",refreshMasterVolumeUI],
     ["punch",refreshPunchUI],
     ["loop-grid",renderLoopGrid],
