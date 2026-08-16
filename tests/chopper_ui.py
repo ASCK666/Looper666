@@ -54,6 +54,25 @@ with tempfile.TemporaryDirectory() as td, sync_playwright() as p:
       return result;
     }''')
     assert abs(volume['actual']-volume['expected'])<1e-9,volume
+    # SAMPLE PITCH is one Chopper operation: state/UI update and any active audition stops.
+    page.evaluate('''() => {
+      window.__pitchAuditionStopped=false;
+      chopAuditionSource={stop(){window.__pitchAuditionStopped=true;}};
+      chopAuditionGain={gain:{value:1}};
+      chopAuditionPad=0;
+    }''')
+    page.fill('#samplePitch','-5');page.dispatch_event('#samplePitch','input')
+    pitch=page.evaluate('''() => ({
+      semitones:samplePitchSemitones,
+      readout:document.getElementById('samplePitchReadout').textContent,
+      info:document.getElementById('sampleInfo').textContent,
+      auditionStopped:window.__pitchAuditionStopped,
+      sourceCleared:chopAuditionSource===null,
+      gainCleared:chopAuditionGain===null
+    })''')
+    assert pitch['semitones']==-5,pitch
+    assert pitch['readout']=='-5 st' and '-5 st' in pitch['info'],pitch
+    assert pitch['auditionStopped'] and pitch['sourceCleared'] and pitch['gainCleared'],pitch
     # AUTO CHOP must still populate the sixteen-pad workstation.
     page.click('#autoMarkers');page.wait_for_timeout(50)
     state=page.evaluate('''() => ({
@@ -77,4 +96,4 @@ with tempfile.TemporaryDirectory() as td, sync_playwright() as p:
     assert all(x['w']>20 and x['h']>20 for x in boxes),boxes
     assert not errors,errors
     page.close();browser.close()
-print('OK: Chopper UI — sample import/volume, AUTO CHOP, 16 pads, 16x16 grid, place/clear and clickable controls')
+print('OK: Chopper UI — sample import/volume/pitch, AUTO CHOP, 16 pads, 16x16 grid, place/clear and clickable controls')
