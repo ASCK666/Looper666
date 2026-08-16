@@ -432,6 +432,24 @@ async function clearDrumEdits(){
   }
 }
 
+async function generateNewDrums(){
+  stopChopAudition();
+  try{
+    const wasPlaying=isLoopPlaying;
+    const modeBefore=lastPreviewMode;
+
+    await generateDrumSelection(true);
+
+    if(wasPlaying){
+      await rerenderPreviewMode(modeBefore);
+    }
+
+    $("chopStatus").textContent="NEW DRUMS ✓";
+  }catch(error){
+    $("chopStatus").textContent=`DRUM ERROR: ${safeErrorMessage(error)}`;
+  }
+}
+
 function renderDrumEditor(){
   const grid=$("drumEditor");
   if(!grid)return;
