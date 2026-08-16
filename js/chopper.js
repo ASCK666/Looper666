@@ -137,6 +137,14 @@ function refreshSamplePitchUI(){
   }
 }
 
+function updateSamplePitch(value){
+  samplePitchSemitones=Number(value)||0;
+  stopChopAudition();
+  refreshMarkerEditor();
+  refreshSamplePitchUI();
+  drawWave();
+}
+
 function sampleVolumeGain(){
   return clamp(sampleVolumePercent/100,0,1);
 }
