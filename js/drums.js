@@ -1027,6 +1027,19 @@ async function playRendered(buffer){
   }
 }
 
+async function playDrumsPreview(){
+  stopChopAudition();
+  try{
+    const selection=await ensureDrumSelection();
+    renderedFlip=await renderDrumsOnly();
+    lastPreviewMode="drums";
+    $("chopStatus").textContent=`DRUMS • ${$("sampleBpm").value} BPM • ${selection.mode.toUpperCase()}`;
+    await playRendered(renderedFlip);
+  }catch(e){
+    $("chopStatus").textContent="DRUM ERROR: "+e.message;
+  }
+}
+
 function stopCurrentBeat(){
   if(flipSource){
     try{flipSource.stop()}catch{}
