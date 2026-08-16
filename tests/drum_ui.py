@@ -51,6 +51,8 @@ with sync_playwright() as p:
     page.locator('#drumEditor .drumEditStep.snare').last.click()
     page.wait_for_function('renderedFlip !== window.__drumPreviewBeforeEdit && isLoopPlaying === true && lastPreviewMode === "drums"',timeout=10000)
     page.click('#stopFlip')
+    page.wait_for_function('isLoopPlaying === false && flipSource === null && lastPreviewMode === null && loopPlayheadState === null && loopPlayheadStartedAt === 0',timeout=5000)
+    assert page.evaluate('renderedFlip !== null') is True
 
     # Clicking a drum cell toggles it, and wheel velocity changes an active step.
     cell=page.locator('#drumEditor .drumEditStep.kick').first
@@ -126,4 +128,4 @@ with sync_playwright() as p:
     mobile.close()
     browser.close()
 
-print('OK: Drum UI — selection, live rerender, 16/8 step editor, toggle/velocity, clear, FX/PUNCH, libraries and mobile stacking')
+print('OK: Drum UI — selection, live rerender/stop, 16/8 step editor, toggle/velocity, clear, FX/PUNCH, libraries and mobile stacking')
