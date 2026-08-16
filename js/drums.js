@@ -405,6 +405,25 @@ async function rerenderAfterDrumEdit(){
   }
 }
 
+async function clearDrumEdits(){
+  try{
+    await ensureDrumSelection();
+    currentDrumSelection.kicks=[];
+    currentDrumSelection.snares=[];
+    currentDrumSelection.ghosts=[];
+    currentDrumSelection.hatSteps=[];
+    currentDrumSelection.kickVelocity={};
+    currentDrumSelection.snareVelocity={};
+    currentDrumSelection.hatVelocity={};
+    markDrumSelectionEdited();
+    renderDrumEditor();
+    await rerenderAfterDrumEdit();
+    $("chopStatus").textContent="DRUMS CLEARED ✓";
+  }catch(e){
+    $("chopStatus").textContent="DRUM EDIT ERROR: "+e.message;
+  }
+}
+
 function renderDrumEditor(){
   const grid=$("drumEditor");
   if(!grid)return;
@@ -957,7 +976,6 @@ async function renderSequence(events){
     const sampleStart=markers[idx];
     const available=Math.max(.01,sampleBuffer.duration-sampleStart);
     const wanted=Math.max(.01,nextTime-startTime);
-
     const src=offline.createBufferSource();
     src.buffer=sampleBuffer;
     src.playbackRate.value=pitchRate;
