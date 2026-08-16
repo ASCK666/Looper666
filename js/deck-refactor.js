@@ -19,15 +19,17 @@
   let flashTimer = null;
 
   function prepareDeckAsset(){
-    const images=[...document.querySelectorAll(".cassetteDeckImage,.cassetteDoorPanel")];
-    images.forEach(img=>{
-      if(img.dataset.deckAssetPrepared==="1")return;
-      img.dataset.deckAssetPrepared="1";
-      img.addEventListener("error",()=>{
-        if(!img.src.endsWith("cassette-mechanism-pixel-v84.png"))img.src=DECK_ASSET_FALLBACK;
-      });
-      img.src=DECK_ASSET_V95;
+    const img=document.querySelector(".cassetteDeckImage");
+    if(!img || img.dataset.deckAssetPrepared==="1")return;
+    img.dataset.deckAssetPrepared="1";
+    img.addEventListener("error",()=>{
+      if(!img.src.endsWith("cassette-mechanism-pixel-v84.png"))img.src=DECK_ASSET_FALLBACK;
     });
+    img.src=DECK_ASSET_V95;
+  }
+
+  function removeDuplicateDoorArtwork(){
+    document.querySelector(".cassetteDoorPanel")?.remove();
   }
 
   function findDeckHost(){
@@ -223,6 +225,7 @@
     removeLegacyHardware();
     disableLegacyTapeCounterEngine();
     prepareDeckAsset();
+    removeDuplicateDoorArtwork();
     const host=findDeckHost();
     buildBacklightLayers(host);
     buildLoopCounter();
