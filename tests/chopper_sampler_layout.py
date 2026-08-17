@@ -7,8 +7,10 @@ except Exception:
 ROOT=Path(__file__).resolve().parents[1]
 html=(ROOT/'index.html').read_text(encoding='utf-8')
 html=re.sub(r'<link rel="manifest"[^>]*>','',html)
-css=(ROOT/'css/base.css').read_text(encoding='utf-8')
-html=html.replace('<link rel="stylesheet" href="./css/base.css">',f'<style>{css}</style>')
+base_css=(ROOT/'css/base.css').read_text(encoding='utf-8')
+clean_css=(ROOT/'css/clean-ui.css').read_text(encoding='utf-8')
+html=html.replace('<link rel="stylesheet" href="./css/base.css">',f'<style>{base_css}</style>')
+html=html.replace('<link rel="stylesheet" href="./css/clean-ui.css">',f'<style>{clean_css}</style>')
 html=re.sub(r'src="assets/[^"]+"','src=""',html)
 for rel in ['./js/bootstrap.js','./js/core.js','./js/looper.js','./js/practice.js','./js/chopper.js','./js/drums.js','./js/events.js']:
     js=(ROOT/rel[2:]).read_text(encoding='utf-8')
@@ -26,18 +28,28 @@ with sync_playwright() as p:
         data=page.evaluate('''() => {
           const box=s=>document.querySelector(s).getBoundingClientRect();
           const pads=[...document.querySelectorAll('#pads .pad')].map(x=>x.getBoundingClientRect().toJSON());
+          const actions=[...document.querySelectorAll('#chopper .samplerActionRow > .btn')].map(x=>({id:x.id,...x.getBoundingClientRect().toJSON()}));
           const upper=getComputedStyle(document.querySelector('.samplerUpperDeck')).gridTemplateColumns;
           const perf=getComputedStyle(document.querySelector('.samplerPerformanceDeck')).gridTemplateColumns;
           const screen=box('.samplerScreenModule'),control=box('.samplerControlModule');
           const padPanel=box('.samplerPadsModule'),seq=box('.samplerSequenceModule');
           const wrap=document.querySelector('.loopGridWrap');
-          return {pads,upper,perf,screen:screen.toJSON(),control:control.toJSON(),padPanel:padPanel.toJSON(),seq:seq.toJSON(),bodyW:document.body.scrollWidth,viewportW:innerWidth,scrollable:wrap.scrollWidth>=wrap.clientWidth};
+          return {pads,actions,hasOldTransport:!!document.querySelector('.samplerTransportModule'),upper,perf,screen:screen.toJSON(),control:control.toJSON(),padPanel:padPanel.toJSON(),seq:seq.toJSON(),bodyW:document.body.scrollWidth,viewportW:innerWidth,scrollable:wrap.scrollWidth>=wrap.clientWidth};
         }''')
         assert len(data['pads'])==16,data
         assert all(x['width']>35 and x['height']>35 for x in data['pads']),data['pads']
         # 4 physical pads per row: pad 1..4 align, pad 5 starts a new row.
         assert abs(data['pads'][0]['top']-data['pads'][3]['top'])<2,data['pads'][:5]
         assert data['pads'][4]['top']>data['pads'][0]['bottom']-2,data['pads'][:5]
+        expected_actions=['loadSampleBtn','autoMarkers','previewFlip','playDrumsOnly','stopFlip','addFlipLibrary']
+        assert [x['id'] for x in data['actions']]==expected_actions,data['actions']
+        assert not data['hasOldTransport'],data
+        assert all(30<=x['height']<=40 for x in data['actions']),data['actions']
+        if width>1000:
+            assert max(x['top'] for x in data['actions'])-min(x['top'] for x in data['actions'])<2,data['actions']
+        else:
+            assert abs(data['actions'][0]['top']-data['actions'][2]['top'])<2,data['actions']
+            assert data['actions'][3]['top']>data['actions'][0]['bottom']-2,data['actions']
         if width>1180:
             assert data['control']['left']>=data['screen']['right']-2,data
         else:
@@ -51,4 +63,4 @@ with sync_playwright() as p:
         assert not errors,errors
         page.close()
     browser.close()
-print('OK: Chopper sampler layout — 4x4 pads, screen/control hierarchy, sequence and responsive stacking')
+print('OK: Chopper sampler layout — compact top actions, 4x4 pads, screen/control hierarchy, sequence and responsive stacking')
