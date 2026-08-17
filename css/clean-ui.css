@@ -118,17 +118,44 @@
   letter-spacing: .6px !important;
 }
 
+#chopper .samplerScreenModule {
+  display: grid !important;
+  grid-template-columns: minmax(0, 1fr) 52px 68px 52px !important;
+  grid-template-areas:
+    "actions actions actions actions"
+    "title pitch tempo volume"
+    "wave wave wave wave"
+    "info info info info" !important;
+  align-items: center !important;
+  column-gap: 7px !important;
+  row-gap: 8px !important;
+}
+
 #chopper .samplerDisplayActions {
+  grid-area: actions;
   grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
   gap: 6px !important;
-  margin: 0 0 10px !important;
+  margin: 0 !important;
+}
+
+#chopper .samplerScreenModule > .stableTitle {
+  grid-area: title;
+  min-width: 0;
+  margin: 0 !important;
+}
+
+#chopper .samplerScreenModule > .stableTitle .titleMeta {
+  display: none !important;
 }
 
 #chopper .samplerDisplayBody {
-  display: grid !important;
-  grid-template-columns: 52px minmax(0, 1fr) 68px 52px !important;
-  align-items: center !important;
-  gap: 7px !important;
+  display: contents !important;
+}
+
+#chopper .samplerDisplayBody .samplerScreen {
+  grid-area: wave;
+  width: 100% !important;
+  min-width: 0 !important;
 }
 
 #chopper .sampleKnob {
@@ -144,8 +171,13 @@
   text-align: center;
 }
 
+#chopper .samplePitchKnob {
+  grid-area: pitch;
+}
+
 #chopper .sampleVolumeKnob {
   --knob-pct: 80;
+  grid-area: volume;
 }
 
 #chopper .sampleKnob > label {
@@ -211,6 +243,7 @@
 }
 
 #chopper .sampleTempoControl {
+  grid-area: tempo;
   display: block !important;
   min-width: 0;
   margin: 0 !important;
@@ -236,6 +269,10 @@
 
 #chopper .fineSettingsSelectRow {
   margin-top: 9px;
+}
+
+#chopper .samplerSampleInfo {
+  grid-area: info;
 }
 
 #chopper .samplerSampleInfo,
@@ -337,13 +374,14 @@
     border-radius: 4px !important;
   }
 
-  #chopper .samplerDisplayActions {
-    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  #chopper .samplerScreenModule {
+    grid-template-columns: minmax(0, 1fr) 44px 60px 44px !important;
+    column-gap: 5px !important;
+    row-gap: 6px !important;
   }
 
-  #chopper .samplerDisplayBody {
-    grid-template-columns: 44px minmax(0, 1fr) 60px 44px !important;
-    gap: 5px !important;
+  #chopper .samplerDisplayActions {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
   }
 
   #chopper .sampleKnobControl {
@@ -410,9 +448,9 @@
     padding-inline: 4px !important;
   }
 
-  #chopper .samplerDisplayBody {
-    grid-template-columns: 40px minmax(0, 1fr) 54px 40px !important;
-    gap: 4px !important;
+  #chopper .samplerScreenModule {
+    grid-template-columns: minmax(0, 1fr) 40px 54px 40px !important;
+    column-gap: 4px !important;
   }
 
   #chopper .sampleKnobControl {
