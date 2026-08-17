@@ -46,5 +46,16 @@ for token in ['navigator.serviceWorker.getRegistrations()', 'caches.keys()']:
     if token not in bootstrap:
         problems.append(f'Bootstrap stale-cache cleanup missing: {token}')
 
+# Bootstrap must not hide extra runtime dependencies: any local path it names
+# has to exist in the deployable tree.
+for val in re.findall(r'["\'](\./[^"\']+)["\']', bootstrap):
+    target=(ROOT/val[2:]).resolve()
+    if not target.exists():
+        problems.append(f'Bootstrap missing: {val} -> {target}')
+
+events=(ROOT/'js'/'events.js').read_text(encoding='utf-8')
+if 'serviceWorker.register' in events:
+    problems.append('events.js must not re-register the retired service worker')
+
 assert not problems, '\n'.join(problems)
 print('OK: local resource paths resolve and Pages development mode cannot serve stale app caches')
