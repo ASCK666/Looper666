@@ -51,6 +51,7 @@
   left: 22px !important;
   height: 11px !important;
   transform-origin: 50% 17px !important;
+  pointer-events: none !important;
 }
 
 .headerVolLabel,
