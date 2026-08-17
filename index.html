@@ -238,7 +238,12 @@
           <div class="samplerActionRow">
             <button id="loadSampleBtn" class="btn primary">LOAD SAMPLE</button>
             <button id="autoMarkers" class="btn">AUTO CHOP</button>
+            <button id="previewFlip" class="btn primary">PLAY</button>
+            <button id="playDrumsOnly" class="btn blue">DRUMS</button>
+            <button id="stopFlip" class="btn">STOP</button>
+            <button id="addFlipLibrary" class="btn good">SAVE BEAT</button>
           </div>
+          <div id="beatSaveStatus" class="status saveBeatStatus">SAVE rend la grille actuelle puis écrit un WAV.</div>
           <input id="sampleFile" class="hidden" type="file" accept="audio/*">
           <input id="waveZoom" class="hidden" type="range" min="1" max="24" step="1" value="1">
 
@@ -288,18 +293,6 @@
           </div>
           <div class="samplerModuleHint">Click = place • right click = clear • one chop per step.</div>
         </div>
-      </div>
-
-      <div class="panel chopTransportPanel samplerTransportModule">
-        <div class="title compactTitle">TRANSPORT</div>
-        <div class="grid4 samplerTransportButtons">
-          <button id="previewFlip" class="btn primary">PLAY</button>
-          <button id="playDrumsOnly" class="btn blue">DRUMS</button>
-          <button id="stopFlip" class="btn">STOP</button>
-          <button id="addFlipLibrary" class="btn good">SAVE BEAT</button>
-        </div>
-        <div id="beatSaveStatus" class="status saveBeatStatus">SAVE rend la grille actuelle puis écrit un WAV.</div>
-        <div class="spaceHint">ESPACE = PLAY / STOP</div>
       </div>
 
       <div class="panel controlPanel samplerDrumSection">
