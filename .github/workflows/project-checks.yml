@@ -39,11 +39,9 @@ jobs:
       - name: Commit CSS cleanup candidate
         if: failure() && github.event_name == 'pull_request'
         run: |
-          git diff -- css/base.css > /tmp/css-cleanup.patch
-          if [ -s /tmp/css-cleanup.patch ]; then
+          if ! git diff --quiet -- css/base.css; then
             git fetch origin "${{ github.head_ref }}"
             git checkout -B "${{ github.head_ref }}" "origin/${{ github.head_ref }}"
-            git apply /tmp/css-cleanup.patch
             git config user.name "github-actions[bot]"
             git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
             git add css/base.css
