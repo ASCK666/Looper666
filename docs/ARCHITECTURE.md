@@ -1,100 +1,113 @@
-# Scratch Practice V91 — code ownership
+# Scratch Practice — current code ownership
 
-Scratch Practice is a local Looper + Chopper. It is split by responsibility so visual changes do not require touching the deterministic Web Audio engine. It contains no remote application calls, model integration or generated-content subsystem.
+Scratch Practice is a local-first Looper + Chopper/Drum workstation built with
+vanilla HTML, CSS and JavaScript. The runtime deliberately stays small: classic
+scripts, Web Audio, local browser storage/file APIs and no application server.
 
-## Reading order for a new maintainer
+This file is the maintainer orientation guide. For the detailed **current** state
+and dependency graph, read `STATE_DEPENDENCY_MAP.md`. For the desired direction,
+read `TARGET_ARCHITECTURE.md`. Do not duplicate a refactor roadmap here.
 
-1. Read `index.html` to understand the three visible work areas.
-2. Read `js/core.js` for shared Web Audio state and dependency-free helpers.
+## Reading order for a maintainer
+
+1. Read `index.html` for the visible workstation structure and runtime load order.
+2. Read `js/core.js` for shared Web Audio infrastructure and generic helpers.
 3. Read the feature file being changed: `looper.js`, `chopper.js` or `drums.js`.
-4. Read `js/events.js` last: it wires the DOM to the feature functions but must
-   not become a second implementation layer.
-5. Run `python3 tools/test_all.py` before and after every small change.
+4. Read `js/events.js` last. It wires DOM events and still contains a few documented
+   cross-domain workflows, but it must not become a second implementation layer.
+5. Read `STATE_DEPENDENCY_MAP.md` before changing ownership or shared state.
+6. Run `python3 tools/test_all.py` before and after a small change.
 
 ## Runtime files
 
-- `index.html` — application structure only
-- `css/base.css` — generated production CSS; never hand-edit
-- `js/bootstrap.js` — boot diagnostics / uncaught-error capture
-- `js/core.js` — shared audio state, meters, WAV helpers, transient detection
-- `js/looper.js` — beat library, IndexedDB fallback, local folder connection, cassette transport
-- `js/practice.js` — legacy Practice implementation; frozen pending redesign
-- `js/chopper.js` — sample import, conditioner, waveform, markers, pads and placement grid
-- `js/drums.js` — grooves, local drum libraries, velocity, PUNCH and render engine
-- `js/events.js` — UI bindings and application startup
+The browser loads classic scripts in this order:
 
-V91 keeps classic scripts because their shared Web Audio state is intentionally
-loaded in a fixed order. New behavior should stay in its owning file; avoid
-adding another global compatibility layer.
+```text
+bootstrap.js -> core.js -> looper.js -> practice.js -> chopper.js -> drums.js -> events.js
+```
 
-## Current dependency direction
+- `index.html` — application structure and explicit runtime manifest
+- `css/base.css` — maintained primary runtime stylesheet
+- `css/clean-ui.css` — maintained late cascade for the intentional lean workstation UI
+- `js/bootstrap.js` — boot diagnostics and retirement of stale app caches/workers
+- `js/core.js` — shared audio infrastructure, meter primitives, WAV helpers and generic utilities
+- `js/looper.js` — Beat Crate, imports, persistence and cassette transport
+- `js/practice.js` — frozen Practice implementation
+- `js/chopper.js` — sample import/conditioning, waveform, markers, pads and placement grid
+- `js/drums.js` — Drum folders/selections, patterns, edits, effects and the current combined renderer
+- `js/events.js` — DOM wiring plus the remaining explicitly documented cross-domain workflows
 
-The intended direction is `events.js -> feature -> core.js`. The application is
-not there yet, so V91 documents the remaining exceptions instead of hiding them:
+Classic-script order is still part of the runtime contract. Do not add a compatibility
+layer to hide that fact. If ownership work later makes imports materially clearer,
+reassess modules then; they are not a proactive goal.
 
-- `drums.js` still contains `renderSequence()` and `playRendered()`, which render
-  the complete Chopper + Drums loop.
-- Chopper export reaches `saveBlobToBeatDirectory()` in `looper.js` through the
-  event wiring.
-- Several audio-state variables remain shared globals created by `core.js`.
+## Current ownership boundary
 
-`refreshCassetteUI()` is the first corrected boundary: it now lives in
-`looper.js`, beside the deck state it displays. Its public name is unchanged so
-the move has no effect on callers or classic-script loading.
+The intended direction is `events -> feature/renderer -> core`, but the current
+runtime is intentionally stabilized rather than being mechanically refactored to
+match the target diagram.
 
-## Progressive migration contract
+Important current facts:
 
-- Move one responsibility at a time; never combine an ownership move with a
-  visual redesign or audio-algorithm change.
-- Keep the existing function name and behavior during a move.
-- Add a focused regression invariant for every new ownership boundary.
-- Keep direct `index.html` opening functional while classic scripts remain.
-- Introduce ES modules only after the engines have explicit inputs and outputs;
-  that later step will make the local HTTP server the supported development path.
-- Prefer a small number of cohesive files. Split a file only when the extracted
-  responsibility has an independent contract and independent tests.
+- `core.js` still physically declares several feature-state families; this is known debt.
+- `drums.js` currently contains the combined Chopper + Drums renderer.
+- renderer source buffer, cue markers and sample pitch rate are explicit inputs;
+  other hidden inputs are documented in `STATE_DEPENDENCY_MAP.md` and are deferred
+  until feature work makes a narrow boundary worth changing.
+- `events.js` still owns some full-preview, save and master-volume orchestration;
+  those are documented exceptions, not invitations for a broad cleanup.
+- Drum-local feedback writes to `#drumStatus`; `drums.js` must not use the
+  Chopper/combined `#chopStatus` sink.
+- Practice remains frozen unless a Practice change is explicitly requested.
 
-## Next safe ownership moves
+The active rule is boy-scout cleanup around the feature being changed: remove a
+complete obsolete responsibility or a hidden dependency only when the resulting
+flow is simpler for a human reader.
 
-1. Move the shared master-volume view out of `chopper.js` without changing its
-   audio graph.
-2. Isolate Looper persistence behind a small storage contract while keeping the
-   current in-memory fallback.
-3. Extract the complete-loop renderer from `drums.js` only after its current
-   Chopper and Drum inputs have dedicated tests.
-4. Reduce `events.js` to startup and event wiring.
+## CSS ownership
 
-## CSS source architecture
+There is **no CSS generator pipeline**. The two deployed stylesheets are maintained
+directly and loaded in this order:
 
-Human edits belong in `css/src/`:
+```text
+css/base.css
+css/clean-ui.css
+```
 
-- `tokens.css`
-- `base.css`
-- `layout.css`
-- `looper.css`
-- `chopper.css`
-- `drums.css`
-- `practice.css` (frozen)
-- `responsive.css`
-- `utilities.css`
-- `shared.css`
+`base.css` is the primary component/layout stylesheet. `clean-ui.css` is the
+existing, intentionally late lean-UI layer. Do not create a third override/theme
+stylesheet. When replacing a rule or component path, remove the retired declaration
+in the same change and verify the full cascade with the CSS health/redundancy tests.
 
-`tools/build_css.py` builds the single `css/base.css` file from these sources.
+See `CSS_WORKFLOW.md` for the edit/test contract.
 
-## Regression rules
+## Change contract
 
-1. Never move file-library JavaScript as part of a CSS refactor.
-2. LOOPER must retain import, folder connection and PREV/PLAY/STOP/NEXT/AUTO behavior.
-3. CHOPPER must retain sample import, 16 pads and the 16×16 placement matrix.
-4. DRUMS must retain KICK/SNARE/HI-HAT folder selectors and fallback inputs.
-5. Do not add BPM detection to imported Looper beats.
-6. Practice CSS/JS stays unchanged until its planned rebuild.
-7. Do not add a new override stylesheet; fix the owning CSS source.
-8. Keep product identity and runtime free of remote model dependencies.
-9. Run `python tools/test_all.py` before packaging.
-10. Keep `tests/js_health.py`, `tests/core_unit.js`, `tests/assets_health.py` and
-    `tests/audio_assets.py` green when removing or relocating runtime code.
+- Move or remove one complete responsibility at a time.
+- Do not combine an ownership move with an audio-algorithm change.
+- Do not create setters, service objects, contexts or wrappers that only hide a global.
+- Do not split files merely to make the tree look more architectural.
+- When a mechanism is replaced, delete the old listener/helper/selector/path in the same change.
+- Keep the three hidden Drum folder file inputs: they are the real fallback when
+  `showDirectoryPicker()` is unavailable, not duplicate UI.
+- Keep the header master gain/meter. The retired lower vertical master display must not return.
+- Add or update a focused regression invariant when a responsibility boundary changes.
+
+## Regression gate
+
+Run:
+
+```bash
+python3 tools/test_all.py
+```
+
+The maintained suite checks runtime/dead-code contracts, JS health, deterministic
+audio behavior, the full CSS cascade, responsive layout, Chopper/Drum UI, master/PUNCH,
+HTTP serving and Chromium interactions. GitHub Actions runs the same suite on pull
+requests and pushes to `main`.
 
 ## Persistence and permissions
 
-If IndexedDB is unavailable, imported beats fall back to memory for the current tab. Folder connection asks for read access; write access is requested only when SAVE BEAT needs it.
+Imported beats use IndexedDB when available and fall back to memory for the current
+tab when it is not. Folder access is user initiated. Beat-folder write permission is
+requested only when SAVE needs it. Drum folder handles/files remain local to the browser.

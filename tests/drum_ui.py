@@ -31,7 +31,7 @@ with sync_playwright() as p:
     page.wait_for_timeout(100)
 
     # The drum machine exposes one editor-owned path for loading and editing drums.
-    for sel in ['.controlPanel','.drumSelector','.snareFx','.currentDrums','.drumEditBox','#drumEditor','#chopStatus']:
+    for sel in ['.controlPanel','.drumSelector','.snareFx','.currentDrums','.drumEditBox','#drumEditor','#drumStatus','#chopStatus']:
         assert page.locator(sel).count()>=1, sel
     assert page.locator('#drumEditor .drumEditStep').count()==48
     assert page.locator('#drumEditor .drumEditHeadStep').count()==16
@@ -56,7 +56,7 @@ with sync_playwright() as p:
       auditionStopped:window.__drumsPreviewAuditionStopped,
       sourceCleared:chopAuditionSource===null,
       gainCleared:chopAuditionGain===null,
-      status:document.getElementById('chopStatus').textContent,
+      status:document.getElementById('drumStatus').textContent,
       bpm:document.getElementById('sampleBpm').value,
       mode:currentDrumSelection.mode.toUpperCase()
     })''')
@@ -89,7 +89,7 @@ with sync_playwright() as p:
       auditionStopped:window.__newDrumsAuditionStopped,
       sourceCleared:chopAuditionSource===null,
       gainCleared:chopAuditionGain===null,
-      status:document.getElementById('chopStatus').textContent
+      status:document.getElementById('drumStatus').textContent
     })''')
     assert rerolled['selectionChanged'],rerolled
     assert rerolled['auditionStopped'] and rerolled['sourceCleared'] and rerolled['gainCleared'],rerolled
@@ -158,7 +158,9 @@ with sync_playwright() as p:
         assert fallback.count()==1, rid
         assert fallback.evaluate("el=>el.closest('.drumEditBox')!==null"), rid
         assert fallback.is_hidden(), rid
-    assert page.locator('#chopStatus').evaluate("el=>el.closest('.drumEditBox')!==null")
+    assert page.locator('#drumStatus').evaluate("el=>el.closest('.drumEditBox')!==null")
+    assert page.locator('#chopStatus').evaluate("el=>el.closest('.samplerControlModule')!==null")
+    assert page.locator('#chopStatus').evaluate("el=>el.closest('.drumEditBox')===null")
     for retired in ['#drumLibrariesPanel','#loadDrumLibraryCTA','.drumLibrarySlot','.drumLibraryButton','.outputMeterPanel','#masterVuVertical']:
         assert page.locator(retired).count()==0, retired
     assert page.locator('#masterVolume').count()==1

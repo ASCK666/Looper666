@@ -1,6 +1,6 @@
 # Current state and dependency map
 
-This document describes the **current runtime on `main` after the incremental ownership/dependency moves through PR #46**. It is intentionally descriptive, not aspirational. `TARGET_ARCHITECTURE.md` defines where the project should converge.
+This document describes the **current runtime on `main`**. The proactive ownership/dependency migration stabilized after PR #46; later feature and UI work is reflected here only when it changes a listed writer, dependency or ownership fact. It is intentionally descriptive, not aspirational. `TARGET_ARCHITECTURE.md` defines where the project should converge.
 
 The map should be refreshed when a completed architecture step makes a listed writer, dependency or priority materially false. Documentation updates must remain separate from runtime ownership changes.
 
@@ -191,7 +191,7 @@ Not every relationship requires movement.
 
 - Looper persistence, folder scanning and beat-library behavior already live in `looper.js`; the main problem is the state they depend on being globally declared and some transport inspection in Events.
 - Chopper waveform/marker algorithms and the immediate sample load/volume/pitch transitions live in `chopper.js`.
-- Drum library loading, patterns, editing, velocities, CLEAR and NEW DRUMS behavior mostly live in `drums.js`.
+- Drum library loading, patterns, editing, velocities, CLEAR and NEW DRUMS behavior mostly live in `drums.js`; Drum-local feedback writes to `#drumStatus` rather than the Chopper/combined status sink.
 - The current combined renderer, its rerender transition, drums-only PLAY and STOP lifecycle live together in `drums.js`; its source audio buffer, cue positions and pitch rate are explicit inputs.
 - Practice is isolated enough to remain frozen.
 
