@@ -18,7 +18,7 @@ for rel in ['./js/bootstrap.js','./js/core.js','./js/looper.js','./js/practice.j
     html=html.replace(f'<script src="{rel}"></script>',f'<script>{js}</script>')
 with sync_playwright() as p:
     browser=p.chromium.launch(headless=True,executable_path='/usr/bin/chromium',args=['--no-sandbox','--disable-dev-shm-usage'])
-    for width,height in [(1440,1200),(820,1200),(520,1200)]:
+    for width,height in [(1440,1200),(820,1200),(520,1200),(390,1200)]:
         page=browser.new_page(viewport={'width':width,'height':height})
         errors=[];page.on('pageerror',lambda e:errors.append(str(e)))
         page.set_content(html,wait_until='load',timeout=20000)
@@ -30,20 +30,30 @@ with sync_playwright() as p:
           const pads=[...document.querySelectorAll('#pads .pad')].map(x=>x.getBoundingClientRect().toJSON());
           const controlActions=[...document.querySelectorAll('#chopper .samplerActionRow > .btn')].map(x=>({id:x.id,...x.getBoundingClientRect().toJSON()}));
           const transport=[...document.querySelectorAll('#chopper .samplerDisplayActions > .btn')].map(x=>({id:x.id,...x.getBoundingClientRect().toJSON()}));
-          const pitch=box('.samplePitchKnob'),volume=box('.sampleVolumeKnob'),wave=box('.samplerScreen');
+          const pitch=box('.samplePitchKnob'),volume=box('.sampleVolumeKnob'),tempo=box('.sampleTempoControl'),wave=box('.samplerScreen');
+          const tempoInput=box('#sampleBpm');
           const upper=getComputedStyle(document.querySelector('.samplerUpperDeck')).gridTemplateColumns;
           const perf=getComputedStyle(document.querySelector('.samplerPerformanceDeck')).gridTemplateColumns;
           const screen=box('.samplerScreenModule'),control=box('.samplerControlModule');
           const padPanel=box('.samplerPadsModule'),seq=box('.samplerSequenceModule');
           const wrap=document.querySelector('.loopGridWrap');
+          const fine=document.querySelector('.advancedBox');
           return {
-            pads,controlActions,transport,pitch:pitch.toJSON(),volume:volume.toJSON(),wave:wave.toJSON(),
+            pads,controlActions,transport,pitch:pitch.toJSON(),volume:volume.toJSON(),tempo:tempo.toJSON(),wave:wave.toJSON(),tempoInput:tempoInput.toJSON(),
             pitchPct:getComputedStyle(document.querySelector('.samplePitchKnob')).getPropertyValue('--knob-pct').trim(),
             volumePct:getComputedStyle(document.querySelector('.sampleVolumeKnob')).getPropertyValue('--knob-pct').trim(),
             pitchInScreen:!!document.querySelector('.samplerScreenModule #samplePitch'),
             volumeInScreen:!!document.querySelector('.samplerScreenModule #sampleVolume'),
+            tempoInScreen:!!document.querySelector('.samplerScreenModule #sampleBpm'),
             pitchInControl:!!document.querySelector('.samplerControlModule #samplePitch'),
             volumeInControl:!!document.querySelector('.samplerControlModule #sampleVolume'),
+            tempoInControl:!!document.querySelector('.samplerControlModule #sampleBpm'),
+            sliceInFine:!!fine?.querySelector('#sliceCount'),
+            snapInFine:!!fine?.querySelector('#snapMode'),
+            gridInFine:!!fine?.querySelector('#gridDivision'),
+            transientInFine:!!fine?.querySelector('#transientRadius'),
+            sliceOutsideFine:!!document.querySelector('.samplerControlModule > #sliceCount, .samplerControlModule > .samplerSelectRow:not(.fineSettingsSelectRow) #sliceCount'),
+            snapOutsideFine:!!document.querySelector('.samplerControlModule > #snapMode, .samplerControlModule > .samplerSelectRow:not(.fineSettingsSelectRow) #snapMode'),
             upper,perf,screen:screen.toJSON(),control:control.toJSON(),padPanel:padPanel.toJSON(),seq:seq.toJSON(),
             bodyW:document.body.scrollWidth,viewportW:innerWidth,scrollable:wrap.scrollWidth>=wrap.clientWidth
           };
@@ -52,33 +62,41 @@ with sync_playwright() as p:
         assert all(x['width']>35 and x['height']>35 for x in data['pads']),data['pads']
         assert abs(data['pads'][0]['top']-data['pads'][3]['top'])<2,data['pads'][:5]
         assert data['pads'][4]['top']>data['pads'][0]['bottom']-2,data['pads'][:5]
-        assert [x['id'] for x in data['controlActions']]==['loadSampleBtn','autoMarkers'],data['controlActions']
-        assert [x['id'] for x in data['transport']]==['previewFlip','playDrumsOnly','stopFlip','addFlipLibrary'],data['transport']
+        assert [x['id'] for x in data['controlActions']]==['playDrumsOnly','autoMarkers'],data['controlActions']
+        assert [x['id'] for x in data['transport']]==['previewFlip','loadSampleBtn','stopFlip','addFlipLibrary'],data['transport']
         assert all(30<=x['height']<=44 for x in data['controlActions']+data['transport']),data
-        assert data['pitchInScreen'] and data['volumeInScreen'],data
-        assert not data['pitchInControl'] and not data['volumeInControl'],data
+        assert data['pitchInScreen'] and data['volumeInScreen'] and data['tempoInScreen'],data
+        assert not data['pitchInControl'] and not data['volumeInControl'] and not data['tempoInControl'],data
+        assert data['sliceInFine'] and data['snapInFine'] and data['gridInFine'] and data['transientInFine'],data
+        assert not data['sliceOutsideFine'] and not data['snapOutsideFine'],data
+        assert data['tempoInput']['width']>30 and data['tempoInput']['height']>=28,data['tempoInput']
         assert abs(float(data['pitchPct'])-50)<.01,data
         assert abs(float(data['volumePct'])-80)<.01,data
+        # Pitch, waveform, tempo and volume stay on one physical row at every maintained width.
+        assert data['pitch']['right']<=data['wave']['left']+2,data
+        assert data['tempo']['left']>=data['wave']['right']-2,data
+        assert data['volume']['left']>=data['tempo']['right']-2,data
+        for item in ['pitch','tempo','volume']:
+            assert data[item]['top']<data['wave']['bottom'] and data[item]['bottom']>data['wave']['top'],data
         if width>760:
             assert max(x['top'] for x in data['transport'])-min(x['top'] for x in data['transport'])<2,data['transport']
-            assert data['pitch']['right']<=data['wave']['left']+2,data
-            assert data['volume']['left']>=data['wave']['right']-2,data
         else:
             assert abs(data['transport'][0]['top']-data['transport'][1]['top'])<2,data['transport']
             assert data['transport'][2]['top']>data['transport'][0]['bottom']-2,data['transport']
-            assert data['pitch']['top']>=data['wave']['bottom']-2,data
-            assert abs(data['pitch']['top']-data['volume']['top'])<2,data
         page.fill('#samplePitch','6');page.dispatch_event('#samplePitch','input')
         page.fill('#sampleVolume','25');page.dispatch_event('#sampleVolume','input')
+        page.fill('#sampleBpm','103.5');page.dispatch_event('#sampleBpm','input')
         knob_state=page.evaluate('''() => ({
           pitch:getComputedStyle(document.querySelector('.samplePitchKnob')).getPropertyValue('--knob-pct').trim(),
           volume:getComputedStyle(document.querySelector('.sampleVolumeKnob')).getPropertyValue('--knob-pct').trim(),
           pitchReadout:document.getElementById('samplePitchReadout').textContent,
-          volumeReadout:document.getElementById('sampleVolumeReadout').textContent
+          volumeReadout:document.getElementById('sampleVolumeReadout').textContent,
+          tempo:document.getElementById('sampleBpm').value
         })''')
         assert abs(float(knob_state['pitch'])-100)<.01,knob_state
         assert abs(float(knob_state['volume'])-25)<.01,knob_state
         assert knob_state['pitchReadout']=='+6 st' and knob_state['volumeReadout']=='25%',knob_state
+        assert knob_state['tempo']=='103.5',knob_state
         if width>1180:
             assert data['control']['left']>=data['screen']['right']-2,data
         else:
@@ -92,4 +110,4 @@ with sync_playwright() as p:
         assert not errors,errors
         page.close()
     browser.close()
-print('OK: Chopper sampler layout — display transport, live pitch/volume knobs, 4x4 pads and responsive stacking')
+print('OK: Chopper sampler layout — inline pitch/wave/tempo/volume, swapped LOAD/DRUMS, fine chop settings and responsive layout')
