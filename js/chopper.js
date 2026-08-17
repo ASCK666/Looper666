@@ -449,16 +449,12 @@ function clearPlayhead(){
   }
 }
 
-function currentSequenceDuration(){
-  const bpm=Math.max(40,Number($("sampleBpm").value)||90);
-  return 8*60/bpm;
-}
-
 function buildLoopPlayheadState(){
   if(!sampleBuffer)return null;
 
-  const targetDur=currentSequenceDuration();
-  const stepDur=targetDur/16;
+  const bpm=Math.max(40,Number($("sampleBpm").value)||90);
+  const stepDur=(60/bpm)/2;
+  const targetDur=8*60/bpm;
   const pitchRate=samplePitchRate();
   const events=gridEventsForRender();
 
@@ -519,20 +515,27 @@ function renderSampleTimeline(){
   const ctx=sampleTimeline2d;
   const labelWidth=66;
   const timelineWidth=Math.max(1,width-labelWidth);
-  const duration=currentSequenceDuration();
   ctx.clearRect(0,0,width,height);
   ctx.fillStyle="#060504";
   ctx.fillRect(0,0,width,height);
 
-  if(sampleBuffer){
-    const visibleDuration=Math.min(duration,effectiveSampleDuration());
-    const drawWidth=Math.max(1,Math.round((visibleDuration/duration)*timelineWidth));
-    const sourceEnd=Math.min(sampleBuffer.duration,displayToSourceTime(visibleDuration));
+  const state=buildLoopPlayheadState();
+  if(state){
     ctx.save();
     ctx.translate(0,18);
     ctx.strokeStyle="#d7a455";
     ctx.lineWidth=1;
-    drawBufferRange(ctx,sampleBuffer,0,sourceEnd,labelWidth,drawWidth,height-18);
+    for(const segment of state.segments){
+      const x=labelWidth+(segment.startTime/state.duration)*timelineWidth;
+      const endX=labelWidth+(segment.endTime/state.duration)*timelineWidth;
+      const drawX=Math.round(x);
+      const drawWidth=Math.max(1,Math.round(endX-x));
+      const sampleEnd=Math.min(
+        sampleBuffer.duration,
+        segment.sampleStart+(segment.endTime-segment.startTime)*state.pitchRate
+      );
+      drawBufferRange(ctx,sampleBuffer,segment.sampleStart,sampleEnd,drawX,drawWidth,height-18);
+    }
     ctx.restore();
   }
 
@@ -554,15 +557,12 @@ function renderSampleTimeline(){
     }
   }
 
-  for(let step=0;step<16;step++){
-    const pad=Number(loopGridEvents[step])||0;
-    if(pad<1 || pad>=markers.length)continue;
-    const x=labelWidth+(step/16)*timelineWidth;
-    ctx.strokeStyle="#ff795a";
-    ctx.lineWidth=2;
-    ctx.beginPath();ctx.moveTo(x,18);ctx.lineTo(x,height);ctx.stroke();
+  if(state){
     ctx.fillStyle="#ead9b9";
-    ctx.fillText(String(pad),x+4,18);
+    for(const segment of state.segments){
+      const x=labelWidth+(segment.startTime/state.duration)*timelineWidth;
+      ctx.fillText(String(segment.pad+1),x+4,18);
+    }
   }
 }
 

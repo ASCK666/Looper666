@@ -88,29 +88,45 @@ with tempfile.TemporaryDirectory() as td, sync_playwright() as p:
     assert state['pads']==16 and state['rows']==16 and state['cells']==256,state
     assert state['timelineWidth']==max(830,state['gridWidth']),state
     assert state['playheadWidth']==state['timelineWidth'],state
-    # The timeline is the continuous real sample against the BPM ruler; it must remain useful before any chop trigger exists.
-    assert page.evaluate('loopGridEvents.every(v=>v===0)') is True
-    timeline_idle=page.evaluate("document.getElementById('sampleTimelineCanvas').toDataURL()")
-    page.fill('#samplePitch','0');page.dispatch_event('#samplePitch','input');page.wait_for_timeout(20)
-    timeline_pitch=page.evaluate("document.getElementById('sampleTimelineCanvas').toDataURL()")
-    assert timeline_pitch!=timeline_idle
-    assert page.evaluate('loopGridEvents.every(v=>v===0)') is True
-    # Chop placement is an overlay on that sample view, not a replacement waveform model.
-    cell=page.locator('#loopGrid .matrixCell:not(.unavailable)').first
-    cell.click();page.wait_for_timeout(20)
-    assert page.evaluate('loopGridEvents.some(v=>v>0)') is True
-    timeline_trigger=page.evaluate("document.getElementById('sampleTimelineCanvas').toDataURL()")
-    assert timeline_trigger!=timeline_pitch
+    # The sequence timeline must draw the actual source range selected by each trigger.
+    page.evaluate('''() => {
+      const original=drawBufferRange;
+      window.__timelineRanges=[];
+      drawBufferRange=function(context,buffer,startSec,endSec,x,width,height){
+        if(context===sampleTimeline2d){
+          window.__timelineRanges.push({startSec,endSec,x,width});
+        }
+        return original(context,buffer,startSec,endSec,x,width,height);
+      };
+    }''')
+    timeline_empty=page.evaluate("document.getElementById('sampleTimelineCanvas').toDataURL()")
+    first_pad_step0=page.locator('#loopGrid .matrixCell:not(.unavailable)').nth(0)
+    first_pad_step0.click();page.wait_for_timeout(20)
+    assert page.evaluate('loopGridEvents[0]===1') is True
+    first_range=page.evaluate('window.__timelineRanges.at(-1)')
+    first_marker=page.evaluate('markers[0]')
+    assert abs(first_range['startSec']-first_marker)<1e-9,(first_range,first_marker)
+    timeline_active=page.evaluate("document.getElementById('sampleTimelineCanvas').toDataURL()")
+    assert timeline_active!=timeline_empty
+    # Replacing the trigger at the same musical time must restart the visible waveform from the new chop marker.
+    second_pad_step0=page.locator('#loopGrid .matrixCell:not(.unavailable)').nth(16)
+    page.evaluate('window.__timelineRanges=[]')
+    second_pad_step0.click();page.wait_for_timeout(20)
+    assert page.evaluate('loopGridEvents[0]===2') is True
+    second_range=page.evaluate('window.__timelineRanges.at(-1)')
+    second_marker=page.evaluate('markers[1]')
+    assert abs(second_range['startSec']-second_marker)<1e-9,(second_range,second_marker)
+    assert second_range['startSec']>first_range['startSec'],(first_range,second_range)
     page.fill('#sampleBpm','120');page.dispatch_event('#sampleBpm','input');page.wait_for_timeout(20)
     timeline_bpm=page.evaluate("document.getElementById('sampleTimelineCanvas').toDataURL()")
-    assert timeline_bpm!=timeline_trigger
-    # Current grid contract: right-click removes only the trigger overlay; the continuous sample view remains.
-    cell.click(button='right');page.wait_for_timeout(20)
+    assert timeline_bpm!=timeline_active
+    # Current grid contract: right-click removes the trigger and the timeline returns to its empty state.
+    second_pad_step0.click(button='right');page.wait_for_timeout(20)
     assert page.evaluate('loopGridEvents.every(v=>v===0)') is True
     timeline_cleared=page.evaluate("document.getElementById('sampleTimelineCanvas').toDataURL()")
     assert timeline_cleared!=timeline_bpm
     # The musical playhead uses the existing loop transport/RAF, keeps moving through silent sample gaps, and clears on STOP.
-    cell.click();page.wait_for_timeout(20)
+    first_pad_step0.click();page.wait_for_timeout(20)
     playhead_pixels='''() => {
       const canvas=document.getElementById('sampleTimelinePlayheadCanvas');
       const data=canvas.getContext('2d').getImageData(0,0,canvas.width,canvas.height).data;
@@ -149,4 +165,4 @@ with tempfile.TemporaryDirectory() as td, sync_playwright() as p:
     assert all(x['w']>20 and x['h']>20 for x in boxes),boxes
     assert not errors,errors
     page.close();browser.close()
-print('OK: Chopper UI — sample import/volume/pitch, continuous BPM-scaled timeline/playhead, AUTO CHOP, 16 pads, 16x16 grid and place/clear')
+print('OK: Chopper UI — sample import/volume/pitch, triggered-source timeline/playhead, AUTO CHOP, 16 pads, 16x16 grid and place/clear')
