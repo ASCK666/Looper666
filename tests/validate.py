@@ -64,10 +64,17 @@ for path in [*RUNTIME_FILES, ROOT / "sw.js"]:
     )
     require(f"node --check {path.name}", proc.returncode == 0, proc.stderr.strip())
 
-# Generic security/runtime invariants. These are intentionally independent of
-# feature file layout, version numbers, colors and historical UI structures.
-require("service worker same-origin guard", "url.origin!==self.location.origin" in SW)
-require("service worker bounded cache", "STATIC_PATHS.has(url.pathname)" in SW)
+# Generic security/runtime invariants. A worker that intercepts requests must
+# retain the same-origin and bounded-cache guards. During active Pages UI work,
+# a no-fetch retirement worker is also valid but must explicitly purge/unregister.
+sw_intercepts_fetch = bool(re.search(r'addEventListener\s*\(\s*["\']fetch["\']', SW))
+if sw_intercepts_fetch:
+    require("service worker same-origin guard", "url.origin!==self.location.origin" in SW)
+    require("service worker bounded cache", "STATIC_PATHS.has(url.pathname)" in SW)
+else:
+    require("service worker retirement unregister", "self.registration.unregister()" in SW)
+    require("service worker retirement cache purge", "scratch-practice-" in SW and "caches.keys()" in SW)
+
 require("no eval", "eval(" not in JS)
 require("no dynamic Function constructor", "new Function" not in JS)
 require("no document.write", "document.write" not in JS)
