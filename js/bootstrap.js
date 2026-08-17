@@ -1,5 +1,5 @@
 "use strict";
-window.__SP={version:"92",ready:false,errors:[]};
+window.__SP={version:"93-dev-no-sw",ready:false,errors:[]};
 window.__SP.report=(scope,error)=>{
   const message=error?.message||String(error||"Unknown error");
   const item={scope,message,time:new Date().toISOString()};
@@ -16,6 +16,24 @@ window.addEventListener("error",event=>{
 window.addEventListener("unhandledrejection",event=>{
   window.__SP.report("PROMISE",event.reason);
 });
+
+// Development mode: always retire stale service workers/caches before they can
+// hide a freshly deployed GitHub Pages build behind old JavaScript.
+if("serviceWorker" in navigator){
+  navigator.serviceWorker.getRegistrations()
+    .then(registrations=>Promise.all(registrations.map(registration=>registration.unregister())))
+    .catch(error=>console.warn("Scratch Practice SW cleanup failed:",error));
+}
+
+if("caches" in window){
+  caches.keys()
+    .then(keys=>Promise.all(
+      keys
+        .filter(key=>key.startsWith("scratch-practice-"))
+        .map(key=>caches.delete(key))
+    ))
+    .catch(error=>console.warn("Scratch Practice cache cleanup failed:",error));
+}
 
 const chopperLayoutScript=document.createElement("script");
 chopperLayoutScript.src="./js/chopper-layout.js";
