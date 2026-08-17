@@ -1,17 +1,12 @@
 name: Apply drum editor library button move
 
-on:
-  push:
-    branches:
-      - agent/drum-editor-library-buttons
-
-permissions:
-  contents: write
+on: push
 
 jobs:
   apply:
-    if: github.actor != 'github-actions[bot]'
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
     steps:
       - uses: actions/checkout@v4
         with:
@@ -188,7 +183,6 @@ jobs:
 ''')
           replace_once('tests/drum_ui.py', "    assert page.locator('#drumEditor .drumEditStep').count()==48\n\n    # Clear means clear;", "    assert page.locator('#drumEditor .drumEditStep').count()==48\n    assert page.locator('#drumEditor .drumEditLibraryButton').count()==3\n\n    # Clear means clear;")
 
-          # Final static guarantees for this migration.
           runtime='\n'.join(Path(p).read_text(encoding='utf-8') for p in ['index.html','js/events.js','css/base.css'])
           for retired in ['class="btn drumLibraryButton"','$("kickFolderBtn").onclick','$("snareFolderBtn").onclick','$("hatFolderBtn").onclick','.drumEditLabel']:
               if retired in runtime:
