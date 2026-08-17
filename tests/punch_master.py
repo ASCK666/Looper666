@@ -9,8 +9,9 @@ except Exception:
 ROOT=Path(__file__).resolve().parents[1]
 html=(ROOT/'index.html').read_text(encoding='utf-8')
 html=re.sub(r'<link rel="manifest"[^>]*>','',html)
-css=(ROOT/'css/base.css').read_text(encoding='utf-8')
-html=html.replace('<link rel="stylesheet" href="./css/base.css">',f'<style>{css}</style>')
+for rel in ['./css/base.css','./css/clean-ui.css']:
+    css=(ROOT/rel[2:]).read_text(encoding='utf-8')
+    html=html.replace(f'<link rel="stylesheet" href="{rel}">',f'<style>{css}</style>')
 html=re.sub(r'src="assets/[^"]+"','src=""',html)
 for rel in ['./js/bootstrap.js','./js/core.js','./js/looper.js','./js/practice.js','./js/chopper.js','./js/drums.js','./js/events.js']:
     js=(ROOT/rel[2:]).read_text(encoding='utf-8')

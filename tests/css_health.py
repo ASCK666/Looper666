@@ -3,12 +3,10 @@ import re
 from css_parser import parse_stylesheet
 
 ROOT=Path(__file__).resolve().parents[1]
-CSS=(ROOT/'css/base.css').read_text(encoding='utf-8')
+CSS_FILES=[ROOT/'css/base.css',ROOT/'css/clean-ui.css']
 SOURCE='\n'.join(p.read_text(encoding='utf-8',errors='ignore') for p in [ROOT/'index.html',*sorted((ROOT/'js').glob('*.js'))])
 TOKENS=set(re.findall(r'[A-Za-z_][A-Za-z0-9_-]*',SOURCE))
-
-rules,keyframes=parse_stylesheet(CSS)
-selectors=[selector for rule in rules for selector in rule.selectors]
+LINE_BUDGETS={'base.css':2900,'clean-ui.css':500}
 
 def impossible(selector):
     # Tokens inside :not(...) are exclusions, not requirements for a selector
@@ -29,8 +27,25 @@ def impossible(selector):
 assert not impossible('.trackSource:not(.class-that-does-not-exist)')
 assert impossible('.class-that-does-not-exist')
 
-dead=[selector for selector in selectors if impossible(selector)]
-assert not dead,dead[:20]
-assert len(CSS.splitlines()) < 2900,len(CSS.splitlines())
-assert rules,'no CSS rules parsed'
-print(f'OK: CSS health — {len(CSS.splitlines())} lines, {len(selectors)} selector branches, 0 unreachable selector branches, dependency-free parser')
+# Browser tests that inline the base stylesheet must also inline clean-ui.css.
+# Otherwise they validate a visual runtime that index.html never serves.
+for test_path in sorted((ROOT/'tests').glob('*.py')):
+    test_source=test_path.read_text(encoding='utf-8',errors='ignore')
+    if './css/base.css' in test_source:
+        assert './css/clean-ui.css' in test_source, f'{test_path.name}: base.css is inlined without clean-ui.css'
+
+total_lines=0
+total_selectors=0
+for path in CSS_FILES:
+    css=path.read_text(encoding='utf-8')
+    rules,keyframes=parse_stylesheet(css)
+    selectors=[selector for rule in rules for selector in rule.selectors]
+    dead=[selector for selector in selectors if impossible(selector)]
+    assert not dead,f'{path.name}: unreachable selector branches: {dead[:20]}'
+    lines=len(css.splitlines())
+    assert lines < LINE_BUDGETS[path.name],f'{path.name}: {lines} lines exceeds budget {LINE_BUDGETS[path.name]}'
+    assert rules,f'{path.name}: no CSS rules parsed'
+    total_lines+=lines
+    total_selectors+=len(selectors)
+
+print(f'OK: CSS health — {total_lines} lines, {total_selectors} selector branches across all runtime CSS, 0 unreachable selector branches, browser tests use the full cascade')

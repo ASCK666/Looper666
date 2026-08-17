@@ -1,6 +1,5 @@
-/* Scratch Practice - GENERATED production stylesheet.
-   Edit css/src/*.css, then run: python tools/build_css.py
-   Global fragment order is preserved by @sp-order markers. */
+/* Scratch Practice - maintained runtime base stylesheet.
+   There is no CSS generator pipeline; edit this file directly. */
 
 :root {
   /* Core UI */
@@ -372,11 +371,9 @@ label {
 .machine {
   position: relative;
   overflow: hidden;
-  display: grid !important;
   grid-template-columns: minmax(0,1fr) !important;
   grid-template-areas: "top" "tabs" "content" !important;
   align-items: start !important;
-  gap: 7px !important;
   padding: 0 !important;
   border: 0 !important;
   border-radius: 0 !important;
@@ -394,17 +391,12 @@ label {
   justify-content: space-between;
   grid-area: top !important;
   display: grid !important;
-  grid-template-columns: 330px minmax(390px,1fr) 110px minmax(440px,500px) !important;
   align-items: center !important;
-  gap: 14px !important;
-  min-height: 76px !important;
-  padding: 0 14px !important;
   border: 1px solid var(--line) !important;
   border-radius: 6px !important;
 }
 
 .stableBrand {
-  display: flex;
   align-items: center;
   gap: 16px;
 }
@@ -433,7 +425,6 @@ label {
 }
 
 .headerDeckPill {
-  display: grid !important;
   grid-template-columns: 80px 1fr 30px !important;
   align-items: center !important;
   gap: 10px !important;
@@ -488,9 +479,8 @@ label {
 
 .headerMasterInner {
   display: grid !important;
-  grid-template-columns: 68px 66px minmax(250px,1fr) !important;
   align-items: center !important;
-  gap: 8px !important;
+
 }
 
 .headerMasterBox {
@@ -498,8 +488,6 @@ label {
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 62px !important;
-  height: 62px !important;
   padding: 0 !important;
   border: 0 !important;
   background: transparent !important;
@@ -518,15 +506,12 @@ label {
 .headerMasterBox:after {
   content: "" !important;
   position: absolute !important;
-  top: 8px !important;
-  left: 30px !important;
   width: 2px !important;
-  height: 15px !important;
   border-radius: 2px !important;
   background: var(--accent) !important;
   box-shadow: 0 0 7px rgba(226,173,95,.46) !important;
   transform: rotate(calc((var(--masterpct,85) - 50) * 1.55deg)) !important;
-  transform-origin: 50% 22px !important;  pointer-events: none !important;
+
 }
 
 .headerVolLabel {
@@ -612,7 +597,6 @@ label {
 }
 
 .headerMeterScale {
-  display: flex;
   justify-content: space-between;
   color: #8f795d !important;
   font-family: var(--font-mono);
@@ -2529,9 +2513,7 @@ button.active:not(:disabled), button[aria-pressed="true"]:not(:disabled),
   --sampler-shell:#11100e;
   --sampler-edge:#3b3228;
   display:grid;
-  gap:10px;
   width:100%;
-  padding:12px;
   border:1px solid #3a3027;
   border-radius:12px;
   background:

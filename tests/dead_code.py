@@ -35,6 +35,16 @@ for orphan in sorted(runtime_files - referenced):
         "delete replaced code in the same update"
     )
 
+# Runtime CSS is maintained directly. References to the retired generator/source
+# layout are stale documentation unless that pipeline is restored in the same change.
+for stylesheet in sorted((ROOT / "css").rglob("*.css")):
+    text = stylesheet.read_text(encoding="utf-8")
+    for stale_path in ("css/src/", "tools/build_css.py"):
+        if stale_path in text:
+            problems.append(
+                f"Stale CSS generation path {stale_path!r} found in {stylesheet.relative_to(ROOT)}"
+            )
+
 # Retired mechanisms must stay retired globally, not only in the file where a
 # previous regression happened. sw.js remains at the project root intentionally
 # as a retirement worker for old clients, but application JS must never register it.
@@ -46,4 +56,4 @@ for script in sorted((ROOT / "js").rglob("*.js")):
         )
 
 assert not problems, "\n".join(problems)
-print("OK: runtime JS/CSS is explicit in index.html and retired update paths stay removed")
+print("OK: runtime JS/CSS is explicit, stale CSS generation paths are absent and retired update paths stay removed")

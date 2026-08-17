@@ -11,7 +11,7 @@ ROOT=Path(__file__).resolve().parents[1]
 # Inline project resources so the test does not depend on localhost/file:// permissions.
 html=(ROOT/'index.html').read_text(encoding='utf-8')
 html=re.sub(r'<link rel="manifest"[^>]*>','',html)
-for rel in ['./css/base.css']:
+for rel in ['./css/base.css','./css/clean-ui.css']:
     css=(ROOT/rel[2:]).read_text(encoding='utf-8')
     html=html.replace(f'<link rel="stylesheet" href="{rel}">',f'<style>{css}</style>')
 # Broken images are fine here: geometry is fixed by CSS aspect-ratio.
