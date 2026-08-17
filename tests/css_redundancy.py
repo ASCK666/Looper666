@@ -4,11 +4,12 @@ import re
 from css_parser import parse_stylesheet
 
 ROOT=Path(__file__).resolve().parents[1]
-CSS=(ROOT/'css/base.css').read_text(encoding='utf-8')
+CSS_FILES=[ROOT/'css/base.css',ROOT/'css/clean-ui.css']
+CSS='\n'.join(path.read_text(encoding='utf-8') for path in CSS_FILES)
 PROJECT='\n'.join(p.read_text(encoding='utf-8',errors='ignore') for p in ROOT.rglob('*') if p.is_file() and p.suffix.lower() in {'.css','.html','.js'})
 rules,keyframes=parse_stylesheet(CSS)
 
-# Every design token must have a consumer.
+# Every design token defined by the runtime CSS cascade must have a consumer.
 defs=set(re.findall(r'(--[\w-]+)\s*:',CSS))
 refs=set(re.findall(r'var\(\s*(--[\w-]+)',PROJECT))
 unused_vars=sorted(defs-refs)
@@ -21,8 +22,9 @@ for name,line in keyframes:
         unused_frames.append((name,line))
 assert not unused_frames,f'unused keyframes: {unused_frames}'
 
-# Detect exact-selector declarations that can no longer win. The check stays
-# conservative: it does not try to infer selector overlap like a browser.
+# Detect exact-selector declarations that can no longer win in the actual CSS
+# load order (base.css followed by clean-ui.css). The check stays conservative:
+# it does not try to infer selector overlap like a browser.
 occ=defaultdict(list)
 for rule_index,rule in enumerate(rules):
     for declaration_index,declaration in enumerate(rule.declarations):
@@ -43,5 +45,5 @@ for rule_index,rule in enumerate(rules):
         if shadowed_for_every_branch:
             dead.append((rule.line,', '.join(rule.selectors),declaration.name))
 
-assert not dead,f'fully shadowed declarations remain: {dead[:20]}'
-print(f'OK: CSS redundancy — {len(defs)} used custom properties, no unused keyframes, no fully-shadowed declarations')
+assert not dead,f'fully shadowed declarations remain in runtime CSS cascade: {dead[:30]}'
+print(f'OK: CSS redundancy — {len(defs)} used custom properties, no unused keyframes, no fully-shadowed declarations across runtime CSS')
