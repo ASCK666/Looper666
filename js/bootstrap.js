@@ -17,6 +17,29 @@ window.addEventListener("unhandledrejection",event=>{
   window.__SP.report("PROMISE",event.reason);
 });
 
+// Visual-only knob binding: native range inputs remain the single source of truth.
+document.querySelectorAll("[data-range-knob]").forEach(knob=>{
+  const input=document.getElementById(knob.dataset.rangeKnob);
+  if(!input)return;
+  const valueDescriptor=Object.getOwnPropertyDescriptor(HTMLInputElement.prototype,"value");
+  const sync=()=>{
+    const min=Number(input.min)||0;
+    const max=Number(input.max)||100;
+    const value=Number(input.value)||0;
+    const pct=max===min?0:(value-min)/(max-min)*100;
+    knob.style.setProperty("--knob-pct",String(Math.max(0,Math.min(100,pct))));
+  };
+  input.addEventListener("input",sync);
+  if(valueDescriptor?.get && valueDescriptor?.set){
+    Object.defineProperty(input,"value",{
+      configurable:true,
+      get(){return valueDescriptor.get.call(this);},
+      set(value){valueDescriptor.set.call(this,value);sync();}
+    });
+  }
+  sync();
+});
+
 // Development mode: always retire stale service workers/caches before they can
 // hide a freshly deployed GitHub Pages build behind old JavaScript.
 if("serviceWorker" in navigator){
