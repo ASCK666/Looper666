@@ -89,6 +89,10 @@ STRUCTURE ACTUELLE
 - assets/                    images de l'interface cassette
 - docs/                      architecture, sécurité et notes techniques
 - tests/                     validations statiques, unitaires et navigateur
+
+Pour l'architecture : docs/ARCHITECTURE.md sert de guide de lecture,
+docs/STATE_DEPENDENCY_MAP.md décrit le graphe réel courant et
+docs/TARGET_ARCHITECTURE.md fixe la direction cible.
 - tools/test_all.py          lanceur de la suite de tests
 
 Il n'y a actuellement pas de pipeline de génération CSS : les feuilles déployées dans

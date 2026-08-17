@@ -224,6 +224,7 @@
             <button id="playDrumsOnly" class="btn blue">DRUMS</button>
             <button id="autoMarkers" class="btn">AUTO CHOP</button>
           </div>
+          <div id="chopStatus" class="status" aria-live="polite">READY</div>
           <div id="beatSaveStatus" class="status saveBeatStatus">SAVE rend la grille actuelle puis écrit un WAV.</div>
           <div class="spaceHint">ESPACE = PLAY / STOP</div>
           <input id="sampleFile" class="hidden" type="file" accept="audio/*">
@@ -378,7 +379,7 @@
             </div>
           </div>
           <div id="drumEditor" class="drumEditor"></div>
-          <div id="chopStatus" class="status drumEditStatus" aria-live="polite">READY</div>
+          <div id="drumStatus" class="status drumEditStatus" aria-live="polite">READY</div>
           <input id="kickFolderFallback" class="hidden" type="file" accept="audio/*" webkitdirectory multiple>
           <input id="snareFolderFallback" class="hidden" type="file" accept="audio/*" webkitdirectory multiple>
           <input id="hatFolderFallback" class="hidden" type="file" accept="audio/*" webkitdirectory multiple>

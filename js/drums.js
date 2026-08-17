@@ -108,14 +108,14 @@ async function chooseDrumFolder(kind){
         const count=entries.length;
 
         if(!count){
-          $("chopStatus").textContent=`${kind.toUpperCase()} • NO COMPATIBLE AUDIO FILE`;
+          $("drumStatus").textContent=`${kind.toUpperCase()} • NO COMPATIBLE AUDIO FILE`;
           return;
         }
 
         drumDirectoryHandles[kind]=handle;
         drumDirectoryEntries[kind]=entries;
         drumFolderFiles[kind]=[];
-        $("chopStatus").textContent=`${kind.toUpperCase()} • ${handle.name} • ${count} SOUNDS • LOADING…`;
+        $("drumStatus").textContent=`${kind.toUpperCase()} • ${handle.name} • ${count} SOUNDS • LOADING…`;
         await refreshDrumsAfterFolderChange(kind,count,handle.name);
         return;
       }catch(e){
@@ -141,7 +141,7 @@ async function setFallbackDrumFolder(kind,fileList){
     .slice(0,MAX_DRUM_FOLDER_FILES);
 
   if(!files.length){
-    $("chopStatus").textContent=`${kind.toUpperCase()} • NO COMPATIBLE AUDIO FILE`;
+    $("drumStatus").textContent=`${kind.toUpperCase()} • NO COMPATIBLE AUDIO FILE`;
     return false;
   }
 
@@ -150,7 +150,7 @@ async function setFallbackDrumFolder(kind,fileList){
   drumFolderFiles[kind]=files;
 
   const rootName=(files[0].webkitRelativePath||"").split("/")[0] || "local folder";
-  $("chopStatus").textContent=`${kind.toUpperCase()} • ${rootName} • ${files.length} SOUNDS • LOADING…`;
+  $("drumStatus").textContent=`${kind.toUpperCase()} • ${rootName} • ${files.length} SOUNDS • LOADING…`;
   await refreshDrumsAfterFolderChange(kind,files.length,rootName);
   return true;
 }
@@ -159,7 +159,7 @@ async function refreshDrumsAfterFolderChange(kind,count,origin){
   // A folder selection should have an audible result immediately.
   // Preserve the current groove family, but reroll the sound files now.
   if($("drumMode").value==="off"){
-    $("chopStatus").textContent=`${kind.toUpperCase()} • ${origin} • ${count} SOUNDS • READY`;
+    $("drumStatus").textContent=`${kind.toUpperCase()} • ${origin} • ${count} SOUNDS • READY`;
     return;
   }
 
@@ -189,9 +189,9 @@ async function refreshDrumsAfterFolderChange(kind,count,origin){
       snare:currentDrumSelection?.snare?.name,
       hat:currentDrumSelection?.hat?.name
     }[kind] || "ready";
-    $("chopStatus").textContent=`${kind.toUpperCase()} • ${selected} ✓`;
+    $("drumStatus").textContent=`${kind.toUpperCase()} • ${selected} ✓`;
   }catch(e){
-    $("chopStatus").textContent=`${kind.toUpperCase()} ERROR: ${e.message}`;
+    $("drumStatus").textContent=`${kind.toUpperCase()} ERROR: ${e.message}`;
   }
 }
 
@@ -371,9 +371,9 @@ async function clearDrumEdits(){
     markDrumSelectionEdited();
     renderDrumEditor();
     await rerenderAfterDrumEdit();
-    $("chopStatus").textContent="DRUMS CLEARED ✓";
+    $("drumStatus").textContent="DRUMS CLEARED ✓";
   }catch(e){
-    $("chopStatus").textContent="DRUM EDIT ERROR: "+e.message;
+    $("drumStatus").textContent="DRUM EDIT ERROR: "+e.message;
   }
 }
 
@@ -389,9 +389,9 @@ async function generateNewDrums(){
       await rerenderPreviewMode(modeBefore);
     }
 
-    $("chopStatus").textContent="NEW DRUMS ✓";
+    $("drumStatus").textContent="NEW DRUMS ✓";
   }catch(error){
-    $("chopStatus").textContent=`DRUM ERROR: ${safeErrorMessage(error)}`;
+    $("drumStatus").textContent=`DRUM ERROR: ${safeErrorMessage(error)}`;
   }
 }
 
@@ -471,7 +471,7 @@ function renderDrumEditor(){
           try{
             await generateDrumSelection(false);
           }catch(e){
-            $("chopStatus").textContent="DRUM ERROR: "+e.message;
+            $("drumStatus").textContent="DRUM ERROR: "+e.message;
             return;
           }
         }
@@ -493,9 +493,9 @@ function renderDrumEditor(){
 
         try{
           await rerenderAfterDrumEdit();
-          $("chopStatus").textContent=`EDIT ${labelText} ✓`;
+          $("drumStatus").textContent=`EDIT ${labelText} ✓`;
         }catch(e){
-          $("chopStatus").textContent="DRUM EDIT ERROR: "+e.message;
+          $("drumStatus").textContent="DRUM EDIT ERROR: "+e.message;
         }
       };
 
@@ -521,9 +521,9 @@ function renderDrumEditor(){
 
         try{
           await rerenderAfterDrumEdit();
-          $("chopStatus").textContent=`${labelText} ${Math.round(next*100)}%`;
+          $("drumStatus").textContent=`${labelText} ${Math.round(next*100)}%`;
         }catch(e){
-          $("chopStatus").textContent="DRUM VELOCITY ERROR: "+e.message;
+          $("drumStatus").textContent="DRUM VELOCITY ERROR: "+e.message;
         }
       },{passive:false});
 
@@ -1000,10 +1000,10 @@ async function playDrumsPreview(){
     const selection=await ensureDrumSelection();
     renderedFlip=await renderDrumsOnly();
     lastPreviewMode="drums";
-    $("chopStatus").textContent=`DRUMS • ${$("sampleBpm").value} BPM • ${selection.mode.toUpperCase()}`;
+    $("drumStatus").textContent=`DRUMS • ${$("sampleBpm").value} BPM • ${selection.mode.toUpperCase()}`;
     await playRendered(renderedFlip);
   }catch(e){
-    $("chopStatus").textContent="DRUM ERROR: "+e.message;
+    $("drumStatus").textContent="DRUM ERROR: "+e.message;
   }
 }
 
