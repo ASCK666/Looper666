@@ -6,7 +6,7 @@ ROOT=Path(__file__).resolve().parents[1]
 CSS_FILES=[ROOT/'css/base.css',ROOT/'css/clean-ui.css']
 SOURCE='\n'.join(p.read_text(encoding='utf-8',errors='ignore') for p in [ROOT/'index.html',*sorted((ROOT/'js').glob('*.js'))])
 TOKENS=set(re.findall(r'[A-Za-z_][A-Za-z0-9_-]*',SOURCE))
-LINE_BUDGETS={'base.css':2900,'clean-ui.css':500}
+SELECTOR_BRANCH_BUDGET=750
 
 def impossible(selector):
     # Tokens inside :not(...) are exclusions, not requirements for a selector
@@ -42,10 +42,20 @@ for path in CSS_FILES:
     selectors=[selector for rule in rules for selector in rule.selectors]
     dead=[selector for selector in selectors if impossible(selector)]
     assert not dead,f'{path.name}: unreachable selector branches: {dead[:20]}'
-    lines=len(css.splitlines())
-    assert lines < LINE_BUDGETS[path.name],f'{path.name}: {lines} lines exceeds budget {LINE_BUDGETS[path.name]}'
     assert rules,f'{path.name}: no CSS rules parsed'
-    total_lines+=lines
+    total_lines+=len(css.splitlines())
     total_selectors+=len(selectors)
 
-print(f'OK: CSS health — {total_lines} lines, {total_selectors} selector branches across all runtime CSS, 0 unreachable selector branches, browser tests use the full cascade')
+# Formatting is deliberately not a maintenance metric: one-line CSS must not
+# score better than readable CSS. Selector branches track cascade growth without
+# rewarding minification.
+assert total_selectors < SELECTOR_BRANCH_BUDGET,(
+    f'CSS selector branches {total_selectors} exceed structural budget '
+    f'{SELECTOR_BRANCH_BUDGET}'
+)
+
+print(
+    f'OK: CSS health — {total_selectors}/{SELECTOR_BRANCH_BUDGET} selector branches, '
+    f'{total_lines} informational lines, 0 unreachable selector branches, '
+    'browser tests use the full cascade'
+)

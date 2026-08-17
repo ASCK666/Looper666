@@ -290,14 +290,59 @@
   font-size: 8px !important;
 }
 
-#chopper .sampleTimelineStack {position:relative;width:max-content;height:86px}
-#sampleTimelineCanvas,#sampleTimelinePlayheadCanvas {display:block;width:auto;height:86px}
-#sampleTimelinePlayheadCanvas {position:absolute;inset:0;z-index:2;pointer-events:none}
-.drumPatternPreview{display:grid;min-width:830px;grid-template-columns:64px repeat(16,minmax(30px,1fr));gap:2px;margin-top:6px;pointer-events:none}
-.drumPatternPreviewLabel{display:flex;align-items:center;padding-left:7px;color:#9e896b;font:800 7px/1 var(--font-mono)}
-.drumPatternPreviewPair{display:grid;grid-template-columns:repeat(2,1fr);gap:1px;min-height:16px}
-.drumPatternPreviewStep{border:1px solid #2f2a23;background:#0e0c09}
-.drumPatternPreviewStep.active{border-color:#9a7038;background:#80552c}
+#chopper .sampleTimelineStack {
+  position: relative;
+  width: max-content;
+  height: 86px;
+}
+
+#sampleTimelineCanvas,
+#sampleTimelinePlayheadCanvas {
+  display: block;
+  width: auto;
+  height: 86px;
+}
+
+#sampleTimelinePlayheadCanvas {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  pointer-events: none;
+}
+
+.drumPatternPreview {
+  display: grid;
+  min-width: 830px;
+  grid-template-columns: 64px repeat(16,minmax(30px,1fr));
+  gap: 2px;
+  margin-top: 6px;
+  pointer-events: none;
+}
+
+.drumPatternPreviewLabel {
+  display: flex;
+  align-items: center;
+  padding-left: 7px;
+  color: #9e896b;
+  font: 800 7px/1 var(--font-mono);
+}
+
+.drumPatternPreviewPair {
+  display: grid;
+  grid-template-columns: repeat(2,1fr);
+  gap: 1px;
+  min-height: 16px;
+}
+
+.drumPatternPreviewStep {
+  border: 1px solid #2f2a23;
+  background: #0e0c09;
+}
+
+.drumPatternPreviewStep.active {
+  border-color: #9a7038;
+  background: #80552c;
+}
 
 /* Pads should never sit in a narrow island once the layout stacks. */
 @media (max-width: 1000px) {

@@ -56,6 +56,11 @@ python tests/browser_smoke.py
 unused custom properties/keyframes and declarations that are fully shadowed by a
 later copy of the same selector.
 
+`tests/css_health.py` treats physical source-line count as informational only.
+Formatting must not become a way to pass or fail maintenance. The growth guard is
+instead a structural budget on selector branches across the real two-file cascade,
+so readable multi-line rules cost exactly the same as minified one-line rules.
+
 Browser/layout tests that inline CSS must inline **both** runtime stylesheets in the
 same order. `tests/css_health.py` enforces that contract.
 
