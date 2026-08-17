@@ -88,17 +88,23 @@ with tempfile.TemporaryDirectory() as td, sync_playwright() as p:
     assert state['pads']==16 and state['rows']==16 and state['cells']==256,state
     assert state['timelineWidth']==max(830,state['gridWidth']),state
     assert state['playheadWidth']==state['timelineWidth'],state
-    # Timeline is derived from the actual sequenced chop lane and must react to BPM without a second state model.
-    timeline_empty=page.evaluate("document.getElementById('sampleTimelineCanvas').toDataURL()")
+    # The timeline is the continuous real sample against the BPM ruler; it must remain useful before any chop trigger exists.
+    assert page.evaluate('loopGridEvents.every(v=>v===0)') is True
+    timeline_idle=page.evaluate("document.getElementById('sampleTimelineCanvas').toDataURL()")
+    page.fill('#samplePitch','0');page.dispatch_event('#samplePitch','input');page.wait_for_timeout(20)
+    timeline_pitch=page.evaluate("document.getElementById('sampleTimelineCanvas').toDataURL()")
+    assert timeline_pitch!=timeline_idle
+    assert page.evaluate('loopGridEvents.every(v=>v===0)') is True
+    # Chop placement is an overlay on that sample view, not a replacement waveform model.
     cell=page.locator('#loopGrid .matrixCell:not(.unavailable)').first
     cell.click();page.wait_for_timeout(20)
     assert page.evaluate('loopGridEvents.some(v=>v>0)') is True
-    timeline_active=page.evaluate("document.getElementById('sampleTimelineCanvas').toDataURL()")
-    assert timeline_active!=timeline_empty
+    timeline_trigger=page.evaluate("document.getElementById('sampleTimelineCanvas').toDataURL()")
+    assert timeline_trigger!=timeline_pitch
     page.fill('#sampleBpm','120');page.dispatch_event('#sampleBpm','input');page.wait_for_timeout(20)
     timeline_bpm=page.evaluate("document.getElementById('sampleTimelineCanvas').toDataURL()")
-    assert timeline_bpm!=timeline_active
-    # Current grid contract: right-click removes the trigger and the timeline returns to its empty state.
+    assert timeline_bpm!=timeline_trigger
+    # Current grid contract: right-click removes only the trigger overlay; the continuous sample view remains.
     cell.click(button='right');page.wait_for_timeout(20)
     assert page.evaluate('loopGridEvents.every(v=>v===0)') is True
     timeline_cleared=page.evaluate("document.getElementById('sampleTimelineCanvas').toDataURL()")
@@ -143,4 +149,4 @@ with tempfile.TemporaryDirectory() as td, sync_playwright() as p:
     assert all(x['w']>20 and x['h']>20 for x in boxes),boxes
     assert not errors,errors
     page.close();browser.close()
-print('OK: Chopper UI — sample import/volume/pitch, BPM-scaled timeline/playhead, AUTO CHOP, 16 pads, 16x16 grid and place/clear')
+print('OK: Chopper UI — sample import/volume/pitch, continuous BPM-scaled timeline/playhead, AUTO CHOP, 16 pads, 16x16 grid and place/clear')
