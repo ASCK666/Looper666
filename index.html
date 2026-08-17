@@ -232,10 +232,10 @@
           <div class="help sampleConditionHelp">AUTO CONDITION • coupe le rumble et crée du headroom uniquement si le sample arrive trop HOT/DENSE. Aucun boost automatique.</div>
         </div>
 
-        <div class="panel samplerControlModule">
+        <div class="panel samplerControlModule chopTransportPanel">
           <div class="title stableTitle"><span>SAMPLE CONTROL <i class="blueLed"></i></span><span class="titleMeta">LOAD / EDIT</span></div>
 
-          <div class="samplerActionRow">
+          <div class="samplerActionRow grid4 samplerTransportButtons">
             <button id="loadSampleBtn" class="btn primary">LOAD SAMPLE</button>
             <button id="autoMarkers" class="btn">AUTO CHOP</button>
             <button id="previewFlip" class="btn primary">PLAY</button>
@@ -244,6 +244,7 @@
             <button id="addFlipLibrary" class="btn good">SAVE BEAT</button>
           </div>
           <div id="beatSaveStatus" class="status saveBeatStatus">SAVE rend la grille actuelle puis écrit un WAV.</div>
+          <div class="spaceHint">ESPACE = PLAY / STOP</div>
           <input id="sampleFile" class="hidden" type="file" accept="audio/*">
           <input id="waveZoom" class="hidden" type="range" min="1" max="24" step="1" value="1">
 
@@ -268,7 +269,7 @@
             <summary>FINE SETTINGS</summary>
             <div class="grid2 advancedInner">
               <div><label>GRID PRECISION</label><select id="gridDivision"><option value="0.25">1/4 beat</option><option value="0.125">1/8 beat</option><option value="0.0625" selected>1/16 beat</option><option value="0.03125">1/32 beat</option></select></div>
-              <div><label>TRANSIENT RANGE</label><select id="transientRadius"><option value="20">20 ms</option><option value="40">40 ms</option><option value="80" selected>80 ms</option><option value="120">120 ms</option><option value="200">200 ms</option></select></div>
+              <div><label>TRANSIENT RANGE</label><select id="transientRadius"><option value="20">20 ms</option><option value="40">40 ms</option><option value="80" selected>80</option><option value="120">120 ms</option><option value="200">200 ms</option></select></div>
             </div>
           </details>
 
