@@ -28,28 +28,57 @@ with sync_playwright() as p:
         data=page.evaluate('''() => {
           const box=s=>document.querySelector(s).getBoundingClientRect();
           const pads=[...document.querySelectorAll('#pads .pad')].map(x=>x.getBoundingClientRect().toJSON());
-          const actions=[...document.querySelectorAll('#chopper .samplerActionRow > .btn')].map(x=>({id:x.id,...x.getBoundingClientRect().toJSON()}));
+          const controlActions=[...document.querySelectorAll('#chopper .samplerActionRow > .btn')].map(x=>({id:x.id,...x.getBoundingClientRect().toJSON()}));
+          const transport=[...document.querySelectorAll('#chopper .samplerDisplayActions > .btn')].map(x=>({id:x.id,...x.getBoundingClientRect().toJSON()}));
+          const pitch=box('.samplePitchKnob'),volume=box('.sampleVolumeKnob'),wave=box('.samplerScreen');
           const upper=getComputedStyle(document.querySelector('.samplerUpperDeck')).gridTemplateColumns;
           const perf=getComputedStyle(document.querySelector('.samplerPerformanceDeck')).gridTemplateColumns;
           const screen=box('.samplerScreenModule'),control=box('.samplerControlModule');
           const padPanel=box('.samplerPadsModule'),seq=box('.samplerSequenceModule');
           const wrap=document.querySelector('.loopGridWrap');
-          return {pads,actions,hasOldTransport:!!document.querySelector('.samplerTransportModule'),upper,perf,screen:screen.toJSON(),control:control.toJSON(),padPanel:padPanel.toJSON(),seq:seq.toJSON(),bodyW:document.body.scrollWidth,viewportW:innerWidth,scrollable:wrap.scrollWidth>=wrap.clientWidth};
+          return {
+            pads,controlActions,transport,pitch:pitch.toJSON(),volume:volume.toJSON(),wave:wave.toJSON(),
+            pitchPct:getComputedStyle(document.querySelector('.samplePitchKnob')).getPropertyValue('--knob-pct').trim(),
+            volumePct:getComputedStyle(document.querySelector('.sampleVolumeKnob')).getPropertyValue('--knob-pct').trim(),
+            pitchInScreen:!!document.querySelector('.samplerScreenModule #samplePitch'),
+            volumeInScreen:!!document.querySelector('.samplerScreenModule #sampleVolume'),
+            pitchInControl:!!document.querySelector('.samplerControlModule #samplePitch'),
+            volumeInControl:!!document.querySelector('.samplerControlModule #sampleVolume'),
+            upper,perf,screen:screen.toJSON(),control:control.toJSON(),padPanel:padPanel.toJSON(),seq:seq.toJSON(),
+            bodyW:document.body.scrollWidth,viewportW:innerWidth,scrollable:wrap.scrollWidth>=wrap.clientWidth
+          };
         }''')
         assert len(data['pads'])==16,data
         assert all(x['width']>35 and x['height']>35 for x in data['pads']),data['pads']
-        # 4 physical pads per row: pad 1..4 align, pad 5 starts a new row.
         assert abs(data['pads'][0]['top']-data['pads'][3]['top'])<2,data['pads'][:5]
         assert data['pads'][4]['top']>data['pads'][0]['bottom']-2,data['pads'][:5]
-        expected_actions=['loadSampleBtn','autoMarkers','previewFlip','playDrumsOnly','stopFlip','addFlipLibrary']
-        assert [x['id'] for x in data['actions']]==expected_actions,data['actions']
-        assert not data['hasOldTransport'],data
-        assert all(30<=x['height']<=40 for x in data['actions']),data['actions']
-        if width>1000:
-            assert max(x['top'] for x in data['actions'])-min(x['top'] for x in data['actions'])<2,data['actions']
+        assert [x['id'] for x in data['controlActions']]==['loadSampleBtn','autoMarkers'],data['controlActions']
+        assert [x['id'] for x in data['transport']]==['previewFlip','playDrumsOnly','stopFlip','addFlipLibrary'],data['transport']
+        assert all(30<=x['height']<=44 for x in data['controlActions']+data['transport']),data
+        assert data['pitchInScreen'] and data['volumeInScreen'],data
+        assert not data['pitchInControl'] and not data['volumeInControl'],data
+        assert abs(float(data['pitchPct'])-50)<.01,data
+        assert abs(float(data['volumePct'])-80)<.01,data
+        if width>760:
+            assert max(x['top'] for x in data['transport'])-min(x['top'] for x in data['transport'])<2,data['transport']
+            assert data['pitch']['right']<=data['wave']['left']+2,data
+            assert data['volume']['left']>=data['wave']['right']-2,data
         else:
-            assert abs(data['actions'][0]['top']-data['actions'][2]['top'])<2,data['actions']
-            assert data['actions'][3]['top']>data['actions'][0]['bottom']-2,data['actions']
+            assert abs(data['transport'][0]['top']-data['transport'][1]['top'])<2,data['transport']
+            assert data['transport'][2]['top']>data['transport'][0]['bottom']-2,data['transport']
+            assert data['pitch']['top']>=data['wave']['bottom']-2,data
+            assert abs(data['pitch']['top']-data['volume']['top'])<2,data
+        page.fill('#samplePitch','6');page.dispatch_event('#samplePitch','input')
+        page.fill('#sampleVolume','25');page.dispatch_event('#sampleVolume','input')
+        knob_state=page.evaluate('''() => ({
+          pitch:getComputedStyle(document.querySelector('.samplePitchKnob')).getPropertyValue('--knob-pct').trim(),
+          volume:getComputedStyle(document.querySelector('.sampleVolumeKnob')).getPropertyValue('--knob-pct').trim(),
+          pitchReadout:document.getElementById('samplePitchReadout').textContent,
+          volumeReadout:document.getElementById('sampleVolumeReadout').textContent
+        })''')
+        assert abs(float(knob_state['pitch'])-100)<.01,knob_state
+        assert abs(float(knob_state['volume'])-25)<.01,knob_state
+        assert knob_state['pitchReadout']=='+6 st' and knob_state['volumeReadout']=='25%',knob_state
         if width>1180:
             assert data['control']['left']>=data['screen']['right']-2,data
         else:
@@ -63,4 +92,4 @@ with sync_playwright() as p:
         assert not errors,errors
         page.close()
     browser.close()
-print('OK: Chopper sampler layout — compact top actions, 4x4 pads, screen/control hierarchy, sequence and responsive stacking')
+print('OK: Chopper sampler layout — display transport, live pitch/volume knobs, 4x4 pads and responsive stacking')
