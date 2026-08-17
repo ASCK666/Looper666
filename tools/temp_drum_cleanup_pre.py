@@ -13,6 +13,10 @@ replacements=[
         '.stableTop, .mainModeTabs, .panel, .headerDeckPill, .headerMaster, .beatCratePanel {'
     ),
     (
+        '.mainModeTabs .tab.active, .btn.primary, .btn.blue, .btn.good, .loadDrumLibraryCTA.active, .pad.active, .pad.hit, .drumEditStep.active.kick, .drumEditStep.active.snare, .drumEditStep.active.hat, .matrixCell.active {',
+        '.mainModeTabs .tab.active, .btn.primary, .btn.blue, .btn.good, .pad.active, .pad.hit, .drumEditStep.active.kick, .drumEditStep.active.snare, .drumEditStep.active.hat, .matrixCell.active {'
+    ),
+    (
         '.help, .folderStatus, small {',
         '.help, small {'
     ),
