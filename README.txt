@@ -38,7 +38,8 @@ CHOPPER / BEAT MAKER
 AUTRE
 - Interface responsive ordinateur / téléphone.
 - Mode Practice séparé.
-- PWA / service worker pour les ressources statiques de l'application.
+- Manifest PWA conservé ; le service worker est actuellement en mode retraite pour
+  éviter les anciennes ressources en cache pendant les mises à jour GitHub Pages.
 
 DIRECTION PRODUIT
 -----------------
@@ -70,7 +71,7 @@ Puis ouvrir :
 
     http://localhost:8080
 
-Le serveur local permet de tester correctement le manifest et le service worker.
+Le serveur local permet de tester correctement le manifest et les APIs navigateur.
 Chrome ou Edge est recommandé pour les fonctions d'accès direct aux dossiers locaux.
 
 STRUCTURE ACTUELLE
@@ -93,6 +94,25 @@ STRUCTURE ACTUELLE
 Il n'y a actuellement pas de pipeline de génération CSS : les feuilles déployées dans
 css/ sont les fichiers maintenus par le projet.
 
+RÈGLE DE MAINTENANCE DES UPDATES
+--------------------------------
+Quand une fonctionnalité, un mécanisme ou un chemin d'exécution est remplacé, l'ancien
+code doit être supprimé dans le même changement. Ne pas conserver sans justification
+explicite d'ancien listener, fallback, registration, import, fichier JS/CSS, branche ou
+chemin de cache devenu inutile.
+
+Une compatibilité ou un code de retraite temporaire peut rester uniquement si sa raison
+est documentée directement dans le code. Le service worker racine est actuellement un
+exemple volontaire : il existe pour désactiver les anciens workers déjà installés.
+
+Le test tests/dead_code.py impose deux garde-fous simples :
+- chaque fichier runtime js/*.js et css/*.css doit rester atteignable depuis index.html ;
+- un mécanisme explicitement retiré, comme serviceWorker.register dans le JS applicatif,
+  ne doit pas réapparaître ailleurs.
+
+Avant de terminer une update qui remplace du code, rechercher aussi les anciens noms de
+fichiers, symboles et chemins concernés et supprimer les reliquats dans le même commit.
+
 TESTS DE NON-RÉGRESSION
 -----------------------
 Lancer la suite complète :
@@ -101,6 +121,7 @@ Lancer la suite complète :
 
 La suite maintenue couvre notamment :
 - chemins de ressources et service worker ;
+- absence de fichiers runtime JS/CSS orphelins après les updates ;
 - contrat runtime et santé JavaScript ;
 - utilitaires audio et export ;
 - régressions Looper / transport / AUTO ;
