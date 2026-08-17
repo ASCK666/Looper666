@@ -136,8 +136,7 @@
                     <button id="stopBeat" class="deckHotspot" type="button" aria-label="Stop" title="STOP"><span aria-hidden="true">■</span><strong>STOP</strong></button>
                     <button id="nextBeat" class="deckHotspot" type="button" aria-label="Beat suivant" title="NEXT"><span aria-hidden="true">▶▶</span><strong>NEXT</strong></button>
                     <button id="autoLooperToggle" class="deckHotspot deckAutoHotspot" type="button" aria-label="Accélération automatique" title="AUTO +1% / 8 LOOPS" aria-pressed="false">
-                      <span aria-hidden="true">+1</span><strong>AUTO SPEED</strong><small id="autoLooperCompactStatus">OFF • +1% / 8 LOOPS</small>
-                    </button>
+                      <span aria-hidden="true">+1</span><strong>AUTO SPEED</strong><small id="autoLooperCompactStatus">OFF • +1% / 8 LOOPS</small></button>
                   </div>
                 </div>
 
@@ -217,6 +216,33 @@
       </div>
 
       <div class="samplerUpperDeck">
+        <div class="panel samplerControlModule chopTransportPanel">
+          <div class="title stableTitle"><span>SAMPLE CONTROL <i class="blueLed"></i></span><span class="titleMeta">LOAD / EDIT</span></div>
+
+          <div class="samplerActionRow">
+            <button id="playDrumsOnly" class="btn blue">DRUMS</button>
+            <button id="autoMarkers" class="btn">AUTO CHOP</button>
+          </div>
+          <div id="beatSaveStatus" class="status saveBeatStatus">SAVE rend la grille actuelle puis écrit un WAV.</div>
+          <div class="spaceHint">ESPACE = PLAY / STOP</div>
+          <input id="sampleFile" class="hidden" type="file" accept="audio/*">
+          <input id="waveZoom" class="hidden" type="range" min="1" max="24" step="1" value="1">
+
+          <details class="advancedBox">
+            <summary>FINE SETTINGS</summary>
+            <div class="samplerSelectRow fineSettingsSelectRow">
+              <div><label>CHOPS</label><select id="sliceCount"><option value="4">4</option><option value="8">8</option><option value="12">12</option><option value="16" selected>16</option></select></div>
+              <div><label>SNAP</label><select id="snapMode"><option value="transient">TRANSIENT</option><option value="grid">GRID</option><option value="free">FREE</option></select></div>
+            </div>
+            <div class="grid2 advancedInner">
+              <div><label>GRID PRECISION</label><select id="gridDivision"><option value="0.25">1/4 beat</option><option value="0.125">1/8 beat</option><option value="0.0625" selected>1/16 beat</option><option value="0.03125">1/32 beat</option></select></div>
+              <div><label>TRANSIENT RANGE</label><select id="transientRadius"><option value="20">20 ms</option><option value="40">40 ms</option><option value="80" selected>80 ms</option><option value="120">120 ms</option><option value="200">200 ms</option></select></div>
+            </div>
+          </details>
+
+          <div class="samplerControlLegend">wheel = zoom • drag chop = free placement</div>
+        </div>
+
         <div class="panel chopperMainPanel samplerScreenModule">
           <div class="grid4 samplerTransportButtons samplerDisplayActions" role="group" aria-label="Transport du Chopper">
             <button id="previewFlip" class="btn primary">PLAY</button>
@@ -261,33 +287,6 @@
 
           <div id="sampleInfo" class="status samplerSampleInfo">Charge un sample, place tes chops et joue.</div>
           <div class="help sampleConditionHelp">AUTO CONDITION • coupe le rumble et crée du headroom uniquement si le sample arrive trop HOT/DENSE. Aucun boost automatique.</div>
-        </div>
-
-        <div class="panel samplerControlModule chopTransportPanel">
-          <div class="title stableTitle"><span>SAMPLE CONTROL <i class="blueLed"></i></span><span class="titleMeta">LOAD / EDIT</span></div>
-
-          <div class="samplerActionRow">
-            <button id="playDrumsOnly" class="btn blue">DRUMS</button>
-            <button id="autoMarkers" class="btn">AUTO CHOP</button>
-          </div>
-          <div id="beatSaveStatus" class="status saveBeatStatus">SAVE rend la grille actuelle puis écrit un WAV.</div>
-          <div class="spaceHint">ESPACE = PLAY / STOP</div>
-          <input id="sampleFile" class="hidden" type="file" accept="audio/*">
-          <input id="waveZoom" class="hidden" type="range" min="1" max="24" step="1" value="1">
-
-          <details class="advancedBox">
-            <summary>FINE SETTINGS</summary>
-            <div class="samplerSelectRow fineSettingsSelectRow">
-              <div><label>CHOPS</label><select id="sliceCount"><option value="4">4</option><option value="8">8</option><option value="12">12</option><option value="16" selected>16</option></select></div>
-              <div><label>SNAP</label><select id="snapMode"><option value="transient">TRANSIENT</option><option value="grid">GRID</option><option value="free">FREE</option></select></div>
-            </div>
-            <div class="grid2 advancedInner">
-              <div><label>GRID PRECISION</label><select id="gridDivision"><option value="0.25">1/4 beat</option><option value="0.125">1/8 beat</option><option value="0.0625" selected>1/16 beat</option><option value="0.03125">1/32 beat</option></select></div>
-              <div><label>TRANSIENT RANGE</label><select id="transientRadius"><option value="20">20 ms</option><option value="40">40 ms</option><option value="80" selected>80 ms</option><option value="120">120 ms</option><option value="200">200 ms</option></select></div>
-            </div>
-          </details>
-
-          <div class="samplerControlLegend">wheel = zoom • drag chop = free placement</div>
         </div>
       </div>
 
