@@ -9,7 +9,7 @@ except Exception:
 ROOT=Path(__file__).resolve().parents[1]
 html=(ROOT/'index.html').read_text(encoding='utf-8')
 html=re.sub(r'<link rel="manifest"[^>]*>','',html)
-for rel in ['./css/base.css']:
+for rel in ['./css/base.css','./css/clean-ui.css']:
     css=(ROOT/rel[2:]).read_text(encoding='utf-8')
     html=html.replace(f'<link rel="stylesheet" href="{rel}">',f'<style>{css}</style>')
 html=re.sub(r'src="assets/[^"]+"','src=""',html)
