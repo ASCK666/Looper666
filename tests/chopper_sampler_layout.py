@@ -30,6 +30,7 @@ with sync_playwright() as p:
           const pads=[...document.querySelectorAll('#pads .pad')].map(x=>x.getBoundingClientRect().toJSON());
           const controlActions=[...document.querySelectorAll('#chopper .samplerActionRow > .btn')].map(x=>({id:x.id,...x.getBoundingClientRect().toJSON()}));
           const transport=[...document.querySelectorAll('#chopper .samplerDisplayActions > .btn')].map(x=>({id:x.id,...x.getBoundingClientRect().toJSON()}));
+          const title=box('.samplerScreenModule > .stableTitle');
           const pitch=box('.samplePitchKnob'),volume=box('.sampleVolumeKnob'),tempo=box('.sampleTempoControl'),wave=box('.samplerScreen');
           const tempoInput=box('#sampleBpm');
           const upper=getComputedStyle(document.querySelector('.samplerUpperDeck')).gridTemplateColumns;
@@ -39,7 +40,8 @@ with sync_playwright() as p:
           const wrap=document.querySelector('.loopGridWrap');
           const fine=document.querySelector('.advancedBox');
           return {
-            pads,controlActions,transport,pitch:pitch.toJSON(),volume:volume.toJSON(),tempo:tempo.toJSON(),wave:wave.toJSON(),tempoInput:tempoInput.toJSON(),
+            pads,controlActions,transport,title:title.toJSON(),pitch:pitch.toJSON(),volume:volume.toJSON(),tempo:tempo.toJSON(),wave:wave.toJSON(),tempoInput:tempoInput.toJSON(),
+            displayBodyDisplay:getComputedStyle(document.querySelector('.samplerDisplayBody')).display,
             pitchPct:getComputedStyle(document.querySelector('.samplePitchKnob')).getPropertyValue('--knob-pct').trim(),
             volumePct:getComputedStyle(document.querySelector('.sampleVolumeKnob')).getPropertyValue('--knob-pct').trim(),
             pitchInScreen:!!document.querySelector('.samplerScreenModule #samplePitch'),
@@ -70,14 +72,19 @@ with sync_playwright() as p:
         assert data['sliceInFine'] and data['snapInFine'] and data['gridInFine'] and data['transientInFine'],data
         assert not data['sliceOutsideFine'] and not data['snapOutsideFine'],data
         assert data['tempoInput']['width']>30 and data['tempoInput']['height']>=28,data['tempoInput']
+        assert data['displayBodyDisplay']=='contents',data
         assert abs(float(data['pitchPct'])-50)<.01,data
         assert abs(float(data['volumePct'])-80)<.01,data
-        # Pitch, waveform, tempo and volume stay on one physical row at every maintained width.
-        assert data['pitch']['right']<=data['wave']['left']+2,data
-        assert data['tempo']['left']>=data['wave']['right']-2,data
-        assert data['volume']['left']>=data['tempo']['right']-2,data
+        # Title, pitch, tempo and volume share the same header row; waveform owns the full row below.
+        assert data['title']['right']<=data['pitch']['left']+2,data
+        assert data['pitch']['right']<=data['tempo']['left']+2,data
+        assert data['tempo']['right']<=data['volume']['left']+2,data
         for item in ['pitch','tempo','volume']:
-            assert data[item]['top']<data['wave']['bottom'] and data[item]['bottom']>data['wave']['top'],data
+            assert data[item]['top']<data['title']['bottom'] and data[item]['bottom']>data['title']['top'],data
+        header_bottom=max(data[x]['bottom'] for x in ['title','pitch','tempo','volume'])
+        assert data['wave']['top']>=header_bottom-2,data
+        assert data['wave']['left']<=data['title']['left']+2,data
+        assert data['wave']['right']>=data['volume']['right']-2,data
         if width>760:
             assert max(x['top'] for x in data['transport'])-min(x['top'] for x in data['transport'])<2,data['transport']
         else:
@@ -110,4 +117,4 @@ with sync_playwright() as p:
         assert not errors,errors
         page.close()
     browser.close()
-print('OK: Chopper sampler layout — inline pitch/wave/tempo/volume, swapped LOAD/DRUMS, fine chop settings and responsive layout')
+print('OK: Chopper sampler layout — title-row pitch/tempo/volume, full-width sample display, swapped LOAD/DRUMS, fine chop settings and responsive layout')
