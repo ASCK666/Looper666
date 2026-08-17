@@ -396,10 +396,3 @@ Promise.resolve()
       document.documentElement.dataset.appReady="1";
     }
   });
-
-// PWA only when served over HTTP(S). Core app also works as file://.
-const swAllowed=location.protocol==="https:" ||
-  (location.protocol==="http:" && ["localhost","127.0.0.1","[::1]"].includes(location.hostname));
-if("serviceWorker" in navigator && swAllowed){
-  navigator.serviceWorker.register("./sw.js").catch(error=>console.warn("SW:",error));
-}

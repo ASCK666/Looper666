@@ -34,18 +34,3 @@ if("caches" in window){
     ))
     .catch(error=>console.warn("Scratch Practice cache cleanup failed:",error));
 }
-
-const chopperLayoutScript=document.createElement("script");
-chopperLayoutScript.src="./js/chopper-layout.js";
-chopperLayoutScript.defer=true;
-document.head.appendChild(chopperLayoutScript);
-
-const looperPolishStyle=document.createElement("link");
-looperPolishStyle.rel="stylesheet";
-looperPolishStyle.href="./css/looper-polish.css";
-document.head.appendChild(looperPolishStyle);
-
-const looperPolishScript=document.createElement("script");
-looperPolishScript.src="./js/looper-polish.js";
-looperPolishScript.defer=true;
-document.head.appendChild(looperPolishScript);
