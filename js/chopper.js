@@ -166,20 +166,6 @@ function updateSampleVolume(value){
   }
 }
 
-function masterVolumeGain(){
-  return clamp(masterVolumePercent/100,0,1);
-}
-
-function refreshMasterVolumeUI(){
-  const readout=$("masterVolumeReadout");
-  if(readout) readout.textContent=`${masterVolumePercent}%`;
-  if(liveBus)liveBus.gain.value=masterVolumeGain();
-  const gain=masterVolumeGain();
-  const db=(gain<=0)? "-∞ dB" : `${(20*Math.log10(gain)).toFixed(1)} dB`;
-  if($("masterDb")) $("masterDb").textContent=db;
-  document.documentElement.style.setProperty("--masterpct", String(masterVolumePercent));
-}
-
 async function loadChopperSample(file){
   stopChopAudition();
   if(!file)return false;

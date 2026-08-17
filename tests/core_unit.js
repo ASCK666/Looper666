@@ -21,7 +21,11 @@ const sandbox = {
   clearInterval,
   clearTimeout,
   console,
-  document:{getElementById:()=>null,createElement:()=>({})},
+  document:{
+    getElementById:()=>null,
+    createElement:()=>({}),
+    documentElement:{style:{setProperty:()=>{}}}
+  },
   performance:{now:()=>1000},
   requestAnimationFrame:()=>1,
   setInterval,
@@ -43,6 +47,9 @@ assert.equal(evaluate("safeErrorMessage({message:'bad\\nmessage'})"),"bad messag
 assert.equal(evaluate("dbToBarCount(-42,16)"),0);
 assert.equal(evaluate("dbToBarCount(-21,16)"),8);
 assert.equal(evaluate("dbToBarCount(0,16)"),16);
+assert.equal(evaluate("updateMasterVolume(0);masterVolumeGain()"),0);
+assert.equal(evaluate("updateMasterVolume(25);masterVolumeGain()"),.25);
+assert.equal(evaluate("updateMasterVolume(150);masterVolumeGain()"),1);
 assert.equal(evaluate("isAudioFile({name:'BEAT.WAV',type:''})"),true);
 assert.equal(evaluate("isAudioFile({name:'notes.txt',type:'text/plain'})"),false);
 assert.throws(

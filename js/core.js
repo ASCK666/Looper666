@@ -215,6 +215,21 @@ function setLamp(id,on){ $(id).classList.toggle("on",!!on); }
 
 function clamp(v,a,b){ return Math.max(a,Math.min(b,v)); }
 
+function masterVolumeGain(){
+  return clamp(masterVolumePercent/100,0,1);
+}
+
+function updateMasterVolume(value=masterVolumePercent){
+  masterVolumePercent=Number(value)||0;
+  const readout=$("masterVolumeReadout");
+  if(readout) readout.textContent=`${masterVolumePercent}%`;
+  if(liveBus)liveBus.gain.value=masterVolumeGain();
+  const gain=masterVolumeGain();
+  const db=(gain<=0)? "-∞ dB" : `${(20*Math.log10(gain)).toFixed(1)} dB`;
+  if($("masterDb")) $("masterDb").textContent=db;
+  document.documentElement.style.setProperty("--masterpct", String(masterVolumePercent));
+}
+
 function shortName(s,n=42){ return s.length>n ? s.slice(0,n-1)+"…" : s; }
 
 function bufferToBlob(buffer){
