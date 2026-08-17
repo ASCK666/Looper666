@@ -30,17 +30,19 @@ with sync_playwright() as p:
           const pads=[...document.querySelectorAll('#pads .pad')].map(x=>x.getBoundingClientRect().toJSON());
           const controlActions=[...document.querySelectorAll('#chopper .samplerActionRow > .btn')].map(x=>({id:x.id,...x.getBoundingClientRect().toJSON()}));
           const transport=[...document.querySelectorAll('#chopper .samplerDisplayActions > .btn')].map(x=>({id:x.id,...x.getBoundingClientRect().toJSON()}));
+          const upperEl=document.querySelector('.samplerUpperDeck');
+          const upperChildren=[...upperEl.children].map(x=>x.classList.contains('samplerControlModule')?'control':x.classList.contains('samplerScreenModule')?'screen':'other');
           const title=box('.samplerScreenModule > .stableTitle');
           const pitch=box('.samplePitchKnob'),volume=box('.sampleVolumeKnob'),tempo=box('.sampleTempoControl'),wave=box('.samplerScreen');
           const tempoInput=box('#sampleBpm');
-          const upper=getComputedStyle(document.querySelector('.samplerUpperDeck')).gridTemplateColumns;
+          const upper=getComputedStyle(upperEl).gridTemplateColumns;
           const perf=getComputedStyle(document.querySelector('.samplerPerformanceDeck')).gridTemplateColumns;
           const screen=box('.samplerScreenModule'),control=box('.samplerControlModule');
           const padPanel=box('.samplerPadsModule'),seq=box('.samplerSequenceModule');
           const wrap=document.querySelector('.loopGridWrap');
           const fine=document.querySelector('.advancedBox');
           return {
-            pads,controlActions,transport,title:title.toJSON(),pitch:pitch.toJSON(),volume:volume.toJSON(),tempo:tempo.toJSON(),wave:wave.toJSON(),tempoInput:tempoInput.toJSON(),
+            pads,controlActions,transport,upperChildren,title:title.toJSON(),pitch:pitch.toJSON(),volume:volume.toJSON(),tempo:tempo.toJSON(),wave:wave.toJSON(),tempoInput:tempoInput.toJSON(),
             displayBodyDisplay:getComputedStyle(document.querySelector('.samplerDisplayBody')).display,
             pitchPct:getComputedStyle(document.querySelector('.samplePitchKnob')).getPropertyValue('--knob-pct').trim(),
             volumePct:getComputedStyle(document.querySelector('.sampleVolumeKnob')).getPropertyValue('--knob-pct').trim(),
@@ -64,6 +66,10 @@ with sync_playwright() as p:
         assert all(x['width']>35 and x['height']>35 for x in data['pads']),data['pads']
         assert abs(data['pads'][0]['top']-data['pads'][3]['top'])<2,data['pads'][:5]
         assert data['pads'][4]['top']>data['pads'][0]['bottom']-2,data['pads'][:5]
+        assert data['upperChildren']==['control','screen'],data['upperChildren']
+        assert data['control']['bottom']<=data['screen']['top']+2,data
+        assert abs(data['control']['left']-data['screen']['left'])<2,data
+        assert abs(data['control']['right']-data['screen']['right'])<2,data
         assert [x['id'] for x in data['controlActions']]==['playDrumsOnly','autoMarkers'],data['controlActions']
         assert [x['id'] for x in data['transport']]==['previewFlip','loadSampleBtn','stopFlip','addFlipLibrary'],data['transport']
         assert all(30<=x['height']<=44 for x in data['controlActions']+data['transport']),data
@@ -104,10 +110,6 @@ with sync_playwright() as p:
         assert abs(float(knob_state['volume'])-25)<.01,knob_state
         assert knob_state['pitchReadout']=='+6 st' and knob_state['volumeReadout']=='25%',knob_state
         assert knob_state['tempo']=='103.5',knob_state
-        if width>1180:
-            assert data['control']['left']>=data['screen']['right']-2,data
-        else:
-            assert data['control']['top']>=data['screen']['bottom']-2,data
         if width>1000:
             assert data['seq']['left']>=data['padPanel']['right']-2,data
         else:
@@ -117,4 +119,4 @@ with sync_playwright() as p:
         assert not errors,errors
         page.close()
     browser.close()
-print('OK: Chopper sampler layout — title-row pitch/tempo/volume, full-width sample display, swapped LOAD/DRUMS, fine chop settings and responsive layout')
+print('OK: Chopper sampler layout — Sample Control above display, title-row pitch/tempo/volume, full-width waveform and responsive layout')
