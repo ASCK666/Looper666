@@ -4,28 +4,15 @@ on:
   push:
     branches:
       - main
-      - agent/drum-editor-library-buttons
   pull_request:
 
 jobs:
   test:
     runs-on: ubuntu-latest
     timeout-minutes: 15
-    permissions:
-      contents: write
     steps:
       - name: Checkout
         uses: actions/checkout@v4
-
-      - name: Apply surgical drum editor patch
-        run: |
-          python tools/apply_drum_editor_library_buttons.py
-          git diff --check
-          git config user.name github-actions[bot]
-          git config user.email 41898282+github-actions[bot]@users.noreply.github.com
-          git add index.html js/drums.js js/events.js css/base.css tests/drum_ui.py
-          git commit -m "Move drum library controls into pattern rows"
-          git push origin HEAD:agent/drum-editor-library-buttons
 
       - name: Set up Python
         uses: actions/setup-python@v5
