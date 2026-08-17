@@ -88,7 +88,7 @@ with tempfile.TemporaryDirectory() as td, sync_playwright() as p:
     assert state['pads']==16 and state['rows']==16 and state['cells']==256,state
     assert state['timelineWidth']==max(830,state['gridWidth']),state
     assert state['playheadWidth']==state['timelineWidth'],state
-    # The sequence timeline must draw the actual source range selected by each trigger.
+    # The sequence timeline is visually partitioned by eighth-note cell while retaining the exact audible source range.
     page.evaluate('''() => {
       const original=drawBufferRange;
       window.__timelineRanges=[];
@@ -103,29 +103,38 @@ with tempfile.TemporaryDirectory() as td, sync_playwright() as p:
     first_pad_step0=page.locator('#loopGrid .matrixCell:not(.unavailable)').nth(0)
     first_pad_step0.click();page.wait_for_timeout(20)
     assert page.evaluate('loopGridEvents[0]===1') is True
-    first_range=page.evaluate('window.__timelineRanges.at(-1)')
+    first_ranges=page.evaluate('window.__timelineRanges.slice()')
     first_marker=page.evaluate('markers[0]')
-    assert abs(first_range['startSec']-first_marker)<1e-9,(first_range,first_marker)
+    cell_width=(state['timelineWidth']-66)/16
+    assert len(first_ranges)>=2,first_ranges
+    assert abs(first_ranges[0]['startSec']-first_marker)<1e-9,(first_ranges,first_marker)
+    assert all(r['width']<=math.ceil(cell_width) for r in first_ranges),first_ranges
+    assert first_ranges[1]['x']>first_ranges[0]['x'] and first_ranges[1]['startSec']>first_ranges[0]['startSec'],first_ranges
     timeline_active=page.evaluate("document.getElementById('sampleTimelineCanvas').toDataURL()")
     assert timeline_active!=timeline_empty
-    # Replacing the trigger at the same musical time must restart the visible waveform from the new chop marker.
-    second_pad_step0=page.locator('#loopGrid .matrixCell:not(.unavailable)').nth(16)
+    # A trigger on the next eighth-note cell must replace that cell with the new pad source exactly at the cell boundary.
+    second_pad_step1=page.locator('#loopGrid .matrixCell:not(.unavailable)').nth(17)
     page.evaluate('window.__timelineRanges=[]')
-    second_pad_step0.click();page.wait_for_timeout(20)
-    assert page.evaluate('loopGridEvents[0]===2') is True
-    second_range=page.evaluate('window.__timelineRanges.at(-1)')
+    second_pad_step1.click();page.wait_for_timeout(20)
+    assert page.evaluate('loopGridEvents[0]===1 && loopGridEvents[1]===2') is True
+    two_chop_ranges=page.evaluate('window.__timelineRanges.slice()')
     second_marker=page.evaluate('markers[1]')
-    assert abs(second_range['startSec']-second_marker)<1e-9,(second_range,second_marker)
-    assert second_range['startSec']>first_range['startSec'],(first_range,second_range)
+    assert len(two_chop_ranges)>=2,two_chop_ranges
+    assert abs(two_chop_ranges[0]['startSec']-first_marker)<1e-9,two_chop_ranges
+    assert abs(two_chop_ranges[1]['startSec']-second_marker)<1e-9,(two_chop_ranges,second_marker)
+    assert abs(two_chop_ranges[1]['x']-(66+cell_width))<3,(two_chop_ranges,cell_width)
+    assert all(r['width']<=math.ceil(cell_width) for r in two_chop_ranges),two_chop_ranges
+    timeline_two_chops=page.evaluate("document.getElementById('sampleTimelineCanvas').toDataURL()")
+    assert timeline_two_chops!=timeline_active
     page.fill('#sampleBpm','120');page.dispatch_event('#sampleBpm','input');page.wait_for_timeout(20)
     timeline_bpm=page.evaluate("document.getElementById('sampleTimelineCanvas').toDataURL()")
-    assert timeline_bpm!=timeline_active
-    # Current grid contract: right-click removes the trigger and the timeline returns to its empty state.
-    second_pad_step0.click(button='right');page.wait_for_timeout(20)
+    assert timeline_bpm!=timeline_two_chops
+    page.click('#clearGrid');page.wait_for_timeout(20)
     assert page.evaluate('loopGridEvents.every(v=>v===0)') is True
     timeline_cleared=page.evaluate("document.getElementById('sampleTimelineCanvas').toDataURL()")
     assert timeline_cleared!=timeline_bpm
     # The musical playhead uses the existing loop transport/RAF, keeps moving through silent sample gaps, and clears on STOP.
+    first_pad_step0=page.locator('#loopGrid .matrixCell:not(.unavailable)').nth(0)
     first_pad_step0.click();page.wait_for_timeout(20)
     playhead_pixels='''() => {
       const canvas=document.getElementById('sampleTimelinePlayheadCanvas');
@@ -165,4 +174,4 @@ with tempfile.TemporaryDirectory() as td, sync_playwright() as p:
     assert all(x['w']>20 and x['h']>20 for x in boxes),boxes
     assert not errors,errors
     page.close();browser.close()
-print('OK: Chopper UI — sample import/volume/pitch, triggered-source timeline/playhead, AUTO CHOP, 16 pads, 16x16 grid and place/clear')
+print('OK: Chopper UI — sample import/volume/pitch, cell-partitioned timeline/playhead, AUTO CHOP, 16 pads, 16x16 grid and place/clear')

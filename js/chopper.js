@@ -520,21 +520,46 @@ function renderSampleTimeline(){
   ctx.fillRect(0,0,width,height);
 
   const state=buildLoopPlayheadState();
+  const cells=[];
   if(state){
+    const stepDur=state.duration/16;
+    for(let step=0;step<16;step++){
+      const cellStart=step*stepDur;
+      const cellEnd=cellStart+stepDur;
+      const segment=state.segments.find(seg=>cellStart<seg.endTime && cellEnd>seg.startTime);
+      if(!segment)continue;
+
+      const startTime=Math.max(cellStart,segment.startTime);
+      const endTime=Math.min(cellEnd,segment.endTime);
+      if(endTime<=startTime)continue;
+
+      cells.push({
+        step,
+        pad:segment.pad,
+        startTime,
+        endTime,
+        sourceStart:segment.sampleStart+(startTime-segment.startTime)*state.pitchRate,
+        sourceEnd:Math.min(
+          sampleBuffer.duration,
+          segment.sampleStart+(endTime-segment.startTime)*state.pitchRate
+        )
+      });
+    }
+
     ctx.save();
     ctx.translate(0,18);
     ctx.strokeStyle="#d7a455";
     ctx.lineWidth=1;
-    for(const segment of state.segments){
-      const x=labelWidth+(segment.startTime/state.duration)*timelineWidth;
-      const endX=labelWidth+(segment.endTime/state.duration)*timelineWidth;
-      const drawX=Math.round(x);
-      const drawWidth=Math.max(1,Math.round(endX-x));
-      const sampleEnd=Math.min(
-        sampleBuffer.duration,
-        segment.sampleStart+(segment.endTime-segment.startTime)*state.pitchRate
+    for(const cell of cells){
+      const x=labelWidth+(cell.startTime/state.duration)*timelineWidth;
+      const endX=labelWidth+(cell.endTime/state.duration)*timelineWidth;
+      const drawX=Math.ceil(x)+1;
+      const drawEnd=Math.floor(endX)-1;
+      const drawWidth=Math.max(1,drawEnd-drawX);
+      drawBufferRange(
+        ctx,sampleBuffer,cell.sourceStart,cell.sourceEnd,
+        drawX,drawWidth,height-18
       );
-      drawBufferRange(ctx,sampleBuffer,segment.sampleStart,sampleEnd,drawX,drawWidth,height-18);
     }
     ctx.restore();
   }
@@ -557,11 +582,11 @@ function renderSampleTimeline(){
     }
   }
 
-  if(state){
+  if(cells.length){
     ctx.fillStyle="#ead9b9";
-    for(const segment of state.segments){
-      const x=labelWidth+(segment.startTime/state.duration)*timelineWidth;
-      ctx.fillText(String(segment.pad+1),x+4,18);
+    for(const cell of cells){
+      const x=labelWidth+(cell.step/16)*timelineWidth;
+      ctx.fillText(String(cell.pad+1),x+4,18);
     }
   }
 }
