@@ -220,7 +220,7 @@
         <div class="panel chopperMainPanel samplerScreenModule">
           <div class="grid4 samplerTransportButtons samplerDisplayActions" role="group" aria-label="Transport du Chopper">
             <button id="previewFlip" class="btn primary">PLAY</button>
-            <button id="playDrumsOnly" class="btn blue">DRUMS</button>
+            <button id="loadSampleBtn" class="btn primary">LOAD SAMPLE</button>
             <button id="stopFlip" class="btn">STOP</button>
             <button id="addFlipLibrary" class="btn good">SAVE BEAT</button>
           </div>
@@ -245,6 +245,10 @@
               </div>
             </div>
 
+            <div class="friendlyControls sampleTempoControl">
+              <div><label for="sampleBpm">TEMPO</label><input id="sampleBpm" type="number" min="40" max="220" step="0.1" value="90"></div>
+            </div>
+
             <div class="sampleKnob sampleVolumeKnob" data-range-knob="sampleVolume">
               <label for="sampleVolume">SAMPLE VOL</label>
               <div class="sampleKnobControl">
@@ -263,7 +267,7 @@
           <div class="title stableTitle"><span>SAMPLE CONTROL <i class="blueLed"></i></span><span class="titleMeta">LOAD / EDIT</span></div>
 
           <div class="samplerActionRow">
-            <button id="loadSampleBtn" class="btn primary">LOAD SAMPLE</button>
+            <button id="playDrumsOnly" class="btn blue">DRUMS</button>
             <button id="autoMarkers" class="btn">AUTO CHOP</button>
           </div>
           <div id="beatSaveStatus" class="status saveBeatStatus">SAVE rend la grille actuelle puis écrit un WAV.</div>
@@ -271,17 +275,12 @@
           <input id="sampleFile" class="hidden" type="file" accept="audio/*">
           <input id="waveZoom" class="hidden" type="range" min="1" max="24" step="1" value="1">
 
-          <div class="samplerSelectRow">
-            <div><label>CHOPS</label><select id="sliceCount"><option value="4">4</option><option value="8">8</option><option value="12">12</option><option value="16" selected>16</option></select></div>
-            <div><label>SNAP</label><select id="snapMode"><option value="transient">TRANSIENT</option><option value="grid">GRID</option><option value="free">FREE</option></select></div>
-          </div>
-
-          <div class="friendlyControls">
-            <div><label>TEMPO GRID</label><input id="sampleBpm" type="number" min="40" max="220" step="0.1" value="90"></div>
-          </div>
-
           <details class="advancedBox">
             <summary>FINE SETTINGS</summary>
+            <div class="samplerSelectRow fineSettingsSelectRow">
+              <div><label>CHOPS</label><select id="sliceCount"><option value="4">4</option><option value="8">8</option><option value="12">12</option><option value="16" selected>16</option></select></div>
+              <div><label>SNAP</label><select id="snapMode"><option value="transient">TRANSIENT</option><option value="grid">GRID</option><option value="free">FREE</option></select></div>
+            </div>
             <div class="grid2 advancedInner">
               <div><label>GRID PRECISION</label><select id="gridDivision"><option value="0.25">1/4 beat</option><option value="0.125">1/8 beat</option><option value="0.0625" selected>1/16 beat</option><option value="0.03125">1/32 beat</option></select></div>
               <div><label>TRANSIENT RANGE</label><select id="transientRadius"><option value="20">20 ms</option><option value="40">40 ms</option><option value="80" selected>80 ms</option><option value="120">120 ms</option><option value="200">200 ms</option></select></div>
