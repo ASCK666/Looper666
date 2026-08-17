@@ -218,13 +218,40 @@
 
       <div class="samplerUpperDeck">
         <div class="panel chopperMainPanel samplerScreenModule">
+          <div class="grid4 samplerTransportButtons samplerDisplayActions" role="group" aria-label="Transport du Chopper">
+            <button id="previewFlip" class="btn primary">PLAY</button>
+            <button id="playDrumsOnly" class="btn blue">DRUMS</button>
+            <button id="stopFlip" class="btn">STOP</button>
+            <button id="addFlipLibrary" class="btn good">SAVE BEAT</button>
+          </div>
+
           <div class="title stableTitle"><span>SAMPLE DISPLAY <i class="blueLed"></i></span><span class="titleMeta">WAVE / CHOPS</span></div>
 
-          <div class="wavewrap largeWave samplerScreen">
-            <canvas id="waveCanvas" width="1500" height="210"></canvas>
-            <canvas id="playheadCanvas" width="1500" height="210" aria-hidden="true"></canvas>
-            <div class="waveScrollbar">
-              <input id="waveScroll" type="range" min="0" max="1000" step="1" value="0" aria-label="Scroll sample waveform">
+          <div class="samplerDisplayBody">
+            <div class="sampleKnob samplePitchKnob" data-range-knob="samplePitch">
+              <label for="samplePitch">PITCH</label>
+              <div class="sampleKnobControl">
+                <span class="sampleKnobFace" aria-hidden="true"></span>
+                <input id="samplePitch" class="sampleKnobInput" type="range" min="-6" max="6" step="1" value="0" aria-label="Pitch du sample">
+              </div>
+              <span id="samplePitchReadout" class="sampleKnobReadout">0 st</span>
+            </div>
+
+            <div class="wavewrap largeWave samplerScreen">
+              <canvas id="waveCanvas" width="1500" height="210"></canvas>
+              <canvas id="playheadCanvas" width="1500" height="210" aria-hidden="true"></canvas>
+              <div class="waveScrollbar">
+                <input id="waveScroll" type="range" min="0" max="1000" step="1" value="0" aria-label="Scroll sample waveform">
+              </div>
+            </div>
+
+            <div class="sampleKnob sampleVolumeKnob" data-range-knob="sampleVolume">
+              <label for="sampleVolume">SAMPLE VOL</label>
+              <div class="sampleKnobControl">
+                <span class="sampleKnobFace" aria-hidden="true"></span>
+                <input id="sampleVolume" class="sampleKnobInput" type="range" min="0" max="100" step="1" value="80" aria-label="Volume du sample">
+              </div>
+              <span id="sampleVolumeReadout" class="sampleKnobReadout">80%</span>
             </div>
           </div>
 
@@ -235,13 +262,9 @@
         <div class="panel samplerControlModule chopTransportPanel">
           <div class="title stableTitle"><span>SAMPLE CONTROL <i class="blueLed"></i></span><span class="titleMeta">LOAD / EDIT</span></div>
 
-          <div class="samplerActionRow grid4 samplerTransportButtons">
+          <div class="samplerActionRow">
             <button id="loadSampleBtn" class="btn primary">LOAD SAMPLE</button>
             <button id="autoMarkers" class="btn">AUTO CHOP</button>
-            <button id="previewFlip" class="btn primary">PLAY</button>
-            <button id="playDrumsOnly" class="btn blue">DRUMS</button>
-            <button id="stopFlip" class="btn">STOP</button>
-            <button id="addFlipLibrary" class="btn good">SAVE BEAT</button>
           </div>
           <div id="beatSaveStatus" class="status saveBeatStatus">SAVE rend la grille actuelle puis écrit un WAV.</div>
           <div class="spaceHint">ESPACE = PLAY / STOP</div>
@@ -255,14 +278,6 @@
 
           <div class="friendlyControls">
             <div><label>TEMPO GRID</label><input id="sampleBpm" type="number" min="40" max="220" step="0.1" value="90"></div>
-            <div>
-              <label>PITCH <span id="samplePitchReadout">0 st</span></label>
-              <input id="samplePitch" type="range" min="-6" max="6" step="1" value="0">
-            </div>
-            <div class="sampleVolControl">
-              <label>SAMPLE VOL <span id="sampleVolumeReadout">80%</span></label>
-              <input id="sampleVolume" type="range" min="0" max="100" step="1" value="80">
-            </div>
           </div>
 
           <details class="advancedBox">

@@ -106,15 +106,108 @@
 }
 
 #chopper .samplerActionRow {
-  grid-template-columns: repeat(6, minmax(0, 1fr)) !important;
+  grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
   gap: 6px !important;
 }
 
-#chopper .samplerActionRow .btn {
+#chopper .samplerActionRow .btn,
+#chopper .samplerDisplayActions .btn {
   min-height: 34px !important;
   padding: 6px 8px !important;
   font-size: 9px !important;
   letter-spacing: .6px !important;
+}
+
+#chopper .samplerDisplayActions {
+  grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
+  gap: 6px !important;
+  margin: 0 0 10px !important;
+}
+
+#chopper .samplerDisplayBody {
+  display: grid !important;
+  grid-template-columns: 72px minmax(0, 1fr) 72px !important;
+  align-items: center !important;
+  gap: 10px !important;
+}
+
+#chopper .sampleKnob {
+  --knob-pct: 50;
+  display: flex !important;
+  min-width: 0;
+  flex-direction: column;
+  align-items: center;
+  gap: 5px;
+  color: #9ca6ad;
+  font: 800 8px/1 var(--font-mono);
+  letter-spacing: .7px;
+  text-align: center;
+}
+
+#chopper .sampleVolumeKnob {
+  --knob-pct: 80;
+}
+
+#chopper .sampleKnob > label {
+  margin: 0 !important;
+  color: inherit !important;
+  font: inherit !important;
+  letter-spacing: inherit !important;
+}
+
+#chopper .sampleKnobControl {
+  position: relative;
+  width: 62px;
+  height: 62px;
+}
+
+#chopper .sampleKnobFace {
+  position: absolute;
+  inset: 4px;
+  border: 1px solid #3f392f;
+  border-radius: 50%;
+  background: radial-gradient(circle at 34% 28%,#383630 0,#211f1a 40%,#0b0a08 74%,#030302 100%);
+  box-shadow: inset 0 1px rgba(255,255,255,.05),0 7px 14px rgba(0,0,0,.34);
+  pointer-events: none;
+}
+
+#chopper .sampleKnobFace:after {
+  content: "";
+  position: absolute;
+  top: 5px;
+  left: 27px;
+  width: 2px;
+  height: 16px;
+  border-radius: 2px;
+  background: var(--accent);
+  box-shadow: 0 0 6px rgba(226,173,95,.42);
+  transform: rotate(calc((var(--knob-pct) - 50) * 2.7deg));
+  transform-origin: 50% 23px;
+}
+
+#chopper .sampleKnobInput {
+  position: absolute !important;
+  inset: 0 !important;
+  z-index: 2;
+  width: 100% !important;
+  height: 100% !important;
+  min-height: 0 !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  opacity: 0;
+  cursor: ew-resize;
+}
+
+#chopper .sampleKnob:focus-within .sampleKnobFace {
+  border-color: #8b6838;
+  box-shadow: inset 0 1px rgba(255,255,255,.05),0 0 0 2px rgba(226,173,95,.12),0 7px 14px rgba(0,0,0,.34);
+}
+
+#chopper .sampleKnobReadout {
+  min-width: 52px;
+  color: #d6c49f;
+  font-size: 8px;
+  line-height: 1;
 }
 
 #chopper .samplerSampleInfo,
@@ -129,10 +222,6 @@
 
 /* Pads should never sit in a narrow island once the layout stacks. */
 @media (max-width: 1000px) {
-  #chopper .samplerActionRow {
-    grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
-  }
-
   #chopper .samplerPadsModule {
     width: 100% !important;
     max-width: none !important;
@@ -220,8 +309,23 @@
     border-radius: 4px !important;
   }
 
-  #chopper .samplerScreen {
+  #chopper .samplerDisplayActions {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  }
+
+  #chopper .samplerDisplayBody {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    gap: 7px !important;
+  }
+
+  #chopper .samplerDisplayBody .samplerScreen {
+    grid-column: 1 / -1;
+    grid-row: 1;
     margin-bottom: 3px !important;
+  }
+
+  #chopper .sampleKnob {
+    grid-row: 2;
   }
 
   #chopper .samplerPerformanceDeck {
@@ -260,9 +364,5 @@
 
   .headerMeterWrap {
     padding-inline: 4px !important;
-  }
-
-  #chopper .samplerActionRow {
-    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
   }
 }
