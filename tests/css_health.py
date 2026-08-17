@@ -27,6 +27,13 @@ def impossible(selector):
 assert not impossible('.trackSource:not(.class-that-does-not-exist)')
 assert impossible('.class-that-does-not-exist')
 
+# Browser tests that inline the base stylesheet must also inline clean-ui.css.
+# Otherwise they validate a visual runtime that index.html never serves.
+for test_path in sorted((ROOT/'tests').glob('*.py')):
+    test_source=test_path.read_text(encoding='utf-8',errors='ignore')
+    if './css/base.css' in test_source:
+        assert './css/clean-ui.css' in test_source, f'{test_path.name}: base.css is inlined without clean-ui.css'
+
 total_lines=0
 total_selectors=0
 for path in CSS_FILES:
@@ -41,4 +48,4 @@ for path in CSS_FILES:
     total_lines+=lines
     total_selectors+=len(selectors)
 
-print(f'OK: CSS health — {total_lines} lines, {total_selectors} selector branches across all runtime CSS, 0 unreachable selector branches')
+print(f'OK: CSS health — {total_lines} lines, {total_selectors} selector branches across all runtime CSS, 0 unreachable selector branches, browser tests use the full cascade')
