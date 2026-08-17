@@ -33,7 +33,9 @@ jobs:
 
       - name: Apply surgical drum cleanup
         if: github.ref == 'refs/heads/agent/remove-drum-library-meter' || github.head_ref == 'agent/remove-drum-library-meter'
-        run: python tools/temp_drum_cleanup.py
+        run: |
+          python tools/temp_drum_cleanup_pre.py
+          python tools/temp_drum_cleanup.py
 
       - name: Install browser test dependency
         run: |
@@ -49,7 +51,7 @@ jobs:
         run: |
           git diff --check
           git checkout origin/main -- .github/workflows/project-checks.yml
-          git rm -f .github/workflows/temp-drum-cleanup.yml tools/temp_drum_cleanup.py
+          git rm -f .github/workflows/temp-drum-cleanup.yml tools/temp_drum_cleanup.py tools/temp_drum_cleanup_pre.py
           git add index.html js/core.js js/drums.js js/events.js css/base.css tests/drum_ui.py tests/punch_master.py .github/workflows/project-checks.yml
           git diff --cached --check
           git config user.name "github-actions[bot]"
