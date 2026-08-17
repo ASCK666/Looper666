@@ -11,6 +11,10 @@ const sampleTimelineCanvas=$("sampleTimelineCanvas");
 const sampleTimeline2d=sampleTimelineCanvas?.getContext("2d");
 const sampleTimelinePlayheadCanvas=$("sampleTimelinePlayheadCanvas");
 const sampleTimelinePlayhead2d=sampleTimelinePlayheadCanvas?.getContext("2d");
+const CHOPPER_SEQUENCE_STEPS=16;
+const SEQUENCE_LABEL_WIDTH=66;
+const SEQUENCE_MIN_WIDTH=830;
+const SAMPLE_TIMELINE_HEIGHT=86;
 
 function samplePitchRate(){
   return Math.pow(2,samplePitchSemitones/12);
@@ -290,16 +294,17 @@ function autoPlaceMarkers(){
 function drawBufferRange(context,buffer,startSec,endSec,x,width,height){
   if(!buffer || width<=0 || height<=0)return;
   const data=buffer.getChannelData(0),sr=buffer.sampleRate;
-  const first=Math.floor(startSec*sr);
-  const last=Math.min(data.length,Math.ceil(endSec*sr));
-  const samples=Math.max(1,last-first);
-  const step=Math.max(1,Math.floor(samples/width));
+  const first=clamp(Math.floor(startSec*sr),0,data.length);
+  const last=clamp(Math.ceil(endSec*sr),first,data.length);
+  const samples=last-first;
+  if(samples<=0)return;
+  const columns=Math.max(1,Math.floor(width));
 
   context.beginPath();
-  for(let px=0;px<width;px++){
+  for(let px=0;px<columns;px++){
     let min=1,max=-1;
-    const start=first+px*step;
-    const end=Math.min(last,start+step);
+    const start=first+Math.floor(samples*px/columns);
+    const end=Math.min(last,first+Math.ceil(samples*(px+1)/columns));
     for(let i=start;i<end;i++){
       const v=data[i];
       if(v<min)min=v;
@@ -459,7 +464,7 @@ function buildLoopPlayheadState(){
   const events=gridEventsForRender();
 
   const placed=[];
-  for(let step=0;step<16;step++){
+  for(let step=0;step<CHOPPER_SEQUENCE_STEPS;step++){
     const chop=Number(events[step])||0;
     if(chop>=1 && chop<markers.length){
       placed.push({step,chop});
@@ -503,8 +508,8 @@ function renderSampleTimeline(){
   const grid=$("loopGrid");
   if(!grid)return;
 
-  const width=Math.max(830,Math.ceil(grid.scrollWidth||grid.clientWidth||830));
-  const height=86;
+  const width=Math.max(SEQUENCE_MIN_WIDTH,Math.ceil(grid.scrollWidth||grid.clientWidth||SEQUENCE_MIN_WIDTH));
+  const height=SAMPLE_TIMELINE_HEIGHT;
   if(sampleTimelineCanvas.width!==width)sampleTimelineCanvas.width=width;
   if(sampleTimelineCanvas.height!==height)sampleTimelineCanvas.height=height;
   if(sampleTimelinePlayheadCanvas){
@@ -513,8 +518,7 @@ function renderSampleTimeline(){
   }
 
   const ctx=sampleTimeline2d;
-  const labelWidth=66;
-  const timelineWidth=Math.max(1,width-labelWidth);
+  const timelineWidth=Math.max(1,width-SEQUENCE_LABEL_WIDTH);
   ctx.clearRect(0,0,width,height);
   ctx.fillStyle="#060504";
   ctx.fillRect(0,0,width,height);
@@ -522,8 +526,8 @@ function renderSampleTimeline(){
   const state=buildLoopPlayheadState();
   const cells=[];
   if(state){
-    const stepDur=state.duration/16;
-    for(let step=0;step<16;step++){
+    const stepDur=state.duration/CHOPPER_SEQUENCE_STEPS;
+    for(let step=0;step<CHOPPER_SEQUENCE_STEPS;step++){
       const cellStart=step*stepDur;
       const cellEnd=cellStart+stepDur;
       const segment=state.segments.find(seg=>cellStart<seg.endTime && cellEnd>seg.startTime);
@@ -551,8 +555,8 @@ function renderSampleTimeline(){
     ctx.strokeStyle="#d7a455";
     ctx.lineWidth=1;
     for(const cell of cells){
-      const x=labelWidth+(cell.startTime/state.duration)*timelineWidth;
-      const endX=labelWidth+(cell.endTime/state.duration)*timelineWidth;
+      const x=SEQUENCE_LABEL_WIDTH+(cell.startTime/state.duration)*timelineWidth;
+      const endX=SEQUENCE_LABEL_WIDTH+(cell.endTime/state.duration)*timelineWidth;
       const drawX=Math.ceil(x)+1;
       const drawEnd=Math.floor(endX)-1;
       const drawWidth=Math.max(1,drawEnd-drawX);
@@ -569,14 +573,14 @@ function renderSampleTimeline(){
   ctx.fillStyle="#9e896b";
   ctx.fillText("SAMPLE",7,6);
 
-  for(let step=0;step<=16;step++){
-    const x=labelWidth+(step/16)*timelineWidth;
-    const barStart=step===0||step===8||step===16;
+  for(let step=0;step<=CHOPPER_SEQUENCE_STEPS;step++){
+    const x=SEQUENCE_LABEL_WIDTH+(step/CHOPPER_SEQUENCE_STEPS)*timelineWidth;
+    const barStart=step===0||step===CHOPPER_SEQUENCE_STEPS/2||step===CHOPPER_SEQUENCE_STEPS;
     const beatStart=step%2===0;
     ctx.strokeStyle=barStart?"#765a34":(beatStart?"#4a3a29":"#2f2a23");
     ctx.lineWidth=barStart?2:1;
     ctx.beginPath();ctx.moveTo(x,0);ctx.lineTo(x,height);ctx.stroke();
-    if(step<16){
+    if(step<CHOPPER_SEQUENCE_STEPS){
       ctx.fillStyle="#9e896b";
       ctx.fillText(stepLabel(step),x+4,6);
     }
@@ -585,7 +589,7 @@ function renderSampleTimeline(){
   if(cells.length){
     ctx.fillStyle="#ead9b9";
     for(const cell of cells){
-      const x=labelWidth+(cell.step/16)*timelineWidth;
+      const x=SEQUENCE_LABEL_WIDTH+(cell.step/CHOPPER_SEQUENCE_STEPS)*timelineWidth;
       ctx.fillText(String(cell.pad+1),x+4,18);
     }
   }
@@ -650,10 +654,9 @@ function drawSampleTimelinePlayhead(loopTime){
 
   const width=sampleTimelinePlayheadCanvas.width;
   const height=sampleTimelinePlayheadCanvas.height;
-  const labelWidth=66;
-  const timelineWidth=Math.max(1,width-labelWidth);
+  const timelineWidth=Math.max(1,width-SEQUENCE_LABEL_WIDTH);
   const duration=Math.max(.001,loopPlayheadState.duration);
-  const x=labelWidth+(loopTime/duration)*timelineWidth;
+  const x=SEQUENCE_LABEL_WIDTH+(loopTime/duration)*timelineWidth;
 
   sampleTimelinePlayhead2d.save();
   sampleTimelinePlayhead2d.strokeStyle="#e2ad5f";
@@ -838,15 +841,15 @@ async function previewSlice(i,button){
 
 function ensureGridEvents(){
   const old=loopGridEvents.slice();
-  loopGridEvents=new Array(16).fill(0);
-  for(let i=0;i<Math.min(old.length,16);i++){
+  loopGridEvents=new Array(CHOPPER_SEQUENCE_STEPS).fill(0);
+  for(let i=0;i<Math.min(old.length,CHOPPER_SEQUENCE_STEPS);i++){
     const pad=Number(old[i])||0;
     loopGridEvents[i]=(pad>=1 && pad<=Math.max(1,markers.length-1))?pad:0;
   }
 }
 
 function stepLabel(step){
-  const beat=Math.floor((step%8)/2)+1;
+  const beat=Math.floor((step%(CHOPPER_SEQUENCE_STEPS/2))/2)+1;
   return step%2===0 ? String(beat) : "&";
 }
 
@@ -859,13 +862,13 @@ function renderLoopGrid(){
   corner.className="matrixCorner";
   grid.appendChild(corner);
 
-  for(let step=0;step<16;step++){
+  for(let step=0;step<CHOPPER_SEQUENCE_STEPS;step++){
     const head=document.createElement("div");
     const beatStart=step%2===0;
-    const barStart=step===0||step===8;
+    const barStart=step===0||step===CHOPPER_SEQUENCE_STEPS/2;
     head.className=`matrixHead${beatStart?" beatStart":""}${barStart?" barStart":""}`;
     head.textContent=stepLabel(step);
-    head.title=`Bar ${step<8?1:2} • ${stepLabel(step)}`;
+    head.title=`Bar ${step<CHOPPER_SEQUENCE_STEPS/2?1:2} • ${stepLabel(step)}`;
     grid.appendChild(head);
   }
 
@@ -892,16 +895,16 @@ function renderLoopGrid(){
 
     grid.appendChild(label);
 
-    for(let step=0;step<16;step++){
+    for(let step=0;step<CHOPPER_SEQUENCE_STEPS;step++){
       const cell=document.createElement("button");
       const beatStart=step%2===0;
-      const barStart=step===0||step===8;
+      const barStart=step===0||step===CHOPPER_SEQUENCE_STEPS/2;
       const active=available && loopGridEvents[step]===pad;
 
       cell.className=`matrixCell${beatStart?" beatStart":""}${barStart?" barStart":""}${active?" active":""}${available?"":" unavailable"}`;
       cell.disabled=!available;
       cell.title=available
-        ? `PAD ${pad} • Bar ${step<8?1:2} • ${stepLabel(step)}`
+        ? `PAD ${pad} • Bar ${step<CHOPPER_SEQUENCE_STEPS/2?1:2} • ${stepLabel(step)}`
         : `PAD ${pad} indisponible`;
 
       if(available){
@@ -934,7 +937,7 @@ function renderLoopGrid(){
 }
 
 function clearLoopGrid(){
-  loopGridEvents=new Array(16).fill(0);
+  loopGridEvents=new Array(CHOPPER_SEQUENCE_STEPS).fill(0);
   renderLoopGrid();
 }
 

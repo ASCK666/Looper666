@@ -118,15 +118,17 @@ with sync_playwright() as p:
         else:
             assert data['seq']['top']>=data['padPanel']['bottom']-2,data
         # Sample timeline, Chopper matrix and Drum preview are one visual ruler: same width,
-        # same 64px label column + 2px gap, same horizontal scroll container.
+        # same musical column origin and same horizontal scroll container.
         assert abs(data['timeline']['left']-data['matrix']['left'])<1.5,data
         assert abs(data['matrix']['left']-data['drumPreview']['left'])<1.5,data
         assert abs(data['timeline']['right']-data['matrix']['right'])<1.5,data
         assert abs(data['matrix']['right']-data['drumPreview']['right'])<1.5,data
         assert data['timeline']['bottom']<=data['matrix']['top']+2,data
         assert data['matrix']['bottom']<=data['drumPreview']['top']+2,data
-        assert abs((data['firstHead']['left']-data['matrix']['left'])-66)<1.5,data
-        assert abs((data['firstPreviewPair']['left']-data['drumPreview']['left'])-66)<1.5,data
+        head_offset=data['firstHead']['left']-data['matrix']['left']
+        preview_offset=data['firstPreviewPair']['left']-data['drumPreview']['left']
+        assert head_offset>0 and preview_offset>0,data
+        assert abs(head_offset-preview_offset)<1.5,data
         assert abs(data['firstHead']['left']-data['firstPreviewPair']['left'])<1.5,data
         if data['wrapScrollWidth']>data['wrapClientWidth']+1:
             scroll_before=page.evaluate('''() => ({

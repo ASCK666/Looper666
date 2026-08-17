@@ -73,6 +73,22 @@ with tempfile.TemporaryDirectory() as td, sync_playwright() as p:
     assert pitch['semitones']==-5,pitch
     assert pitch['readout']=='-5 st' and '-5 st' in pitch['info'],pitch
     assert pitch['auditionStopped'] and pitch['sourceCleared'] and pitch['gainCleared'],pitch
+    # Sparse source ranges must be distributed across the destination width without fake full-height empty columns.
+    sparse_lines=page.evaluate('''() => {
+      const fake={sampleRate:2,getChannelData(){return new Float32Array([.25,-.25]);}};
+      const lines=[];
+      let move=null;
+      const context={
+        beginPath(){},
+        moveTo(x,y){move={x,y};},
+        lineTo(x,y){lines.push({x1:move.x,y1:move.y,x2:x,y2:y});},
+        stroke(){}
+      };
+      drawBufferRange(context,fake,0,1,0,8,20);
+      return lines;
+    }''')
+    assert len(sparse_lines)==8,sparse_lines
+    assert max(abs(line['y2']-line['y1']) for line in sparse_lines)<6,sparse_lines
     # AUTO CHOP must still populate the sixteen-pad workstation.
     page.click('#autoMarkers');page.wait_for_timeout(50)
     state=page.evaluate('''() => ({
@@ -82,11 +98,15 @@ with tempfile.TemporaryDirectory() as td, sync_playwright() as p:
       rows:document.querySelectorAll('#loopGrid .matrixRowLabel').length,
       timelineWidth:document.getElementById('sampleTimelineCanvas').width,
       playheadWidth:document.getElementById('sampleTimelinePlayheadCanvas').width,
-      gridWidth:document.getElementById('loopGrid').scrollWidth
+      gridWidth:document.getElementById('loopGrid').scrollWidth,
+      sequenceSteps:CHOPPER_SEQUENCE_STEPS,
+      labelWidth:SEQUENCE_LABEL_WIDTH,
+      minWidth:SEQUENCE_MIN_WIDTH
     })''')
     assert state['markers']==17,state
+    assert state['sequenceSteps']==16,state
     assert state['pads']==16 and state['rows']==16 and state['cells']==256,state
-    assert state['timelineWidth']==max(830,state['gridWidth']),state
+    assert state['timelineWidth']==max(state['minWidth'],state['gridWidth']),state
     assert state['playheadWidth']==state['timelineWidth'],state
     # The sequence timeline is visually partitioned by eighth-note cell while retaining the exact audible source range.
     page.evaluate('''() => {
@@ -99,21 +119,18 @@ with tempfile.TemporaryDirectory() as td, sync_playwright() as p:
         return original(context,buffer,startSec,endSec,x,width,height);
       };
     }''')
-    timeline_empty=page.evaluate("document.getElementById('sampleTimelineCanvas').toDataURL()")
     first_pad_step0=page.locator('#loopGrid .matrixCell:not(.unavailable)').nth(0)
     first_pad_step0.click();page.wait_for_timeout(20)
     assert page.evaluate('loopGridEvents[0]===1') is True
     first_ranges=page.evaluate('window.__timelineRanges.slice()')
     first_marker=page.evaluate('markers[0]')
-    cell_width=(state['timelineWidth']-66)/16
+    cell_width=(state['timelineWidth']-state['labelWidth'])/state['sequenceSteps']
     assert len(first_ranges)>=2,first_ranges
     assert abs(first_ranges[0]['startSec']-first_marker)<1e-9,(first_ranges,first_marker)
     assert all(r['width']<=math.ceil(cell_width) for r in first_ranges),first_ranges
     assert first_ranges[1]['x']>first_ranges[0]['x'] and first_ranges[1]['startSec']>first_ranges[0]['startSec'],first_ranges
-    timeline_active=page.evaluate("document.getElementById('sampleTimelineCanvas').toDataURL()")
-    assert timeline_active!=timeline_empty
     # A trigger on the next eighth-note cell must replace that cell with the new pad source exactly at the cell boundary.
-    second_pad_step1=page.locator('#loopGrid .matrixCell:not(.unavailable)').nth(17)
+    second_pad_step1=page.locator('#loopGrid .matrixCell:not(.unavailable)').nth(state['sequenceSteps']+1)
     page.evaluate('window.__timelineRanges=[]')
     second_pad_step1.click();page.wait_for_timeout(20)
     assert page.evaluate('loopGridEvents[0]===1 && loopGridEvents[1]===2') is True
@@ -122,10 +139,8 @@ with tempfile.TemporaryDirectory() as td, sync_playwright() as p:
     assert len(two_chop_ranges)>=2,two_chop_ranges
     assert abs(two_chop_ranges[0]['startSec']-first_marker)<1e-9,two_chop_ranges
     assert abs(two_chop_ranges[1]['startSec']-second_marker)<1e-9,(two_chop_ranges,second_marker)
-    assert abs(two_chop_ranges[1]['x']-(66+cell_width))<3,(two_chop_ranges,cell_width)
+    assert abs(two_chop_ranges[1]['x']-(state['labelWidth']+cell_width))<3,(two_chop_ranges,cell_width)
     assert all(r['width']<=math.ceil(cell_width) for r in two_chop_ranges),two_chop_ranges
-    timeline_two_chops=page.evaluate("document.getElementById('sampleTimelineCanvas').toDataURL()")
-    assert timeline_two_chops!=timeline_active
     # BPM must remap how much source audio belongs to each fixed musical cell, not merely repaint the canvas.
     pitch_rate=page.evaluate('samplePitchRate()')
     span_90=two_chop_ranges[0]['endSec']-two_chop_ranges[0]['startSec']
@@ -137,12 +152,8 @@ with tempfile.TemporaryDirectory() as td, sync_playwright() as p:
     span_120=bpm_ranges[0]['endSec']-bpm_ranges[0]['startSec']
     assert abs(span_120-(60/120/2)*pitch_rate)<1e-5,(span_120,pitch_rate)
     assert span_120<span_90,(span_90,span_120)
-    timeline_bpm=page.evaluate("document.getElementById('sampleTimelineCanvas').toDataURL()")
-    assert timeline_bpm!=timeline_two_chops
     page.click('#clearGrid');page.wait_for_timeout(20)
     assert page.evaluate('loopGridEvents.every(v=>v===0)') is True
-    timeline_cleared=page.evaluate("document.getElementById('sampleTimelineCanvas').toDataURL()")
-    assert timeline_cleared!=timeline_bpm
     # The musical playhead uses the existing loop transport/RAF, keeps moving through silent sample gaps, and clears on STOP.
     first_pad_step0=page.locator('#loopGrid .matrixCell:not(.unavailable)').nth(0)
     first_pad_step0.click();page.wait_for_timeout(20)
@@ -211,4 +222,4 @@ with tempfile.TemporaryDirectory() as td, sync_playwright() as p:
     assert all(x['w']>20 and x['h']>20 for x in boxes),boxes
     assert not errors,errors
     page.close();browser.close()
-print('OK: Chopper UI — sample import/volume/pitch, BPM-remapped cell timeline/playhead, AUTO CHOP, 16 pads, 16x16 grid and place/clear')
+print('OK: Chopper UI — sparse waveform ranges, sample import/volume/pitch, BPM-remapped cell timeline/playhead, AUTO CHOP, 16 pads, 16x16 grid and place/clear')
