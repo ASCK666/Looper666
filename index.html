@@ -378,61 +378,13 @@
             </div>
           </div>
           <div id="drumEditor" class="drumEditor"></div>
+          <div id="chopStatus" class="status drumEditStatus" aria-live="polite">READY</div>
+          <input id="kickFolderFallback" class="hidden" type="file" accept="audio/*" webkitdirectory multiple>
+          <input id="snareFolderFallback" class="hidden" type="file" accept="audio/*" webkitdirectory multiple>
+          <input id="hatFolderFallback" class="hidden" type="file" accept="audio/*" webkitdirectory multiple>
         </div>
 
-        <div class="drumLibrariesPanel" id="drumLibrariesPanel">
-          <button id="loadDrumLibraryCTA" class="loadDrumLibraryCTA btn" type="button">
-            <span class="loadDrumLibraryArrow">↓</span>
-            <span class="loadDrumLibraryCopy">
-              <b>LOAD DRUM LIBRARY</b>
-              <small>START WITH YOUR KICKS</small>
-            </span>
-          </button>
-          <div class="drumLibrariesHead">
-            <div>
-              <div class="currentDrumsTitle">DRUM LIBRARIES</div>
-              <div class="help">Charge tes dossiers locaux. Les sons sont appliqués immédiatement au groove courant.</div>
-            </div>
-            <div id="chopStatus" class="status drumEngineStatus">READY</div>
-          </div>
 
-          <div class="drumLibraryGrid">
-            <div class="drumLibrarySlot kickLibrarySlot">
-              <div class="drumLibraryIcon">K</div>
-              <div class="drumLibraryCopy">
-                <b>KICK</b>
-                <span id="kickFolderStatus" class="folderStatus">no folder selected • synth fallback</span>
-              </div>
-              <input id="kickFolderFallback" class="folderFallback" type="file" accept="audio/*" webkitdirectory multiple>
-            </div>
-
-            <div class="drumLibrarySlot snareLibrarySlot">
-              <div class="drumLibraryIcon">S</div>
-              <div class="drumLibraryCopy">
-                <b>SNARE</b>
-                <span id="snareFolderStatus" class="folderStatus">no folder selected • synth fallback</span>
-              </div>
-              <input id="snareFolderFallback" class="folderFallback" type="file" accept="audio/*" webkitdirectory multiple>
-            </div>
-
-            <div class="drumLibrarySlot hatLibrarySlot">
-              <div class="drumLibraryIcon">H</div>
-              <div class="drumLibraryCopy">
-                <b>HI-HAT</b>
-                <span id="hatFolderStatus" class="folderStatus">no folder selected • synth fallback</span>
-              </div>
-              <input id="hatFolderFallback" class="folderFallback" type="file" accept="audio/*" webkitdirectory multiple>
-            </div>
-          </div>
-        </div>
-
-        <div class="outputMeterPanel">
-          <div class="title compactTitle">MASTER</div>
-          <div class="verticalMeter">
-            <div id="masterVuVertical" class="verticalVu"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div>
-            <div class="verticalScale"><span>0</span><span>-6</span><span>-12</span><span>-18</span><span>-24</span><span>-36</span><span>-∞</span></div>
-          </div>
-        </div>
       </div>
     </div>
   </section>

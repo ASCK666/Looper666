@@ -78,7 +78,7 @@ with sync_playwright() as p:
           wave:document.getElementById('waveCanvas').getBoundingClientRect().toJSON(),
           pads:document.getElementById('pads').getBoundingClientRect().toJSON(),
           grid:document.getElementById('loopGrid').getBoundingClientRect().toJSON(),
-          drums:document.getElementById('drumLibrariesPanel').getBoundingClientRect().toJSON()
+          drums:document.querySelector('.drumEditBox').getBoundingClientRect().toJSON()
         })''')
         assert chop['chopper'] != 'none' and chop['looper'] == 'none', chop
         assert chop['wave']['width'] > 200 and chop['wave']['height'] > 40, chop

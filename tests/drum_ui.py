@@ -30,13 +30,12 @@ with sync_playwright() as p:
     page.click('[data-tab="chopper"]')
     page.wait_for_timeout(100)
 
-    # The drum machine must expose the complete editor/library surface.
-    for sel in ['.controlPanel','.drumSelector','.snareFx','.currentDrums','.drumEditBox','#drumEditor','#drumLibrariesPanel']:
+    # The drum machine exposes one editor-owned path for loading and editing drums.
+    for sel in ['.controlPanel','.drumSelector','.snareFx','.currentDrums','.drumEditBox','#drumEditor','#chopStatus']:
         assert page.locator(sel).count()>=1, sel
     assert page.locator('#drumEditor .drumEditStep').count()==48
     assert page.locator('#drumEditor .drumEditHeadStep').count()==16
     assert page.locator('#drumEditor .drumEditLibraryButton').count()==3
-    assert page.locator('.drumLibrarySlot').count()==3
 
     # NEW DRUMS must create a real selection and keep the editor usable.
     page.click('#newDrums')
@@ -144,7 +143,7 @@ with sync_playwright() as p:
     page.wait_for_timeout(80)
     assert 'KNOCK' in page.locator('#punchDesc').inner_text().upper()
 
-    # Per-part library controls are the compact row labels themselves.
+    # Per-part folder loading exists only on the compact row labels.
     for rid,label in [('kickFolderBtn','KICK'),('snareFolderBtn','SNARE'),('hatFolderBtn','HI-HAT')]:
         control=page.locator('#'+rid)
         assert control.count()==1, rid
@@ -154,13 +153,15 @@ with sync_playwright() as p:
         box=control.bounding_box()
         assert box and 18<=box['width']<=60 and 10<=box['height']<=20, (rid,box)
         assert control.is_enabled(), rid
-    assert page.locator('.drumLibraryButton').count()==0
-    assert page.locator('.drumLibrarySlot button').count()==0
     for rid in ['kickFolderFallback','snareFolderFallback','hatFolderFallback']:
-        assert page.locator('#'+rid).count()==1, rid
-    cta_box=page.locator('#loadDrumLibraryCTA').bounding_box()
-    assert cta_box and cta_box['width']>80 and cta_box['height']>=30, cta_box
-    assert page.locator('#loadDrumLibraryCTA').is_enabled()
+        fallback=page.locator('#'+rid)
+        assert fallback.count()==1, rid
+        assert fallback.evaluate("el=>el.closest('.drumEditBox')!==null"), rid
+        assert fallback.is_hidden(), rid
+    assert page.locator('#chopStatus').evaluate("el=>el.closest('.drumEditBox')!==null")
+    for retired in ['#drumLibrariesPanel','#loadDrumLibraryCTA','.drumLibrarySlot','.drumLibraryButton','.outputMeterPanel','#masterVuVertical']:
+        assert page.locator(retired).count()==0, retired
+    assert page.locator('#masterVolume').count()==1
 
     assert not errors, errors
     page.close()
@@ -191,4 +192,4 @@ with sync_playwright() as p:
     mobile.close()
     browser.close()
 
-print('OK: Drum UI — selection, renderer-owned drums PLAY/NEW/rerender/stop, 16/8 step editor, toggle/velocity, clear, FX/PUNCH, libraries and mobile stacking')
+print('OK: Drum UI — selection, renderer-owned drums PLAY/NEW/rerender/stop, 16/8 step editor, toggle/velocity, clear, FX/PUNCH, single-path drum loading and mobile stacking')

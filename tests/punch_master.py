@@ -59,6 +59,8 @@ with sync_playwright() as p:
     page.set_content(html,wait_until='load',timeout=20000)
     page.wait_for_function('window.__SP && window.__SP.ready === true',timeout=10000)
     page.click('[data-tab="chopper"]')
+    assert page.locator('#masterVuVertical').count()==0
+    assert page.locator('#vu').count()==1
 
     page.evaluate('ensureAudio()')
     box=page.locator('#masterVolume').bounding_box()

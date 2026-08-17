@@ -560,7 +560,7 @@ label {
   background: transparent !important;
 }
 
-.headerVu i, .verticalVu i {
+.headerVu i {
   min-width: 3px;
   border: 1px solid #211a13 !important;
   border-radius: 0 !important;
@@ -573,25 +573,25 @@ label {
   margin-top: 1px !important;
 }
 
-.headerVu i.on.low, .verticalVu i.on.low {
+.headerVu i.on.low {
   border-color: #506d69 !important;
   background: linear-gradient(180deg,#789d98,#567772) !important;
   box-shadow: 0 0 3px rgba(109,152,151,.18) !important;
 }
 
-.headerVu i.on.mid, .verticalVu i.on.mid {
+.headerVu i.on.mid {
   border-color: #9b743c !important;
   background: linear-gradient(180deg,#e2ad5f,#a97936) !important;
   box-shadow: 0 0 4px rgba(226,173,95,.20) !important;
 }
 
-.headerVu i.on.high, .verticalVu i.on.high {
+.headerVu i.on.high {
   border-color: #a85d31 !important;
   background: linear-gradient(180deg,#e18a48,#b65332) !important;
   box-shadow: 0 0 5px rgba(212,134,67,.28) !important;
 }
 
-.headerVu i.peakHold, .verticalVu i.peakHold {
+.headerVu i.peakHold {
   border-color: #f1c276 !important;
   box-shadow: 0 0 2px #e2ad5f,0 0 6px rgba(212,134,67,.34) !important;
 }
@@ -654,7 +654,7 @@ input, select {
   border-radius: 4px !important;
 }
 
-.help, .folderStatus, .status {
+.help, .status {
   font-size: 10px !important;
 }
 
@@ -666,31 +666,6 @@ input, select {
   float: right !important;
   margin-top: -31px !important;
   min-height: 28px !important;
-}
-
-.verticalVu {
-  display: flex;
-  flex-direction: column-reverse;
-  gap: 2px;
-  padding: 9px 10px;
-  border: 1px solid #33291f !important;
-  border-radius: 2px !important;
-  background: #080705 !important;
-  box-shadow: inset 2px 2px #030302,inset -1px -1px #292118 !important;
-}
-
-.verticalVu i {
-  flex: 1;
-  min-height: 5px;
-}
-
-.verticalScale {
-  display: flex;
-  flex-direction: column;
-  justify-content: space-between;
-  padding: 3px 0;
-  color: #9c8464 !important;
-  font-size: 8px;
 }
 
 #practice {
@@ -940,16 +915,12 @@ input, select {
   box-shadow: none !important;
 }
 
-@keyframes loadLibraryNudge {
-  0%,100%{transform:translateY(-1px)}
-  50%{transform:translateY(3px)}
-}
 
-.title, .currentDrumsTitle, .drumLibraryCopy b, label {
+.title, .currentDrumsTitle, label {
   color: #d6dade !important;
 }
 
-.help, .folderStatus, small {
+.help, small {
   color: #747d85 !important;
 }
 
@@ -1004,7 +975,7 @@ a, .blue {
   color: #e7b969 !important;
 }
 
-.stableTop, .mainModeTabs, .panel, .headerDeckPill, .headerMaster, .beatCratePanel, .outputMeterPanel, .drumLibrariesPanel, .currentDrums, .wavewrap.largeWave, .loopGridWrap, .drumEditBox, .snareFx, .punchFx, .btn, input, select, .status {
+.stableTop, .mainModeTabs, .panel, .headerDeckPill, .headerMaster, .beatCratePanel, .currentDrums, .wavewrap.largeWave, .loopGridWrap, .drumEditBox, .snareFx, .punchFx, .btn, input, select, .status {
   background-image: linear-gradient(180deg,rgba(255,255,255,.02),rgba(0,0,0,.16)),
     var(--deck-texture) !important;
   background-size: auto,256px 256px !important;
@@ -1013,13 +984,13 @@ a, .blue {
   background-blend-mode: normal,soft-light !important;
 }
 
-.stableTop, .mainModeTabs, .panel, .headerDeckPill, .headerMaster, .beatCratePanel, .outputMeterPanel, .drumLibrariesPanel {
+.stableTop, .mainModeTabs, .panel, .headerDeckPill, .headerMaster, .beatCratePanel {
   border-color: #3a3025 !important;
   box-shadow: inset 0 1px 0 rgba(255,255,255,.018),
     0 10px 22px rgba(0,0,0,.18) !important;
 }
 
-.mainModeTabs .tab.active, .btn.primary, .btn.blue, .btn.good, .loadDrumLibraryCTA.active, .pad.active, .pad.hit, .drumEditStep.active.kick, .drumEditStep.active.snare, .drumEditStep.active.hat, .matrixCell.active {
+.mainModeTabs .tab.active, .btn.primary, .btn.blue, .btn.good, .pad.active, .pad.hit, .drumEditStep.active.kick, .drumEditStep.active.snare, .drumEditStep.active.hat, .matrixCell.active {
   box-shadow: inset 0 1px 0 rgba(255,255,255,.035),
     0 0 10px rgba(226,173,95,.10) !important;
 }
@@ -1840,13 +1811,12 @@ body:has(#looper.active) .headerDeckPill {display:none}
 .controlPanel {
   grid-area: auto !important;
   display: grid !important;
-  grid-template-columns: minmax(0,1fr) 305px 120px !important;
+  grid-template-columns: minmax(0,1fr) 305px !important;
   grid-template-areas:
-    "title title meter"
-    "selector fx meter"
-    "current punch meter"
-    "editor punch meter"
-    "libraries libraries meter" !important;
+    "title title"
+    "selector fx"
+    "current punch"
+    "editor punch" !important;
   align-items: start;
   gap: 8px 14px !important;
   padding: 12px 16px !important;
@@ -1855,22 +1825,6 @@ body:has(#looper.active) .headerDeckPill {display:none}
 .controlPanel > .stableTitle,
 .controlPanel > .title:first-child {
   grid-area: title !important;
-}
-
-.outputMeterPanel {
-  grid-area: meter !important;
-  padding-left: 10px !important;
-  border-left: 1px solid #1d252c !important;
-}
-
-.verticalMeter {
-  height: 230px;
-  display: grid;
-  grid-template-columns: 52px 30px;
-  gap: 8px;
-  justify-content: center;
-  border-color: #283038 !important;
-  background: linear-gradient(180deg,#07090b,#050709) !important;
 }
 
 /* --- Groove selection / FX ------------------------------------------------ */
@@ -2110,201 +2064,24 @@ body:has(#looper.active) .headerDeckPill {display:none}
   pointer-events: none;
 }
 
-/* --- Local drum libraries ------------------------------------------------ */
-.drumLibrariesPanel {
-  grid-area: libraries;
-  margin-top: 2px;
-  padding: 10px;
-  border-width: 1px;
-  border-style: solid;
-  border-radius: 5px;
-}
-
-.drumLibrariesHead {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 12px;
-  margin-bottom: 9px;
-}
-
-.drumLibrariesHead .help {
-  margin-top: 4px;
-}
-
-.drumEngineStatus {
-  flex: 0 0 auto;
-  min-width: 116px;
-  margin: 0 !important;
-  padding: 7px 10px !important;
-  text-align: center;
-  font: 800 8px/1 var(--font-mono);
-  letter-spacing: .7px;
-  border-width: 1px;
-  border-style: solid;
-}
-
-.drumLibraryGrid {
-  display: grid;
-  grid-template-columns: repeat(3,minmax(0,1fr));
-  gap: 8px;
-}
-
-.drumLibrarySlot {
-  min-width: 0;
-  display: grid;
-  grid-template-columns: 34px minmax(0,1fr);
-  grid-template-areas: "icon copy";
-  gap: 7px 9px;
-  padding: 9px;
-  border-width: 1px;
-  border-style: solid;
-  border-radius: 4px;
-  border-color: #292f34 !important;
-  background: linear-gradient(180deg,#101316,#090b0d) !important;
-  box-shadow:
-    inset 0 1px 0 rgba(255,255,255,.025),
-    0 4px 9px rgba(0,0,0,.10);
-}
-
-.drumLibraryIcon {
-  grid-area: icon;
-  width: 32px;
-  height: 32px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border: 1px solid #414b54;
-  border-radius: 3px;
-  color: #bac4cc;
-  background: radial-gradient(circle at 35% 28%,#30363c,#171c21 55%,#0c1014);
-  box-shadow:
-    inset 0 1px 0 rgba(255,255,255,.06),
-    0 2px 5px rgba(0,0,0,.30);
-  font: 900 11px/1 var(--font-mono);
-}
-
-.kickLibrarySlot .drumLibraryIcon {
-  box-shadow:
-    inset 0 1px 0 rgba(255,255,255,.06),
-    0 0 0 1px rgba(101,124,145,.04),
-    0 2px 5px rgba(0,0,0,.30);
-}
-
-.snareLibrarySlot .drumLibraryIcon {
-  border-color: #4b4c4d;
-}
-
-.hatLibrarySlot .drumLibraryIcon {
-  border-color: #45515a;
-}
-
-.drumLibraryCopy {
-  grid-area: copy;
-  min-width: 0;
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  gap: 4px;
-}
-
-.drumLibraryCopy b {
-  font-size: 9px;
-  line-height: 1;
-  letter-spacing: 1px;
-}
-
-.drumLibraryCopy .folderStatus {
-  display: block;
-  min-width: 0;
-  margin: 0 !important;
+.drumEditStatus {
+  min-height: 18px !important;
+  margin-top: 8px;
+  padding: 4px 6px !important;
   overflow: hidden;
-  color: #6f7c86 !important;
-  font: 8px/1.4 var(--font-mono);
-  font-size: 8px !important;
+  border: 0 !important;
+  color: #7f8d96 !important;
+  background: transparent !important;
+  font: 800 8px/1.35 var(--font-mono);
   white-space: nowrap;
   text-overflow: ellipsis;
-}
-
-.folderFallback {
-  display: none !important;
-}
-
-.loadDrumLibraryCTA {
-  width: 100%;
-  min-height: 52px !important;
-  display: flex !important;
-  align-items: center;
-  justify-content: flex-start;
-  gap: 12px;
-  margin: 0 0 10px !important;
-  padding: 9px 12px !important;
-  border-color: #344654 !important;
-  box-shadow: none !important;
-  text-align: left;
-}
-
-.loadDrumLibraryCTA:hover {
-  border-color: #45647d !important;
-  background: linear-gradient(180deg,#18222a,#10171c) !important;
-}
-
-.loadDrumLibraryArrow {
-  flex: 0 0 30px;
-  height: 30px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border: 1px solid #385774 !important;
-  border-radius: 50%;
-  color: #9ecfff !important;
-  background: #0a1015 !important;
-  font-size: 16px;
-  animation: loadLibraryNudge 1.15s ease-in-out infinite;
-}
-
-.loadDrumLibraryCopy {
-  min-width: 0;
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-}
-
-.loadDrumLibraryCopy b {
-  color: #e0e6eb;
-  font-size: 10px;
-  letter-spacing: .8px;
-}
-
-.loadDrumLibraryCopy small {
-  color: #8195a6;
-  font-size: 8px;
-  font-weight: 800;
-  letter-spacing: .45px;
-}
-
-.loadDrumLibraryCTA.complete {
-  opacity: .62;
-  border-color: #343e46 !important;
-  box-shadow: none !important;
-}
-
-.loadDrumLibraryCTA.complete .loadDrumLibraryArrow {
-  animation: none;
 }
 
 /* Component-owned responsive behavior. */
 @media (max-width:1240px) {
   .controlPanel {
-    grid-template-columns: minmax(0,1fr) 280px 105px !important;
+    grid-template-columns: minmax(0,1fr) 280px !important;
   }
-}
-
-@media (max-width:980px) {
-  .drumLibraryGrid {
-    grid-template-columns: 1fr !important;
-  }
-
 }
 
 @media (max-width:760px) {
@@ -2338,19 +2115,12 @@ body:has(#looper.active) .headerDeckPill {display:none}
       "current"
       "editor"
       "fx"
-      "punch"
-      "libraries"
-      "meter" !important;
+      "punch" !important;
   }
 
   .punchFx {
     grid-area: punch;
     margin-top: 0;
-  }
-
-  .drumLibrariesHead {
-    align-items: flex-start;
-    flex-direction: column;
   }
 
 }
@@ -2676,7 +2446,6 @@ button.active:not(:disabled), button[aria-pressed="true"]:not(:disabled),
 #chopper .samplerDeck .btn.primary,#chopper .samplerDeck .btn.blue,#chopper .samplerDeck .btn.good {border-color:#765a34!important;color:#f0d39c!important;background:linear-gradient(180deg,#3b2d1e,#211811)!important}
 
 .samplerDrumSection {margin-top:1px!important;border-top:1px solid #43372b!important;background:linear-gradient(180deg,#14110d,#080605)!important}
-.samplerDrumSection .outputMeterPanel {border-radius:5px!important;background:#070503!important}
 
 /* --- Responsive ---------------------------------------------------------- */
 @media (max-width:1180px) {
