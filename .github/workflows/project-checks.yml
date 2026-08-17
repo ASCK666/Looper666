@@ -6,6 +6,9 @@ on:
       - main
   pull_request:
 
+permissions:
+  contents: write
+
 jobs:
   test:
     runs-on: ubuntu-latest
@@ -33,10 +36,17 @@ jobs:
       - name: Run maintained checks
         run: python tools/test_all.py
 
-      - name: Upload CSS cleanup candidate
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: css-cleanup-candidate
-          path: css/base.css
-          if-no-files-found: error
+      - name: Commit CSS cleanup candidate
+        if: failure() && github.event_name == 'pull_request'
+        run: |
+          git diff -- css/base.css > /tmp/css-cleanup.patch
+          if [ -s /tmp/css-cleanup.patch ]; then
+            git fetch origin "${{ github.head_ref }}"
+            git checkout -B "${{ github.head_ref }}" "origin/${{ github.head_ref }}"
+            git apply /tmp/css-cleanup.patch
+            git config user.name "github-actions[bot]"
+            git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+            git add css/base.css
+            git commit -m "Remove shadowed CSS declarations"
+            git push origin "HEAD:${{ github.head_ref }}"
+          fi
