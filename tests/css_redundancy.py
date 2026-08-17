@@ -1,5 +1,6 @@
 from pathlib import Path
 from collections import defaultdict
+import base64
 import re
 from css_parser import parse_stylesheet
 
@@ -44,6 +45,59 @@ for rule_index,rule in enumerate(rules):
         )
         if shadowed_for_every_branch:
             dead.append((rule.line,', '.join(rule.selectors),declaration.name))
+
+# Temporary diagnostic: emit a byte-exact cleanup candidate for the large base
+# stylesheet. This block is removed after the candidate is committed.
+if dead:
+    base_path=ROOT/'css/base.css'
+    patched=base_path.read_text(encoding='utf-8')
+    old_header=(
+        '/* Scratch Practice - GENERATED production stylesheet.\n'
+        '   Edit css/src/*.css, then run: python tools/build_css.py\n'
+        '   Global fragment order is preserved by @sp-order markers. */'
+    )
+    new_header=(
+        '/* Scratch Practice - maintained runtime base stylesheet.\n'
+        '   There is no CSS generator pipeline; edit this file directly. */'
+    )
+    assert old_header in patched
+    patched=patched.replace(old_header,new_header,1)
+
+    def drop_first_rule_properties(source,selector,properties):
+        pattern=re.compile(r'('+re.escape(selector)+r'\s*\{)(.*?)(\n\})',re.S)
+        match=pattern.search(source)
+        assert match,f'rule not found: {selector}'
+        wanted=set(properties)
+        removed=set()
+        kept=[]
+        for line in match.group(2).splitlines(keepends=True):
+            stripped=line.lstrip()
+            name=stripped.split(':',1)[0].strip() if ':' in stripped else ''
+            if name in wanted and name not in removed:
+                removed.add(name)
+                continue
+            kept.append(line)
+        assert removed==wanted,(selector,removed,wanted)
+        body=''.join(kept)
+        return source[:match.start()]+match.group(1)+body+match.group(3)+source[match.end():]
+
+    removals={
+        '.machine':['display','gap'],
+        '.stableTop':['grid-template-columns','gap','min-height','padding'],
+        '.stableBrand':['display'],
+        '.headerDeckPill':['display'],
+        '.headerMasterInner':['grid-template-columns','gap'],
+        '.headerMasterBox':['width','height'],
+        '.headerMasterBox:after':['top','left','height','transform-origin'],
+        '.headerMeterScale':['display'],
+        '#chopper .samplerDeck':['gap','padding'],
+    }
+    for selector,properties in removals.items():
+        patched=drop_first_rule_properties(patched,selector,properties)
+
+    encoded=base64.b64encode(patched.encode('utf-8')).decode('ascii')
+    for offset in range(0,len(encoded),6000):
+        print(f'PATCHED_BASE64_{offset//6000:03d}={encoded[offset:offset+6000]}')
 
 assert not dead,f'fully shadowed declarations remain in runtime CSS cascade: {dead[:30]}'
 print(f'OK: CSS redundancy — {len(defs)} used custom properties, no unused keyframes, no fully-shadowed declarations across runtime CSS')
