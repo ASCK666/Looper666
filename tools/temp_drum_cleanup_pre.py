@@ -1,6 +1,8 @@
 from pathlib import Path
 
-path=Path(__file__).resolve().parents[1]/'css/base.css'
+ROOT=Path(__file__).resolve().parents[1]
+
+path=ROOT/'css/base.css'
 text=path.read_text(encoding='utf-8')
 
 replacements=[
@@ -32,4 +34,15 @@ for old,new in replacements:
     text=text.replace(old,new,1)
 
 path.write_text(text,encoding='utf-8')
-print('Shared retired CSS selector branches removed.')
+
+# The layout contract must measure the surviving drum editor, not the retired
+# duplicate library panel.
+path=ROOT/'tests/css_layout.py'
+text=path.read_text(encoding='utf-8')
+old="          drums:document.getElementById('drumLibrariesPanel').getBoundingClientRect().toJSON()"
+new="          drums:document.querySelector('.drumEditBox').getBoundingClientRect().toJSON()"
+assert text.count(old)==1,text.count(old)
+text=text.replace(old,new,1)
+path.write_text(text,encoding='utf-8')
+
+print('Shared retired selectors and stale layout contract removed.')
