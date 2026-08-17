@@ -280,6 +280,33 @@ function autoPlaceMarkers(){
   $("sampleInfo").textContent=`${count} chops • transients détectés ✓`;
 }
 
+// Draw a real source-buffer range into an arbitrary horizontal span. Styling
+// stays with the caller so the same primitive can serve both Chopper views.
+function drawBufferRange(context,buffer,startSec,endSec,x,width,height){
+  if(!buffer || width<=0 || height<=0)return;
+  const data=buffer.getChannelData(0),sr=buffer.sampleRate;
+  const first=Math.floor(startSec*sr);
+  const last=Math.min(data.length,Math.ceil(endSec*sr));
+  const samples=Math.max(1,last-first);
+  const step=Math.max(1,Math.floor(samples/width));
+
+  context.beginPath();
+  for(let px=0;px<width;px++){
+    let min=1,max=-1;
+    const start=first+px*step;
+    const end=Math.min(last,start+step);
+    for(let i=start;i<end;i++){
+      const v=data[i];
+      if(v<min)min=v;
+      if(v>max)max=v;
+    }
+    const y1=(1-max)*height/2;
+    const y2=(1-min)*height/2;
+    context.moveTo(x+px,y1);context.lineTo(x+px,y2);
+  }
+  context.stroke();
+}
+
 function drawWave(){
   const w=canvas.width,h=canvas.height;
   c2d.clearRect(0,0,w,h);
@@ -292,32 +319,16 @@ function drawWave(){
   }
 
   const vw=viewWindow();
-  const rate=samplePitchRate();
-  const data=sampleBuffer.getChannelData(0),sr=sampleBuffer.sampleRate;
-
-  // Convert visible pitched/playback time back to source samples.
-  const first=Math.floor(displayToSourceTime(vw.start)*sr);
-  const last=Math.min(data.length,Math.ceil(displayToSourceTime(vw.end)*sr));
-  const samples=Math.max(1,last-first);
-  const step=Math.max(1,Math.floor(samples/w));
 
   c2d.strokeStyle="#d7a455";
   c2d.lineWidth=1;
-  c2d.beginPath();
-  for(let x=0;x<w;x++){
-    let min=1,max=-1;
-    const start=first+x*step;
-    const end=Math.min(last,start+step);
-    for(let i=start;i<end;i++){
-      const v=data[i];
-      if(v<min)min=v;
-      if(v>max)max=v;
-    }
-    const y1=(1-max)*h/2;
-    const y2=(1-min)*h/2;
-    c2d.moveTo(x,y1);c2d.lineTo(x,y2);
-  }
-  c2d.stroke();
+  drawBufferRange(
+    c2d,
+    sampleBuffer,
+    displayToSourceTime(vw.start),
+    displayToSourceTime(vw.end),
+    0,w,h
+  );
 
   c2d.font="12px monospace";
   markers.forEach((sourceT,i)=>{
