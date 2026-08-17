@@ -25,7 +25,8 @@ base_url = f"http://127.0.0.1:{server.server_port}"
 try:
     expected = {
         "/index.html": ("text/html", b"Scratch Practice"),
-        "/css/base.css": ("text/css", b"GENERATED production stylesheet"),
+        "/css/base.css": ("text/css", b"maintained runtime base stylesheet"),
+        "/css/clean-ui.css": ("text/css", b"Lean UI overrides"),
         "/js/events.js": ("javascript", b"addEventListener"),
         "/manifest.json": ("application/json", b"Local pixel-art Looper"),
     }
@@ -49,4 +50,4 @@ finally:
     server.server_close()
     thread.join(timeout=5)
 
-print("OK: deployable folder serves HTML, CSS, JS, manifest and production assets locally")
+print("OK: deployable folder serves HTML, both runtime CSS files, JS, manifest and production assets locally")
