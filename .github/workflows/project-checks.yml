@@ -32,3 +32,11 @@ jobs:
 
       - name: Run maintained checks
         run: python tools/test_all.py
+
+      - name: Upload CSS cleanup candidate
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: css-cleanup-candidate
+          path: css/base.css
+          if-no-files-found: error
