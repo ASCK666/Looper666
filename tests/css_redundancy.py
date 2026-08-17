@@ -1,6 +1,5 @@
 from pathlib import Path
 from collections import defaultdict
-import base64
 import re
 from css_parser import parse_stylesheet
 
@@ -46,8 +45,8 @@ for rule_index,rule in enumerate(rules):
         if shadowed_for_every_branch:
             dead.append((rule.line,', '.join(rule.selectors),declaration.name))
 
-# Temporary diagnostic: emit a byte-exact cleanup candidate for the large base
-# stylesheet. This block is removed after the candidate is committed.
+# Temporary diagnostic: materialize a byte-exact cleanup candidate for the large
+# base stylesheet. This block and its artifact step are removed before merge.
 if dead:
     base_path=ROOT/'css/base.css'
     patched=base_path.read_text(encoding='utf-8')
@@ -94,10 +93,8 @@ if dead:
     }
     for selector,properties in removals.items():
         patched=drop_first_rule_properties(patched,selector,properties)
-
-    encoded=base64.b64encode(patched.encode('utf-8')).decode('ascii')
-    for offset in range(0,len(encoded),6000):
-        print(f'PATCHED_BASE64_{offset//6000:03d}={encoded[offset:offset+6000]}')
+    base_path.write_text(patched,encoding='utf-8')
+    print(f'WROTE_CSS_CLEANUP_CANDIDATE={base_path}')
 
 assert not dead,f'fully shadowed declarations remain in runtime CSS cascade: {dead[:30]}'
 print(f'OK: CSS redundancy — {len(defs)} used custom properties, no unused keyframes, no fully-shadowed declarations across runtime CSS')
