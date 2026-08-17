@@ -2,72 +2,25 @@ from pathlib import Path
 import re
 
 ROOT = Path(__file__).resolve().parents[1]
-ENTRY = ROOT / "index.html"
 RUNTIME_DIRS = (ROOT / "js", ROOT / "css")
 RUNTIME_SUFFIXES = {".js", ".css"}
 problems = []
 
-
-def is_external(value):
-    return value.startswith(("http://", "https://", "data:", "#", "mailto:", "blob:"))
-
-
-def resolve_runtime_ref(source, value):
-    clean = value.split("#", 1)[0].split("?", 1)[0].strip()
-    if not clean or is_external(clean):
-        return None
-
-    if clean.startswith("/"):
-        target = ROOT / clean.lstrip("/")
-    else:
-        target = source.parent / clean
-
-    target = target.resolve()
-    try:
-        target.relative_to(ROOT)
-    except ValueError:
-        return None
-
-    return target if target.suffix in RUNTIME_SUFFIXES else None
-
-
-def runtime_refs(source):
-    text = source.read_text(encoding="utf-8")
-    values = []
-
-    if source.suffix == ".html":
-        values.extend(re.findall(r'\b(?:src|href)=["\']([^"\']+)["\']', text))
-    else:
-        values.extend(
-            re.findall(r'["\']([^"\']+\.(?:js|css)(?:[?#][^"\']*)?)["\']', text)
-        )
-
-    refs = []
-    for value in values:
-        target = resolve_runtime_ref(source, value)
-        if target is not None:
-            refs.append(target)
-    return refs
-
-
-# Runtime source files must be reachable from index.html. Replaced JS/CSS must be
-# removed in the same update instead of being left behind as dormant files.
-reachable = set()
-queue = [ENTRY]
-visited = set()
-while queue:
-    source = queue.pop()
-    if source in visited or not source.exists():
+# Keep index.html as the explicit runtime manifest. For this small static project,
+# every maintained JS/CSS file must be loaded there; replaced files must be deleted
+# in the same update instead of surviving as dormant runtime code.
+html = (ROOT / "index.html").read_text(encoding="utf-8")
+referenced = set()
+for value in re.findall(r'\b(?:src|href)=["\']([^"\']+)["\']', html):
+    if value.startswith(("http://", "https://", "data:", "#", "mailto:", "blob:")):
         continue
-    visited.add(source)
-
-    for target in runtime_refs(source):
-        if not target.exists():
-            problems.append(f"Runtime reference missing: {source.relative_to(ROOT)} -> {target.relative_to(ROOT)}")
-            continue
-        if target not in reachable:
-            reachable.add(target)
-            queue.append(target)
+    clean = value.split("#", 1)[0].split("?", 1)[0]
+    target = (ROOT / clean.lstrip("./")).resolve()
+    if target.suffix not in RUNTIME_SUFFIXES:
+        continue
+    referenced.add(target)
+    if not target.exists():
+        problems.append(f"Runtime reference missing from index.html: {value}")
 
 runtime_files = {
     path.resolve()
@@ -76,9 +29,9 @@ runtime_files = {
     if path.is_file() and path.suffix in RUNTIME_SUFFIXES
 }
 
-for orphan in sorted(runtime_files - reachable):
+for orphan in sorted(runtime_files - referenced):
     problems.append(
-        f"Dead runtime file: {orphan.relative_to(ROOT)} is not reachable from index.html; "
+        f"Dead runtime file: {orphan.relative_to(ROOT)} is not loaded by index.html; "
         "delete replaced code in the same update"
     )
 
@@ -93,4 +46,4 @@ for script in sorted((ROOT / "js").rglob("*.js")):
         )
 
 assert not problems, "\n".join(problems)
-print("OK: runtime JS/CSS is reachable and retired update paths stay removed")
+print("OK: runtime JS/CSS is explicit in index.html and retired update paths stay removed")
