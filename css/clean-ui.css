@@ -93,6 +93,10 @@
   padding: 8px !important;
 }
 
+#chopper .samplerUpperDeck {
+  grid-template-columns: minmax(0, 1fr) !important;
+}
+
 #chopper .samplerControlModule.chopTransportPanel {
   display: flex !important;
   flex-direction: column !important;
