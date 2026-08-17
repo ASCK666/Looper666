@@ -351,10 +351,6 @@ $("addFlipLibrary").onclick=async()=>{
     btn.disabled=false;
   }
 };
-$("loadDrumLibraryCTA").onclick=async()=>{
-  const kind=nextMissingDrumLibrary();
-  if(kind) await chooseDrumFolder(kind);
-};
 $("kickFolderFallback").onchange=async()=>{await setFallbackDrumFolder("kick",$("kickFolderFallback").files);};
 $("snareFolderFallback").onchange=async()=>{await setFallbackDrumFolder("snare",$("snareFolderFallback").files);};
 $("hatFolderFallback").onchange=async()=>{await setFallbackDrumFolder("hat",$("hatFolderFallback").files);};
@@ -372,7 +368,6 @@ function safeInit(name,fn){
   ["meters",ensureMeterElements],
   ["practice",makePractice],
   ["drum-selection",updateDrumSelectionUI],
-  ["drum-library-cta",refreshLoadDrumLibraryCTA],
   ["auto-looper",refreshAutoLooperCompact],
   ["tape-counter",refreshTapeCounter],
   ["master-volume",refreshMasterVolumeUI],

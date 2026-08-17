@@ -88,51 +88,9 @@ function drumPattern(requested,density,previous=null,forceDifferent=false){
   return {...picked,mode,kickNudge:{...(picked.kickNudge||{})}};
 }
 
-function drumLibraryIsLoaded(kind){
-  return !!drumDirectoryHandles[kind] || (drumFolderFiles[kind]||[]).length>0;
-}
-
-function nextMissingDrumLibrary(){
-  if(!drumLibraryIsLoaded("kick")) return "kick";
-  if(!drumLibraryIsLoaded("snare")) return "snare";
-  if(!drumLibraryIsLoaded("hat")) return "hat";
-  return null;
-}
-
-function refreshLoadDrumLibraryCTA(){
-  const button=$("loadDrumLibraryCTA");
-  if(!button)return;
-
-  const kind=nextMissingDrumLibrary();
-  if(!kind){
-    button.classList.add("complete");
-    button.disabled=true;
-    button.querySelector("b").textContent="DRUM LIBRARIES READY";
-    button.querySelector("small").textContent="KICK • SNARE • HI-HAT";
-    button.querySelector(".loadDrumLibraryArrow").textContent="✓";
-    return;
-  }
-
-  button.classList.remove("complete");
-  button.disabled=false;
-  const label=kind==="hat"?"HI-HAT":kind.toUpperCase();
-  button.querySelector("b").textContent=`LOAD ${label} LIBRARY`;
-  button.querySelector("small").textContent=
-    kind==="kick" ? "START HERE — CHOOSE YOUR KICK FOLDER" :
-    kind==="snare" ? "NEXT — CHOOSE YOUR SNARE FOLDER" :
-    "LAST STEP — CHOOSE YOUR HI-HAT FOLDER";
-  button.querySelector(".loadDrumLibraryArrow").textContent="↓";
-}
-
 async function chooseDrumFolder(kind){
-  const status=$(`${kind}FolderStatus`);
   const button=$(`${kind}FolderBtn`);
-  const originalText=button?.textContent || "";
-
-  if(button){
-    button.disabled=true;
-    button.textContent="OPENING…";
-  }
+  if(button)button.disabled=true;
 
   try{
     // Native directory handle when available.
@@ -150,14 +108,14 @@ async function chooseDrumFolder(kind){
         const count=entries.length;
 
         if(!count){
-          status.textContent="no compatible audio file found";
+          $("chopStatus").textContent=`${kind.toUpperCase()} • NO COMPATIBLE AUDIO FILE`;
           return;
         }
 
         drumDirectoryHandles[kind]=handle;
         drumDirectoryEntries[kind]=entries;
         drumFolderFiles[kind]=[];
-        status.textContent=`${handle.name} • ${count} sounds • loading…`;
+        $("chopStatus").textContent=`${kind.toUpperCase()} • ${handle.name} • ${count} SOUNDS • LOADING…`;
         await refreshDrumsAfterFolderChange(kind,count,handle.name);
         return;
       }catch(e){
@@ -167,15 +125,12 @@ async function chooseDrumFolder(kind){
     }
 
     // file:// / browsers without File System Access API.
-    // webkitdirectory is kept as a functional fallback.
+    // webkitdirectory remains the functional fallback.
     const input=$(`${kind}FolderFallback`);
     input.value="";
     input.click();
   }finally{
-    if(button){
-      button.disabled=false;
-      button.textContent=originalText;
-    }
+    if(button)button.disabled=false;
   }
 }
 
@@ -186,7 +141,7 @@ async function setFallbackDrumFolder(kind,fileList){
     .slice(0,MAX_DRUM_FOLDER_FILES);
 
   if(!files.length){
-    $(`${kind}FolderStatus`).textContent="no compatible audio file found";
+    $("chopStatus").textContent=`${kind.toUpperCase()} • NO COMPATIBLE AUDIO FILE`;
     return false;
   }
 
@@ -195,8 +150,7 @@ async function setFallbackDrumFolder(kind,fileList){
   drumFolderFiles[kind]=files;
 
   const rootName=(files[0].webkitRelativePath||"").split("/")[0] || "local folder";
-  $(`${kind}FolderStatus`).textContent=`${rootName} • ${files.length} sounds • loading…`;
-
+  $("chopStatus").textContent=`${kind.toUpperCase()} • ${rootName} • ${files.length} SOUNDS • LOADING…`;
   await refreshDrumsAfterFolderChange(kind,files.length,rootName);
   return true;
 }
@@ -205,8 +159,7 @@ async function refreshDrumsAfterFolderChange(kind,count,origin){
   // A folder selection should have an audible result immediately.
   // Preserve the current groove family, but reroll the sound files now.
   if($("drumMode").value==="off"){
-    $(`${kind}FolderStatus`).textContent=`${origin} • ${count} sounds • ready`;
-    refreshLoadDrumLibraryCTA();
+    $("chopStatus").textContent=`${kind.toUpperCase()} • ${origin} • ${count} SOUNDS • READY`;
     return;
   }
 
@@ -236,12 +189,8 @@ async function refreshDrumsAfterFolderChange(kind,count,origin){
       snare:currentDrumSelection?.snare?.name,
       hat:currentDrumSelection?.hat?.name
     }[kind] || "ready";
-
-    $(`${kind}FolderStatus`).textContent=`${origin} • ${count} sounds • active: ${selected}`;
-    $("chopStatus").textContent=`${kind.toUpperCase()} FOLDER ✓`;
-    refreshLoadDrumLibraryCTA();
+    $("chopStatus").textContent=`${kind.toUpperCase()} • ${selected} ✓`;
   }catch(e){
-    $(`${kind}FolderStatus`).textContent=`${origin} • ${count} sounds • error`;
     $("chopStatus").textContent=`${kind.toUpperCase()} ERROR: ${e.message}`;
   }
 }
@@ -298,10 +247,6 @@ async function loadSelectedDrum(kind,rate,excludeName=null){
         drumDecodeCache.delete(first);
       }
     }
-    const origin=drumDirectoryHandles[kind]?.name ||
-      ((file.webkitRelativePath||"").split("/")[0]) ||
-      "local folder";
-    $(`${kind}FolderStatus`).textContent=`${origin} • active: ${file.name}`;
     return {
       buffer:drumDecodeCache.get(key),
       name:file.name
