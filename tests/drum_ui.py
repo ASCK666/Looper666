@@ -35,7 +35,7 @@ with sync_playwright() as p:
         assert page.locator(sel).count()>=1, sel
     assert page.locator('#drumEditor .drumEditStep').count()==48
     assert page.locator('#drumEditor .drumEditHeadStep').count()==16
-    assert page.locator('#drumEditor .drumEditLabel').count()==3
+    assert page.locator('#drumEditor .drumEditLibraryButton').count()==3
     assert page.locator('.drumLibrarySlot').count()==3
 
     # NEW DRUMS must create a real selection and keep the editor usable.
@@ -130,6 +130,7 @@ with sync_playwright() as p:
     page.select_option('#drumEditView','16')
     page.wait_for_timeout(60)
     assert page.locator('#drumEditor .drumEditStep').count()==48
+    assert page.locator('#drumEditor .drumEditLibraryButton').count()==3
 
     # Clear means clear; reverb and PUNCH controls still respond.
     page.click('#clearDrumEdits')
@@ -143,11 +144,23 @@ with sync_playwright() as p:
     page.wait_for_timeout(80)
     assert 'KNOCK' in page.locator('#punchDesc').inner_text().upper()
 
-    # Geometry: the local library buttons must remain visible/clickable.
-    for rid in ['kickFolderBtn','snareFolderBtn','hatFolderBtn','loadDrumLibraryCTA']:
-        box=page.locator('#'+rid).bounding_box()
-        assert box and box['width']>80 and box['height']>=30, (rid,box)
-        assert page.locator('#'+rid).is_enabled(), rid
+    # Per-part library controls are the compact row labels themselves.
+    for rid,label in [('kickFolderBtn','KICK'),('snareFolderBtn','SNARE'),('hatFolderBtn','HI-HAT')]:
+        control=page.locator('#'+rid)
+        assert control.count()==1, rid
+        assert control.inner_text()==label, (rid,control.inner_text())
+        assert control.evaluate("el=>el.closest('#drumEditor')!==null"), rid
+        assert control.evaluate("el=>typeof el.onclick==='function'"), rid
+        box=control.bounding_box()
+        assert box and 18<=box['width']<=60 and 10<=box['height']<=20, (rid,box)
+        assert control.is_enabled(), rid
+    assert page.locator('.drumLibraryButton').count()==0
+    assert page.locator('.drumLibrarySlot button').count()==0
+    for rid in ['kickFolderFallback','snareFolderFallback','hatFolderFallback']:
+        assert page.locator('#'+rid).count()==1, rid
+    cta_box=page.locator('#loadDrumLibraryCTA').bounding_box()
+    assert cta_box and cta_box['width']>80 and cta_box['height']>=30, cta_box
+    assert page.locator('#loadDrumLibraryCTA').is_enabled()
 
     assert not errors, errors
     page.close()

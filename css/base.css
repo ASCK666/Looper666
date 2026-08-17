@@ -2026,19 +2026,39 @@ body:has(#looper.active) .headerDeckPill {display:none}
   grid-template-columns: 62px repeat(8,minmax(26px,1fr));
 }
 
-.drumEditLabel,
 .drumEditHeadStep,
 .drumEditStep {
   min-height: 28px;
   border-radius: 2px;
 }
 
-.drumEditLabel {
-  display: flex;
-  align-items: center;
+.drumEditLibraryButton {
+  align-self: center;
+  justify-self: start;
+  width: auto !important;
+  min-width: 0 !important;
+  min-height: 0 !important;
+  margin: 0;
+  padding: 3px 4px !important;
+  border: 1px solid #2f3940;
+  border-radius: 2px;
   color: #9ba7ad;
-  font: 800 8px/1 var(--font-mono);
-  letter-spacing: .6px;
+  background: #0b1115;
+  box-shadow: none;
+  font: 800 8px/1 var(--font-mono) !important;
+  letter-spacing: .35px;
+  white-space: nowrap;
+}
+
+.drumEditLibraryButton:hover {
+  border-color: #54708b;
+  color: #eef3f6;
+  background: #111a20;
+}
+
+.drumEditLibraryButton:disabled {
+  opacity: .55;
+  cursor: wait;
 }
 
 .drumEditHeadStep {
@@ -2134,9 +2154,7 @@ body:has(#looper.active) .headerDeckPill {display:none}
   min-width: 0;
   display: grid;
   grid-template-columns: 34px minmax(0,1fr);
-  grid-template-areas:
-    "icon copy"
-    "button button";
+  grid-template-areas: "icon copy";
   gap: 7px 9px;
   padding: 9px;
   border-width: 1px;
@@ -2206,23 +2224,6 @@ body:has(#looper.active) .headerDeckPill {display:none}
   font-size: 8px !important;
   white-space: nowrap;
   text-overflow: ellipsis;
-}
-
-.drumLibraryButton {
-  grid-area: button;
-  width: 100%;
-  min-height: 34px !important;
-  padding: 6px 9px !important;
-  font-size: 9px !important;
-  font-weight: 800 !important;
-  letter-spacing: .35px !important;
-  border-color: #343c43 !important;
-}
-
-.drumLibraryButton:hover {
-  border-color: #54708b !important;
-  color: #eef3f6 !important;
-  background: linear-gradient(180deg,#242c33,#141a20) !important;
 }
 
 .folderFallback {
@@ -2304,11 +2305,6 @@ body:has(#looper.active) .headerDeckPill {display:none}
     grid-template-columns: 1fr !important;
   }
 
-  .drumLibrarySlot {
-    grid-template-columns: 34px minmax(0,1fr) minmax(145px,190px);
-    grid-template-areas: "icon copy button";
-    align-items: center;
-  }
 }
 
 @media (max-width:760px) {
@@ -2357,12 +2353,6 @@ body:has(#looper.active) .headerDeckPill {display:none}
     flex-direction: column;
   }
 
-  .drumLibrarySlot {
-    grid-template-columns: 34px minmax(0,1fr);
-    grid-template-areas:
-      "icon copy"
-      "button button";
-  }
 }
 
 /* Shared rule now owned by Drum workstation. */

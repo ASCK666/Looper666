@@ -355,11 +355,8 @@ $("loadDrumLibraryCTA").onclick=async()=>{
   const kind=nextMissingDrumLibrary();
   if(kind) await chooseDrumFolder(kind);
 };
-$("kickFolderBtn").onclick=()=>chooseDrumFolder("kick");
 $("kickFolderFallback").onchange=async()=>{await setFallbackDrumFolder("kick",$("kickFolderFallback").files);};
-$("snareFolderBtn").onclick=()=>chooseDrumFolder("snare");
 $("snareFolderFallback").onchange=async()=>{await setFallbackDrumFolder("snare",$("snareFolderFallback").files);};
-$("hatFolderBtn").onclick=()=>chooseDrumFolder("hat");
 $("hatFolderFallback").onchange=async()=>{await setFallbackDrumFolder("hat",$("hatFolderFallback").files);};
 function reportInitFailure(name,error){
   console.error(`INIT ${name}:`,error);
