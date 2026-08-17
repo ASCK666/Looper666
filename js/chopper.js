@@ -946,35 +946,6 @@ function gridEventsForRender(){
   return loopGridEvents.slice();
 }
 
-function synthHit(kind,rate){
-  const dur=kind==="kick"?.22:kind==="snare"?.16:.07;
-  const len=Math.floor(dur*rate);
-  const out=new Float32Array(len);
-  for(let i=0;i<len;i++){
-    const t=i/rate,env=Math.exp(-t*(kind==="kick"?18:kind==="snare"?24:55));
-    if(kind==="kick"){
-      const base=92+Math.random()*26;
-      const f=base-(42+Math.random()*18)*(t/dur);
-      out[i]=Math.sin(2*Math.PI*f*t)*env*.85;
-    }else if(kind==="snare"){
-      const noise=(Math.random()*2-1)*.65;
-      out[i]=(noise+Math.sin(2*Math.PI*190*t)*.35)*env*.55;
-    }else{
-      out[i]=(Math.random()*2-1)*env*.25;
-    }
-  }
-  return out;
-}
-
-function sampleDensity(buffer){
-  const data=buffer.getChannelData(0),hop=1024;let hits=0,total=0,prev=0;
-  for(let i=0;i+hop<data.length;i+=hop){
-    let e=0;for(let j=0;j<hop;j++){const v=data[i+j];e+=v*v;}
-    e=Math.sqrt(e/hop);if(e-prev>.025)hits++;prev=e;total++;
-  }
-  return total?clamp(hits/total*5,0,1):.5;
-}
-
 // 30 original hip-hop grooves reconstructed from common programming
 // principles: syncopated kicks, 2/4 backbeats, ghost snares, MPC-style swing,
 // late claps/snares, and off-grid "drunk" timing. No source MIDI is copied.
