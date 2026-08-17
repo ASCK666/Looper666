@@ -158,10 +158,7 @@ $("sliceCount").onchange=()=>{
   stopChopAudition();
   autoPlaceMarkers();
 };
-$("masterVolume").oninput=()=>{
-  masterVolumePercent=Number($("masterVolume").value)||0;
-  refreshMasterVolumeUI();
-};
+$("masterVolume").oninput=()=>updateMasterVolume($("masterVolume").value);
 
 $("sampleVolume").oninput=()=>updateSampleVolume($("sampleVolume").value);
 
@@ -386,7 +383,7 @@ function safeInit(name,fn){
   ["drum-selection",updateDrumSelectionUI],
   ["auto-looper",refreshAutoLooperCompact],
   ["tape-counter",refreshTapeCounter],
-  ["master-volume",refreshMasterVolumeUI],
+  ["master-volume",updateMasterVolume],
   ["punch",refreshPunchUI],
   ["loop-grid",renderLoopGrid],
   ["waveform",drawWave]
