@@ -37,11 +37,39 @@ with sync_playwright() as p:
     assert page.locator('#drumEditor .drumEditHeadStep').count()==16
     assert page.locator('#drumEditor .drumEditLibraryButton').count()==3
 
+    # The sequence-area Drum view is read-only presentation: three lanes, two 16ths per Chopper eighth, repeated over two bars.
+    assert page.locator('#drumPatternPreview').count()==1
+    assert page.locator('#drumPatternPreview .drumPatternPreviewLabel').count()==3
+    assert page.locator('#drumPatternPreview .drumPatternPreviewPair').count()==48
+    assert page.locator('#drumPatternPreview .drumPatternPreviewStep').count()==96
+    assert page.locator('#drumPatternPreview .drumPatternPreviewStep.active').count()==0
+    assert page.locator('#drumPatternPreview').evaluate("el=>el.previousElementSibling?.id==='loopGrid'")
+    assert page.locator('#drumPatternPreview').evaluate("el=>getComputedStyle(el).pointerEvents==='none'")
+
+    preview_matches_selection='''() => {
+      const selection=currentDrumSelection;
+      const expected={
+        kick:new Set(selection?.kicks||[]),
+        snare:new Set(selection?.snares||[]),
+        hat:new Set(Array.isArray(selection?.hatSteps)?selection.hatSteps:(selection?.hats||[]).map(x=>x*2))
+      };
+      for(const lane of ['kick','snare','hat']){
+        const cells=[...document.querySelectorAll(`#drumPatternPreview .drumPatternPreviewStep.${lane}`)];
+        if(cells.length!==32)return false;
+        for(let displayStep=0;displayStep<32;displayStep++){
+          const active=!!selection && selection.mode!=='off' && expected[lane].has(displayStep%16);
+          if(cells[displayStep].classList.contains('active')!==active)return false;
+        }
+      }
+      return true;
+    }'''
+
     # NEW DRUMS must create a real selection and keep the editor usable.
     page.click('#newDrums')
     page.wait_for_function('currentDrumSelection !== null',timeout=10000)
     assert page.evaluate('currentDrumSelection.mode !== "off"') is True
     assert 'PATTERN' not in page.locator('#currentPattern').inner_text() or page.locator('#currentPattern').inner_text()!='PATTERN —'
+    assert page.evaluate(preview_matches_selection) is True
 
     # Drums-only PLAY is one renderer-owned transition and must stop any active chop audition first.
     page.evaluate('''() => {
@@ -94,11 +122,13 @@ with sync_playwright() as p:
     assert rerolled['selectionChanged'],rerolled
     assert rerolled['auditionStopped'] and rerolled['sourceCleared'] and rerolled['gainCleared'],rerolled
     assert rerolled['status']=='NEW DRUMS ✓',rerolled
+    assert page.evaluate(preview_matches_selection) is True
 
     # Editing while a drums-only preview is playing must rebuild the buffer and keep transport running.
     page.evaluate('window.__drumPreviewBeforeEdit=renderedFlip')
     page.locator('#drumEditor .drumEditStep.snare').last.click()
     page.wait_for_function('renderedFlip !== window.__drumPreviewBeforeEdit && isLoopPlaying === true && lastPreviewMode === "drums"',timeout=10000)
+    assert page.evaluate(preview_matches_selection) is True
     page.click('#stopFlip')
     page.wait_for_function('isLoopPlaying === false && flipSource === null && lastPreviewMode === null && loopPlayheadState === null && loopPlayheadStartedAt === 0',timeout=5000)
     assert page.evaluate('renderedFlip !== null') is True
@@ -111,6 +141,7 @@ with sync_playwright() as p:
     cell=page.locator('#drumEditor .drumEditStep.kick').first
     after='active' in (cell.get_attribute('class') or '').split()
     assert before != after
+    assert page.evaluate(preview_matches_selection) is True
     if not after:
         cell.click(); page.wait_for_timeout(80)
         cell=page.locator('#drumEditor .drumEditStep.kick').first
@@ -120,21 +151,27 @@ with sync_playwright() as p:
     cell=page.locator('#drumEditor .drumEditStep.kick').first
     new=cell.get_attribute('data-velocity')
     assert old != new and new is not None
+    assert page.evaluate(preview_matches_selection) is True
 
-    # 8TH / 16TH view switching must rebuild the editor correctly.
+    # 8TH / 16TH editor switching must not change the fixed two-bar read-only preview.
     page.select_option('#drumEditView','8')
     page.wait_for_timeout(60)
     assert page.locator('#drumEditor .drumEditStep').count()==24
     assert page.locator('#drumEditor .drumEditHeadStep').count()==8
+    assert page.locator('#drumPatternPreview .drumPatternPreviewStep').count()==96
+    assert page.evaluate(preview_matches_selection) is True
     page.select_option('#drumEditView','16')
     page.wait_for_timeout(60)
     assert page.locator('#drumEditor .drumEditStep').count()==48
     assert page.locator('#drumEditor .drumEditLibraryButton').count()==3
+    assert page.locator('#drumPatternPreview .drumPatternPreviewStep').count()==96
 
-    # Clear means clear; reverb and PUNCH controls still respond.
+    # Clear means clear in both the editor and its read-only sequence preview; reverb and PUNCH still respond.
     page.click('#clearDrumEdits')
     page.wait_for_timeout(100)
     assert page.locator('#drumEditor .drumEditStep.active').count()==0
+    assert page.locator('#drumPatternPreview .drumPatternPreviewStep.active').count()==0
+    assert page.evaluate(preview_matches_selection) is True
     page.fill('#snareReverbMix','40')
     page.dispatch_event('#snareReverbMix','input')
     assert page.locator('#snareReverbMixReadout').inner_text()=='40%'
@@ -158,6 +195,7 @@ with sync_playwright() as p:
         assert fallback.count()==1, rid
         assert fallback.evaluate("el=>el.closest('.drumEditBox')!==null"), rid
         assert fallback.is_hidden(), rid
+    assert page.locator('#drumPatternPreview').evaluate("el=>el.closest('.drumEditBox')===null")
     assert page.locator('#drumStatus').evaluate("el=>el.closest('.drumEditBox')!==null")
     assert page.locator('#chopStatus').evaluate("el=>el.closest('.samplerControlModule')!==null")
     assert page.locator('#chopStatus').evaluate("el=>el.closest('.drumEditBox')===null")
@@ -184,14 +222,19 @@ with sync_playwright() as p:
       const reverb=document.querySelector('.snareFx:not(.punchFx)').getBoundingClientRect();
       const punch=document.querySelector('.punchFx').getBoundingClientRect();
       const editor=document.querySelector('.drumEditBox').getBoundingClientRect();
-      return {panel:panel.toJSON(),selector:selector.toJSON(),reverb:reverb.toJSON(),punch:punch.toJSON(),editor:editor.toJSON(),columns:getComputedStyle(document.querySelector('.controlPanel')).gridTemplateColumns};
+      const preview=document.querySelector('#drumPatternPreview').getBoundingClientRect();
+      const wrap=document.querySelector('.loopGridWrap').getBoundingClientRect();
+      return {panel:panel.toJSON(),selector:selector.toJSON(),reverb:reverb.toJSON(),punch:punch.toJSON(),editor:editor.toJSON(),preview:preview.toJSON(),wrap:wrap.toJSON(),columns:getComputedStyle(document.querySelector('.controlPanel')).gridTemplateColumns,bodyOverflow:document.body.scrollWidth-document.body.clientWidth};
     }""")
     assert mobile_geo['selector']['width']>300, mobile_geo
     assert mobile_geo['editor']['width']>300, mobile_geo
     assert mobile_geo['punch']['top']>=mobile_geo['reverb']['bottom']-1, mobile_geo
     assert len(mobile_geo['columns'].split())==1, mobile_geo
+    assert mobile_geo['preview']['width']>=830, mobile_geo
+    assert mobile_geo['wrap']['width']<mobile_geo['preview']['width'], mobile_geo
+    assert mobile_geo['bodyOverflow']<=1, mobile_geo
     assert not mobile_errors, mobile_errors
     mobile.close()
     browser.close()
 
-print('OK: Drum UI — selection, renderer-owned drums PLAY/NEW/rerender/stop, 16/8 step editor, toggle/velocity, clear, FX/PUNCH, single-path drum loading and mobile stacking')
+print('OK: Drum UI — selection, renderer-owned drums PLAY/NEW/rerender/stop, read-only two-bar preview, 16/8 step editor, toggle/velocity, clear, FX/PUNCH, single-path drum loading and mobile stacking')

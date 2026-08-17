@@ -7,6 +7,14 @@ const canvas=$("waveCanvas");
 const c2d=canvas.getContext("2d");
 const playheadCanvas=$("playheadCanvas");
 const ph2d=playheadCanvas.getContext("2d");
+const sampleTimelineCanvas=$("sampleTimelineCanvas");
+const sampleTimeline2d=sampleTimelineCanvas?.getContext("2d");
+const sampleTimelinePlayheadCanvas=$("sampleTimelinePlayheadCanvas");
+const sampleTimelinePlayhead2d=sampleTimelinePlayheadCanvas?.getContext("2d");
+const CHOPPER_SEQUENCE_STEPS=16;
+const SEQUENCE_LABEL_WIDTH=66;
+const SEQUENCE_MIN_WIDTH=830;
+const SAMPLE_TIMELINE_HEIGHT=86;
 
 function samplePitchRate(){
   return Math.pow(2,samplePitchSemitones/12);
@@ -143,6 +151,7 @@ function updateSamplePitch(value){
   refreshMarkerEditor();
   refreshSamplePitchUI();
   drawWave();
+  renderSampleTimeline();
 }
 
 function sampleVolumeGain(){
@@ -280,6 +289,34 @@ function autoPlaceMarkers(){
   $("sampleInfo").textContent=`${count} chops • transients détectés ✓`;
 }
 
+// Draw a real source-buffer range into an arbitrary horizontal span. Styling
+// stays with the caller so the same primitive can serve both Chopper views.
+function drawBufferRange(context,buffer,startSec,endSec,x,width,height){
+  if(!buffer || width<=0 || height<=0)return;
+  const data=buffer.getChannelData(0),sr=buffer.sampleRate;
+  const first=clamp(Math.floor(startSec*sr),0,data.length);
+  const last=clamp(Math.ceil(endSec*sr),first,data.length);
+  const samples=last-first;
+  if(samples<=0)return;
+  const columns=Math.max(1,Math.floor(width));
+
+  context.beginPath();
+  for(let px=0;px<columns;px++){
+    let min=1,max=-1;
+    const start=first+Math.floor(samples*px/columns);
+    const end=Math.min(last,first+Math.ceil(samples*(px+1)/columns));
+    for(let i=start;i<end;i++){
+      const v=data[i];
+      if(v<min)min=v;
+      if(v>max)max=v;
+    }
+    const y1=(1-max)*height/2;
+    const y2=(1-min)*height/2;
+    context.moveTo(x+px,y1);context.lineTo(x+px,y2);
+  }
+  context.stroke();
+}
+
 function drawWave(){
   const w=canvas.width,h=canvas.height;
   c2d.clearRect(0,0,w,h);
@@ -292,32 +329,16 @@ function drawWave(){
   }
 
   const vw=viewWindow();
-  const rate=samplePitchRate();
-  const data=sampleBuffer.getChannelData(0),sr=sampleBuffer.sampleRate;
-
-  // Convert visible pitched/playback time back to source samples.
-  const first=Math.floor(displayToSourceTime(vw.start)*sr);
-  const last=Math.min(data.length,Math.ceil(displayToSourceTime(vw.end)*sr));
-  const samples=Math.max(1,last-first);
-  const step=Math.max(1,Math.floor(samples/w));
 
   c2d.strokeStyle="#d7a455";
   c2d.lineWidth=1;
-  c2d.beginPath();
-  for(let x=0;x<w;x++){
-    let min=1,max=-1;
-    const start=first+x*step;
-    const end=Math.min(last,start+step);
-    for(let i=start;i<end;i++){
-      const v=data[i];
-      if(v<min)min=v;
-      if(v>max)max=v;
-    }
-    const y1=(1-max)*h/2;
-    const y2=(1-min)*h/2;
-    c2d.moveTo(x,y1);c2d.lineTo(x,y2);
-  }
-  c2d.stroke();
+  drawBufferRange(
+    c2d,
+    sampleBuffer,
+    displayToSourceTime(vw.start),
+    displayToSourceTime(vw.end),
+    0,w,h
+  );
 
   c2d.font="12px monospace";
   markers.forEach((sourceT,i)=>{
@@ -428,6 +449,9 @@ canvas.addEventListener("wheel",ev=>{
 
 function clearPlayhead(){
   ph2d.clearRect(0,0,playheadCanvas.width,playheadCanvas.height);
+  if(sampleTimelinePlayhead2d && sampleTimelinePlayheadCanvas){
+    sampleTimelinePlayhead2d.clearRect(0,0,sampleTimelinePlayheadCanvas.width,sampleTimelinePlayheadCanvas.height);
+  }
 }
 
 function buildLoopPlayheadState(){
@@ -440,7 +464,7 @@ function buildLoopPlayheadState(){
   const events=gridEventsForRender();
 
   const placed=[];
-  for(let step=0;step<16;step++){
+  for(let step=0;step<CHOPPER_SEQUENCE_STEPS;step++){
     const chop=Number(events[step])||0;
     if(chop>=1 && chop<markers.length){
       placed.push({step,chop});
@@ -479,7 +503,105 @@ function buildLoopPlayheadState(){
   };
 }
 
-function currentPlayheadInfo(){
+function renderSampleTimeline(){
+  if(!sampleTimelineCanvas || !sampleTimeline2d)return;
+  const grid=$("loopGrid");
+  if(!grid)return;
+
+  const width=Math.max(SEQUENCE_MIN_WIDTH,Math.ceil(grid.scrollWidth||grid.clientWidth||SEQUENCE_MIN_WIDTH));
+  const height=SAMPLE_TIMELINE_HEIGHT;
+  if(sampleTimelineCanvas.width!==width)sampleTimelineCanvas.width=width;
+  if(sampleTimelineCanvas.height!==height)sampleTimelineCanvas.height=height;
+  if(sampleTimelinePlayheadCanvas){
+    if(sampleTimelinePlayheadCanvas.width!==width)sampleTimelinePlayheadCanvas.width=width;
+    if(sampleTimelinePlayheadCanvas.height!==height)sampleTimelinePlayheadCanvas.height=height;
+  }
+
+  const ctx=sampleTimeline2d;
+  const timelineWidth=Math.max(1,width-SEQUENCE_LABEL_WIDTH);
+  ctx.clearRect(0,0,width,height);
+  ctx.fillStyle="#060504";
+  ctx.fillRect(0,0,width,height);
+
+  const state=buildLoopPlayheadState();
+  const cells=[];
+  if(state){
+    const stepDur=state.duration/CHOPPER_SEQUENCE_STEPS;
+    for(let step=0;step<CHOPPER_SEQUENCE_STEPS;step++){
+      const cellStart=step*stepDur;
+      const cellEnd=cellStart+stepDur;
+      const segment=state.segments.find(seg=>cellStart<seg.endTime && cellEnd>seg.startTime);
+      if(!segment)continue;
+
+      const startTime=Math.max(cellStart,segment.startTime);
+      const endTime=Math.min(cellEnd,segment.endTime);
+      if(endTime<=startTime)continue;
+
+      cells.push({
+        step,
+        pad:segment.pad,
+        startTime,
+        endTime,
+        sourceStart:segment.sampleStart+(startTime-segment.startTime)*state.pitchRate,
+        sourceEnd:Math.min(
+          sampleBuffer.duration,
+          segment.sampleStart+(endTime-segment.startTime)*state.pitchRate
+        )
+      });
+    }
+
+    ctx.save();
+    ctx.translate(0,18);
+    ctx.strokeStyle="#d7a455";
+    ctx.lineWidth=1;
+    for(const cell of cells){
+      const x=SEQUENCE_LABEL_WIDTH+(cell.startTime/state.duration)*timelineWidth;
+      const endX=SEQUENCE_LABEL_WIDTH+(cell.endTime/state.duration)*timelineWidth;
+      const drawX=Math.ceil(x)+1;
+      const drawEnd=Math.floor(endX)-1;
+      const drawWidth=Math.max(1,drawEnd-drawX);
+      drawBufferRange(
+        ctx,sampleBuffer,cell.sourceStart,cell.sourceEnd,
+        drawX,drawWidth,height-18
+      );
+    }
+    ctx.restore();
+  }
+
+  ctx.font="8px monospace";
+  ctx.textBaseline="top";
+  ctx.fillStyle="#9e896b";
+  ctx.fillText("SAMPLE",7,6);
+
+  for(let step=0;step<=CHOPPER_SEQUENCE_STEPS;step++){
+    const x=SEQUENCE_LABEL_WIDTH+(step/CHOPPER_SEQUENCE_STEPS)*timelineWidth;
+    const barStart=step===0||step===CHOPPER_SEQUENCE_STEPS/2||step===CHOPPER_SEQUENCE_STEPS;
+    const beatStart=step%2===0;
+    ctx.strokeStyle=barStart?"#765a34":(beatStart?"#4a3a29":"#2f2a23");
+    ctx.lineWidth=barStart?2:1;
+    ctx.beginPath();ctx.moveTo(x,0);ctx.lineTo(x,height);ctx.stroke();
+    if(step<CHOPPER_SEQUENCE_STEPS){
+      ctx.fillStyle="#9e896b";
+      ctx.fillText(stepLabel(step),x+4,6);
+    }
+  }
+
+  if(cells.length){
+    ctx.fillStyle="#ead9b9";
+    for(const cell of cells){
+      const x=SEQUENCE_LABEL_WIDTH+(cell.step/CHOPPER_SEQUENCE_STEPS)*timelineWidth;
+      ctx.fillText(String(cell.pad+1),x+4,18);
+    }
+  }
+}
+
+function currentLoopTime(){
+  if(!ctx || !isLoopPlaying || lastPreviewMode!=="full" || !loopPlayheadState)return null;
+  const dur=Math.max(.001,loopPlayheadState.duration);
+  return ((ctx.currentTime-loopPlayheadStartedAt)%dur+dur)%dur;
+}
+
+function currentPlayheadInfo(loopTime=currentLoopTime()){
   if(!ctx || !sampleBuffer)return null;
 
   // Clicking a pad has priority over the loop display while the pad audition
@@ -497,12 +619,8 @@ function currentPlayheadInfo(){
     };
   }
 
-  if(!isLoopPlaying || lastPreviewMode!=="full" || !loopPlayheadState){
-    return null;
-  }
+  if(loopTime===null)return null;
 
-  const dur=Math.max(.001,loopPlayheadState.duration);
-  const loopTime=((ctx.currentTime-loopPlayheadStartedAt)%dur+dur)%dur;
   const segment=loopPlayheadState.segments.find(
     seg=>loopTime>=seg.startTime && loopTime<seg.endTime
   );
@@ -531,6 +649,27 @@ function currentPlayheadInfo(){
   };
 }
 
+function drawSampleTimelinePlayhead(loopTime){
+  if(loopTime===null || !sampleTimelinePlayheadCanvas || !sampleTimelinePlayhead2d || !loopPlayheadState)return;
+
+  const width=sampleTimelinePlayheadCanvas.width;
+  const height=sampleTimelinePlayheadCanvas.height;
+  const timelineWidth=Math.max(1,width-SEQUENCE_LABEL_WIDTH);
+  const duration=Math.max(.001,loopPlayheadState.duration);
+  const x=SEQUENCE_LABEL_WIDTH+(loopTime/duration)*timelineWidth;
+
+  sampleTimelinePlayhead2d.save();
+  sampleTimelinePlayhead2d.strokeStyle="#e2ad5f";
+  sampleTimelinePlayhead2d.lineWidth=2;
+  sampleTimelinePlayhead2d.shadowColor="rgba(226,173,95,.62)";
+  sampleTimelinePlayhead2d.shadowBlur=6;
+  sampleTimelinePlayhead2d.beginPath();
+  sampleTimelinePlayhead2d.moveTo(x,0);
+  sampleTimelinePlayhead2d.lineTo(x,height);
+  sampleTimelinePlayhead2d.stroke();
+  sampleTimelinePlayhead2d.restore();
+}
+
 function startPlayheadAnimation(){
   if(chopPlayheadRAF){
     cancelAnimationFrame(chopPlayheadRAF);
@@ -552,7 +691,9 @@ function stopPlayheadAnimation(clear=true){
 function drawPlayhead(){
   clearPlayhead();
 
-  const info=currentPlayheadInfo();
+  const loopTime=currentLoopTime();
+  drawSampleTimelinePlayhead(loopTime);
+  const info=currentPlayheadInfo(loopTime);
   if(!info){
     chopPlayheadRAF=0;
     setActivePad(-1);
@@ -700,15 +841,15 @@ async function previewSlice(i,button){
 
 function ensureGridEvents(){
   const old=loopGridEvents.slice();
-  loopGridEvents=new Array(16).fill(0);
-  for(let i=0;i<Math.min(old.length,16);i++){
+  loopGridEvents=new Array(CHOPPER_SEQUENCE_STEPS).fill(0);
+  for(let i=0;i<Math.min(old.length,CHOPPER_SEQUENCE_STEPS);i++){
     const pad=Number(old[i])||0;
     loopGridEvents[i]=(pad>=1 && pad<=Math.max(1,markers.length-1))?pad:0;
   }
 }
 
 function stepLabel(step){
-  const beat=Math.floor((step%8)/2)+1;
+  const beat=Math.floor((step%(CHOPPER_SEQUENCE_STEPS/2))/2)+1;
   return step%2===0 ? String(beat) : "&";
 }
 
@@ -721,13 +862,13 @@ function renderLoopGrid(){
   corner.className="matrixCorner";
   grid.appendChild(corner);
 
-  for(let step=0;step<16;step++){
+  for(let step=0;step<CHOPPER_SEQUENCE_STEPS;step++){
     const head=document.createElement("div");
     const beatStart=step%2===0;
-    const barStart=step===0||step===8;
+    const barStart=step===0||step===CHOPPER_SEQUENCE_STEPS/2;
     head.className=`matrixHead${beatStart?" beatStart":""}${barStart?" barStart":""}`;
     head.textContent=stepLabel(step);
-    head.title=`Bar ${step<8?1:2} • ${stepLabel(step)}`;
+    head.title=`Bar ${step<CHOPPER_SEQUENCE_STEPS/2?1:2} • ${stepLabel(step)}`;
     grid.appendChild(head);
   }
 
@@ -754,16 +895,16 @@ function renderLoopGrid(){
 
     grid.appendChild(label);
 
-    for(let step=0;step<16;step++){
+    for(let step=0;step<CHOPPER_SEQUENCE_STEPS;step++){
       const cell=document.createElement("button");
       const beatStart=step%2===0;
-      const barStart=step===0||step===8;
+      const barStart=step===0||step===CHOPPER_SEQUENCE_STEPS/2;
       const active=available && loopGridEvents[step]===pad;
 
       cell.className=`matrixCell${beatStart?" beatStart":""}${barStart?" barStart":""}${active?" active":""}${available?"":" unavailable"}`;
       cell.disabled=!available;
       cell.title=available
-        ? `PAD ${pad} • Bar ${step<8?1:2} • ${stepLabel(step)}`
+        ? `PAD ${pad} • Bar ${step<CHOPPER_SEQUENCE_STEPS/2?1:2} • ${stepLabel(step)}`
         : `PAD ${pad} indisponible`;
 
       if(available){
@@ -791,10 +932,12 @@ function renderLoopGrid(){
       grid.appendChild(cell);
     }
   }
+
+  renderSampleTimeline();
 }
 
 function clearLoopGrid(){
-  loopGridEvents=new Array(16).fill(0);
+  loopGridEvents=new Array(CHOPPER_SEQUENCE_STEPS).fill(0);
   renderLoopGrid();
 }
 

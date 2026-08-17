@@ -319,6 +319,52 @@ function drumArrayForLane(lane){
   return [];
 }
 
+function drumPreviewSteps(lane){
+  const selection=currentDrumSelection;
+  if(!selection || selection.mode==="off")return [];
+  if(lane==="kick")return selection.kicks||[];
+  if(lane==="snare")return selection.snares||[];
+  if(lane==="hat"){
+    return Array.isArray(selection.hatSteps)
+      ? selection.hatSteps
+      : (selection.hats||[]).map(x=>x*2);
+  }
+  return [];
+}
+
+function renderDrumPatternPreview(){
+  const grid=$("drumPatternPreview");
+  if(!grid)return;
+  grid.textContent="";
+
+  const lanes=[
+    ["kick","KICK"],
+    ["snare","SNARE"],
+    ["hat","HAT"]
+  ];
+
+  for(const [lane,labelText] of lanes){
+    const label=document.createElement("div");
+    label.className="drumPatternPreviewLabel";
+    label.textContent=labelText;
+    grid.appendChild(label);
+
+    const activeSteps=new Set(drumPreviewSteps(lane));
+    for(let sequenceStep=0;sequenceStep<16;sequenceStep++){
+      const pair=document.createElement("div");
+      pair.className=`drumPatternPreviewPair ${lane}`;
+
+      for(let subStep=0;subStep<2;subStep++){
+        const patternStep=(sequenceStep*2+subStep)%16;
+        const step=document.createElement("span");
+        step.className=`drumPatternPreviewStep ${lane}${activeSteps.has(patternStep)?" active":""}`;
+        pair.appendChild(step);
+      }
+      grid.appendChild(pair);
+    }
+  }
+}
+
 function markDrumSelectionEdited(){
   if(!currentDrumSelection || currentDrumSelection.mode==="off")return;
   if(currentDrumSelection.patternId!=="EDIT"){
@@ -530,6 +576,8 @@ function renderDrumEditor(){
       grid.appendChild(cell);
     }
   }
+
+  renderDrumPatternPreview();
 }
 
 function updateDrumSelectionUI(){

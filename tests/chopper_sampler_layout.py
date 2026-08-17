@@ -40,6 +40,8 @@ with sync_playwright() as p:
           const screen=box('.samplerScreenModule'),control=box('.samplerControlModule');
           const padPanel=box('.samplerPadsModule'),seq=box('.samplerSequenceModule');
           const wrap=document.querySelector('.loopGridWrap');
+          const timeline=box('#sampleTimelineCanvas'),matrix=box('#loopGrid'),drumPreview=box('#drumPatternPreview');
+          const firstHead=box('#loopGrid .matrixHead'),firstPreviewPair=box('#drumPatternPreview .drumPatternPreviewPair');
           const fine=document.querySelector('.advancedBox');
           return {
             pads,controlActions,transport,upperChildren,title:title.toJSON(),pitch:pitch.toJSON(),volume:volume.toJSON(),tempo:tempo.toJSON(),wave:wave.toJSON(),tempoInput:tempoInput.toJSON(),
@@ -59,7 +61,8 @@ with sync_playwright() as p:
             sliceOutsideFine:!!document.querySelector('.samplerControlModule > #sliceCount, .samplerControlModule > .samplerSelectRow:not(.fineSettingsSelectRow) #sliceCount'),
             snapOutsideFine:!!document.querySelector('.samplerControlModule > #snapMode, .samplerControlModule > .samplerSelectRow:not(.fineSettingsSelectRow) #snapMode'),
             upper,perf,screen:screen.toJSON(),control:control.toJSON(),padPanel:padPanel.toJSON(),seq:seq.toJSON(),
-            bodyW:document.body.scrollWidth,viewportW:innerWidth,scrollable:wrap.scrollWidth>=wrap.clientWidth
+            timeline:timeline.toJSON(),matrix:matrix.toJSON(),drumPreview:drumPreview.toJSON(),firstHead:firstHead.toJSON(),firstPreviewPair:firstPreviewPair.toJSON(),
+            bodyW:document.body.scrollWidth,viewportW:innerWidth,scrollable:wrap.scrollWidth>=wrap.clientWidth,wrapScrollWidth:wrap.scrollWidth,wrapClientWidth:wrap.clientWidth
           };
         }''')
         assert len(data['pads'])==16,data
@@ -114,9 +117,38 @@ with sync_playwright() as p:
             assert data['seq']['left']>=data['padPanel']['right']-2,data
         else:
             assert data['seq']['top']>=data['padPanel']['bottom']-2,data
+        # Sample timeline, Chopper matrix and Drum preview are one visual ruler: same width,
+        # same musical column origin and same horizontal scroll container.
+        assert abs(data['timeline']['left']-data['matrix']['left'])<1.5,data
+        assert abs(data['matrix']['left']-data['drumPreview']['left'])<1.5,data
+        assert abs(data['timeline']['right']-data['matrix']['right'])<1.5,data
+        assert abs(data['matrix']['right']-data['drumPreview']['right'])<1.5,data
+        assert data['timeline']['bottom']<=data['matrix']['top']+2,data
+        assert data['matrix']['bottom']<=data['drumPreview']['top']+2,data
+        head_offset=data['firstHead']['left']-data['matrix']['left']
+        preview_offset=data['firstPreviewPair']['left']-data['drumPreview']['left']
+        assert head_offset>0 and preview_offset>0,data
+        assert abs(head_offset-preview_offset)<1.5,data
+        assert abs(data['firstHead']['left']-data['firstPreviewPair']['left'])<1.5,data
+        if data['wrapScrollWidth']>data['wrapClientWidth']+1:
+            scroll_before=page.evaluate('''() => ({
+              timeline:document.getElementById('sampleTimelineCanvas').getBoundingClientRect().left,
+              head:document.querySelector('#loopGrid .matrixHead').getBoundingClientRect().left,
+              drum:document.querySelector('#drumPatternPreview .drumPatternPreviewPair').getBoundingClientRect().left
+            })''')
+            page.evaluate("document.querySelector('.loopGridWrap').scrollLeft=120")
+            page.wait_for_timeout(20)
+            scroll_after=page.evaluate('''() => ({
+              timeline:document.getElementById('sampleTimelineCanvas').getBoundingClientRect().left,
+              head:document.querySelector('#loopGrid .matrixHead').getBoundingClientRect().left,
+              drum:document.querySelector('#drumPatternPreview .drumPatternPreviewPair').getBoundingClientRect().left
+            })''')
+            shifts={key:scroll_before[key]-scroll_after[key] for key in scroll_before}
+            assert shifts['timeline']>1,shifts
+            assert max(shifts.values())-min(shifts.values())<1.5,shifts
         assert data['bodyW']<=data['viewportW']+2,data
         assert data['scrollable'],data
         assert not errors,errors
         page.close()
     browser.close()
-print('OK: Chopper sampler layout — Sample Control above display, title-row pitch/tempo/volume, full-width waveform and responsive layout')
+print('OK: Chopper sampler layout — Sample Control above display, aligned sample/grid/drum ruler and responsive layout')
