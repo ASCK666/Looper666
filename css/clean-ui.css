@@ -93,6 +93,30 @@
   padding: 8px !important;
 }
 
+#chopper .samplerControlModule.chopTransportPanel {
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: stretch !important;
+  gap: 10px !important;
+  padding: 12px !important;
+}
+
+#chopper .samplerControlModule.chopTransportPanel > .stableTitle {
+  margin: 0 0 14px !important;
+}
+
+#chopper .samplerActionRow {
+  grid-template-columns: repeat(6, minmax(0, 1fr)) !important;
+  gap: 6px !important;
+}
+
+#chopper .samplerActionRow .btn {
+  min-height: 34px !important;
+  padding: 6px 8px !important;
+  font-size: 9px !important;
+  letter-spacing: .6px !important;
+}
+
 #chopper .samplerSampleInfo,
 #chopper .saveBeatStatus {
   min-height: 0 !important;
@@ -105,6 +129,10 @@
 
 /* Pads should never sit in a narrow island once the layout stacks. */
 @media (max-width: 1000px) {
+  #chopper .samplerActionRow {
+    grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+  }
+
   #chopper .samplerPadsModule {
     width: 100% !important;
     max-width: none !important;
@@ -175,7 +203,6 @@
   #chopper .samplerPerformanceDeck,
   #chopper .samplerPadsModule,
   #chopper .samplerSequenceModule,
-  #chopper .samplerTransportModule,
   #chopper .samplerDrumSection {
     width: 100% !important;
     max-width: none !important;
@@ -233,5 +260,9 @@
 
   .headerMeterWrap {
     padding-inline: 4px !important;
+  }
+
+  #chopper .samplerActionRow {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
   }
 }
