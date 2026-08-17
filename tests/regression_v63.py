@@ -23,7 +23,7 @@ def make_wav(path: Path, seconds=.35, hz=220, amp=.2):
         wf.writeframes(b''.join(out))
 
 html=(ROOT/'index.html').read_text(encoding='utf-8')
-for rel in ['./css/base.css']:
+for rel in ['./css/base.css','./css/clean-ui.css']:
     css=(ROOT/rel[2:]).read_text(encoding='utf-8')
     html=html.replace(f'<link rel="stylesheet" href="{rel}">',f'<style>{css}</style>')
 for rel in ['./js/bootstrap.js','./js/core.js','./js/looper.js','./js/practice.js','./js/chopper.js','./js/drums.js','./js/events.js']:
