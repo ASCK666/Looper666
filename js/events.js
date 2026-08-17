@@ -177,6 +177,7 @@ $("sampleVolume").onchange=async()=>{
   }
 };
 
+$("sampleBpm").oninput=renderSampleTimeline;
 $("samplePitch").oninput=()=>updateSamplePitch($("samplePitch").value);
 $("samplePitch").onchange=async()=>{
   if(isLoopPlaying && lastPreviewMode==="full" && sampleBuffer){

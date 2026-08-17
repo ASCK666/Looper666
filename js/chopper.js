@@ -7,6 +7,8 @@ const canvas=$("waveCanvas");
 const c2d=canvas.getContext("2d");
 const playheadCanvas=$("playheadCanvas");
 const ph2d=playheadCanvas.getContext("2d");
+const sampleTimelineCanvas=$("sampleTimelineCanvas");
+const sampleTimeline2d=sampleTimelineCanvas?.getContext("2d");
 
 function samplePitchRate(){
   return Math.pow(2,samplePitchSemitones/12);
@@ -143,6 +145,7 @@ function updateSamplePitch(value){
   refreshMarkerEditor();
   refreshSamplePitchUI();
   drawWave();
+  renderSampleTimeline();
 }
 
 function sampleVolumeGain(){
@@ -490,6 +493,70 @@ function buildLoopPlayheadState(){
   };
 }
 
+function renderSampleTimeline(){
+  if(!sampleTimelineCanvas || !sampleTimeline2d)return;
+  const grid=$("loopGrid");
+  if(!grid)return;
+
+  const width=Math.max(830,Math.ceil(grid.scrollWidth||grid.clientWidth||830));
+  const height=86;
+  if(sampleTimelineCanvas.width!==width)sampleTimelineCanvas.width=width;
+  if(sampleTimelineCanvas.height!==height)sampleTimelineCanvas.height=height;
+
+  const ctx=sampleTimeline2d;
+  const labelWidth=66;
+  const timelineWidth=Math.max(1,width-labelWidth);
+  ctx.clearRect(0,0,width,height);
+  ctx.fillStyle="#060504";
+  ctx.fillRect(0,0,width,height);
+
+  const state=buildLoopPlayheadState();
+  if(state){
+    ctx.save();
+    ctx.translate(0,18);
+    ctx.strokeStyle="#d7a455";
+    ctx.lineWidth=1;
+    for(const segment of state.segments){
+      const x=labelWidth+(segment.startTime/state.duration)*timelineWidth;
+      const endX=labelWidth+(segment.endTime/state.duration)*timelineWidth;
+      const drawX=Math.round(x);
+      const drawWidth=Math.max(1,Math.round(endX-x));
+      const sampleEnd=Math.min(
+        sampleBuffer.duration,
+        segment.sampleStart+(segment.endTime-segment.startTime)*state.pitchRate
+      );
+      drawBufferRange(ctx,sampleBuffer,segment.sampleStart,sampleEnd,drawX,drawWidth,height-18);
+    }
+    ctx.restore();
+  }
+
+  ctx.font="8px monospace";
+  ctx.textBaseline="top";
+  ctx.fillStyle="#9e896b";
+  ctx.fillText("SAMPLE",7,6);
+
+  for(let step=0;step<=16;step++){
+    const x=labelWidth+(step/16)*timelineWidth;
+    const barStart=step===0||step===8||step===16;
+    const beatStart=step%2===0;
+    ctx.strokeStyle=barStart?"#765a34":(beatStart?"#4a3a29":"#2f2a23");
+    ctx.lineWidth=barStart?2:1;
+    ctx.beginPath();ctx.moveTo(x,0);ctx.lineTo(x,height);ctx.stroke();
+    if(step<16){
+      ctx.fillStyle="#9e896b";
+      ctx.fillText(stepLabel(step),x+4,6);
+    }
+  }
+
+  if(state){
+    ctx.fillStyle="#ead9b9";
+    for(const segment of state.segments){
+      const x=labelWidth+(segment.startTime/state.duration)*timelineWidth;
+      ctx.fillText(String(segment.pad+1),x+4,18);
+    }
+  }
+}
+
 function currentPlayheadInfo(){
   if(!ctx || !sampleBuffer)return null;
 
@@ -802,6 +869,8 @@ function renderLoopGrid(){
       grid.appendChild(cell);
     }
   }
+
+  renderSampleTimeline();
 }
 
 function clearLoopGrid(){

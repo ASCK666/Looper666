@@ -79,16 +79,28 @@ with tempfile.TemporaryDirectory() as td, sync_playwright() as p:
       markers:markers.length,
       pads:document.querySelectorAll('#pads .pad').length,
       cells:document.querySelectorAll('#loopGrid .matrixCell').length,
-      rows:document.querySelectorAll('#loopGrid .matrixRowLabel').length
+      rows:document.querySelectorAll('#loopGrid .matrixRowLabel').length,
+      timelineWidth:document.getElementById('sampleTimelineCanvas').width,
+      gridWidth:document.getElementById('loopGrid').scrollWidth
     })''')
     assert state['markers']==17,state
     assert state['pads']==16 and state['rows']==16 and state['cells']==256,state
-    # Current grid contract: click places one pad, right-click removes it.
+    assert state['timelineWidth']==max(830,state['gridWidth']),state
+    # Timeline is derived from the actual sequenced chop lane and must react to BPM without a second state model.
+    timeline_empty=page.evaluate("document.getElementById('sampleTimelineCanvas').toDataURL()")
     cell=page.locator('#loopGrid .matrixCell:not(.unavailable)').first
     cell.click();page.wait_for_timeout(20)
     assert page.evaluate('loopGridEvents.some(v=>v>0)') is True
+    timeline_active=page.evaluate("document.getElementById('sampleTimelineCanvas').toDataURL()")
+    assert timeline_active!=timeline_empty
+    page.fill('#sampleBpm','120');page.dispatch_event('#sampleBpm','input');page.wait_for_timeout(20)
+    timeline_bpm=page.evaluate("document.getElementById('sampleTimelineCanvas').toDataURL()")
+    assert timeline_bpm!=timeline_active
+    # Current grid contract: right-click removes the trigger and the timeline returns to its empty state.
     cell.click(button='right');page.wait_for_timeout(20)
     assert page.evaluate('loopGridEvents.every(v=>v===0)') is True
+    timeline_cleared=page.evaluate("document.getElementById('sampleTimelineCanvas').toDataURL()")
+    assert timeline_cleared!=timeline_bpm
     # Essential controls must remain physically clickable after CSS changes.
     boxes=page.evaluate('''() => ['loadSampleBtn','autoMarkers','previewFlip','stopFlip','addFlipLibrary','clearGrid'].map(id=>{
       const r=document.getElementById(id).getBoundingClientRect();return {id,w:r.width,h:r.height};
@@ -96,4 +108,4 @@ with tempfile.TemporaryDirectory() as td, sync_playwright() as p:
     assert all(x['w']>20 and x['h']>20 for x in boxes),boxes
     assert not errors,errors
     page.close();browser.close()
-print('OK: Chopper UI — sample import/volume/pitch, AUTO CHOP, 16 pads, 16x16 grid, place/clear and clickable controls')
+print('OK: Chopper UI — sample import/volume/pitch, BPM-scaled sample timeline, AUTO CHOP, 16 pads, 16x16 grid and place/clear')
