@@ -487,14 +487,19 @@ function renderDrumEditor(){
   const lanes=[
     ["kick","KICK"],
     ["snare","SNARE"],
-    ["hat","HAT"]
+    ["hat","HI-HAT"]
   ];
 
   for(const [lane,labelText] of lanes){
-    const label=document.createElement("div");
-    label.className="drumEditLabel";
-    label.textContent=labelText;
-    grid.appendChild(label);
+    const loadButton=document.createElement("button");
+    loadButton.type="button";
+    loadButton.id=`${lane}FolderBtn`;
+    loadButton.className="drumEditLibraryButton";
+    loadButton.textContent=labelText;
+    loadButton.title=`Charger le dossier ${labelText}`;
+    loadButton.setAttribute("aria-label",`Charger le dossier ${labelText}`);
+    loadButton.onclick=()=>chooseDrumFolder(lane);
+    grid.appendChild(loadButton);
 
     const arr=drumArrayForLane(lane);
 
