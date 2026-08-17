@@ -1,71 +1,33 @@
 "use strict";
-const CACHE="scratch-practice-v93";
-const ASSETS=[
-  "./",
-  "./index.html",
-  "./manifest.json",
-  "./css/base.css",
-  "./js/bootstrap.js",
-  "./js/core.js",
-  "./js/looper.js",
-  "./js/practice.js",
-  "./js/chopper.js",
-  "./js/drums.js",
-  "./js/events.js",
-  "./assets/cassette-mechanism-pixel-v84.png",
-  "./assets/cassette-reel-pixel-v81.png",
-  "./assets/deck-black-ui-texture.png"
-];
-const STATIC_PATHS=new Set(ASSETS.map(path=>new URL(path,self.location.href).pathname));
-const INDEX_URL=new URL("./index.html",self.location.href).href;
 
+// Development kill switch: GitHub Pages is still changing quickly, so stale
+// offline caches are more dangerous than useful. Retire any existing Scratch
+// Practice service worker, remove its caches, and reload controlled pages once
+// so they come back from the network with one coherent build.
 self.addEventListener("install",event=>{
   self.skipWaiting();
-  event.waitUntil(caches.open(CACHE).then(cache=>cache.addAll(ASSETS)));
 });
 
 self.addEventListener("activate",event=>{
-  event.waitUntil(
-    caches.keys()
-      .then(keys=>Promise.all(keys.filter(key=>key!==CACHE).map(key=>caches.delete(key))))
-      .then(()=>self.clients.claim())
-  );
-});
-
-self.addEventListener("fetch",event=>{
-  const request=event.request;
-  if(request.method!=="GET")return;
-
-  const url=new URL(request.url);
-  if(url.origin!==self.location.origin)return; // never proxy/cache third-party traffic
-
-  if(request.mode==="navigate"){
-    event.respondWith(
-      fetch(request)
-        .then(response=>{
-          if(response.ok && response.type==="basic"){
-            const copy=response.clone();
-            event.waitUntil(caches.open(CACHE).then(cache=>cache.put(INDEX_URL,copy)));
-          }
-          return response;
-        })
-        .catch(()=>caches.match(INDEX_URL))
+  event.waitUntil((async()=>{
+    const keys=await caches.keys();
+    await Promise.all(
+      keys
+        .filter(key=>key.startsWith("scratch-practice-"))
+        .map(key=>caches.delete(key))
     );
-    return;
-  }
 
-  if(!STATIC_PATHS.has(url.pathname))return; // no unbounded dynamic cache
+    await self.registration.unregister();
 
-  event.respondWith(
-    caches.match(request,{ignoreSearch:true}).then(cached=>{
-      if(cached)return cached;
-      return fetch(request).then(response=>{
-        if(response.ok && response.type==="basic"){
-          const copy=response.clone();
-          event.waitUntil(caches.open(CACHE).then(cache=>cache.put(request,copy)));
-        }
-        return response;
-      });
-    })
-  );
+    const clients=await self.clients.matchAll({type:"window",includeUncontrolled:true});
+    await Promise.all(clients.map(async client=>{
+      try{
+        await client.navigate(client.url);
+      }catch(error){
+        console.warn("Scratch Practice reload after SW retirement failed:",error);
+      }
+    }));
+  })());
 });
+
+// Intentionally no fetch handler: every request goes directly to the network.
