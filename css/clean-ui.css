@@ -290,6 +290,10 @@
   font-size: 8px !important;
 }
 
+#chopper .sampleTimelineStack {position:relative;width:max-content;height:86px}
+#sampleTimelineCanvas,#sampleTimelinePlayheadCanvas {display:block;width:auto;height:86px}
+#sampleTimelinePlayheadCanvas {position:absolute;inset:0;z-index:2;pointer-events:none}
+
 /* Pads should never sit in a narrow island once the layout stacks. */
 @media (max-width: 1000px) {
   #chopper .samplerPadsModule {

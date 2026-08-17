@@ -81,11 +81,13 @@ with tempfile.TemporaryDirectory() as td, sync_playwright() as p:
       cells:document.querySelectorAll('#loopGrid .matrixCell').length,
       rows:document.querySelectorAll('#loopGrid .matrixRowLabel').length,
       timelineWidth:document.getElementById('sampleTimelineCanvas').width,
+      playheadWidth:document.getElementById('sampleTimelinePlayheadCanvas').width,
       gridWidth:document.getElementById('loopGrid').scrollWidth
     })''')
     assert state['markers']==17,state
     assert state['pads']==16 and state['rows']==16 and state['cells']==256,state
     assert state['timelineWidth']==max(830,state['gridWidth']),state
+    assert state['playheadWidth']==state['timelineWidth'],state
     # Timeline is derived from the actual sequenced chop lane and must react to BPM without a second state model.
     timeline_empty=page.evaluate("document.getElementById('sampleTimelineCanvas').toDataURL()")
     cell=page.locator('#loopGrid .matrixCell:not(.unavailable)').first
@@ -101,6 +103,39 @@ with tempfile.TemporaryDirectory() as td, sync_playwright() as p:
     assert page.evaluate('loopGridEvents.every(v=>v===0)') is True
     timeline_cleared=page.evaluate("document.getElementById('sampleTimelineCanvas').toDataURL()")
     assert timeline_cleared!=timeline_bpm
+    # The musical playhead uses the existing loop transport/RAF, keeps moving through silent sample gaps, and clears on STOP.
+    cell.click();page.wait_for_timeout(20)
+    playhead_pixels='''() => {
+      const canvas=document.getElementById('sampleTimelinePlayheadCanvas');
+      const data=canvas.getContext('2d').getImageData(0,0,canvas.width,canvas.height).data;
+      let count=0,minX=canvas.width,maxX=-1;
+      for(let i=3;i<data.length;i+=4){
+        if(data[i]===0)continue;
+        const pixel=(i-3)/4;
+        const x=pixel%canvas.width;
+        count++;
+        if(x<minX)minX=x;
+        if(x>maxX)maxX=x;
+      }
+      return {count,minX,maxX,width:canvas.width,height:canvas.height};
+    }'''
+    assert page.evaluate(playhead_pixels)['count']==0
+    page.click('#previewFlip')
+    page.wait_for_function('isLoopPlaying === true && loopPlayheadState !== null',timeout=5000)
+    page.wait_for_function('''() => {
+      const c=document.getElementById('sampleTimelinePlayheadCanvas');
+      const d=c.getContext('2d').getImageData(0,0,c.width,c.height).data;
+      for(let i=3;i<d.length;i+=4)if(d[i]!==0)return true;
+      return false;
+    }''',timeout=5000)
+    first_playhead=page.evaluate(playhead_pixels)
+    page.wait_for_timeout(140)
+    second_playhead=page.evaluate(playhead_pixels)
+    assert first_playhead['count']>0 and second_playhead['count']>0,(first_playhead,second_playhead)
+    assert second_playhead['minX']>first_playhead['minX'],(first_playhead,second_playhead)
+    page.click('#stopFlip');page.wait_for_timeout(30)
+    assert page.evaluate('isLoopPlaying === false && loopPlayheadState === null') is True
+    assert page.evaluate(playhead_pixels)['count']==0
     # Essential controls must remain physically clickable after CSS changes.
     boxes=page.evaluate('''() => ['loadSampleBtn','autoMarkers','previewFlip','stopFlip','addFlipLibrary','clearGrid'].map(id=>{
       const r=document.getElementById(id).getBoundingClientRect();return {id,w:r.width,h:r.height};
@@ -108,4 +143,4 @@ with tempfile.TemporaryDirectory() as td, sync_playwright() as p:
     assert all(x['w']>20 and x['h']>20 for x in boxes),boxes
     assert not errors,errors
     page.close();browser.close()
-print('OK: Chopper UI — sample import/volume/pitch, BPM-scaled sample timeline, AUTO CHOP, 16 pads, 16x16 grid and place/clear')
+print('OK: Chopper UI — sample import/volume/pitch, BPM-scaled timeline/playhead, AUTO CHOP, 16 pads, 16x16 grid and place/clear')

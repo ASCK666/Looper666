@@ -9,6 +9,8 @@ const playheadCanvas=$("playheadCanvas");
 const ph2d=playheadCanvas.getContext("2d");
 const sampleTimelineCanvas=$("sampleTimelineCanvas");
 const sampleTimeline2d=sampleTimelineCanvas?.getContext("2d");
+const sampleTimelinePlayheadCanvas=$("sampleTimelinePlayheadCanvas");
+const sampleTimelinePlayhead2d=sampleTimelinePlayheadCanvas?.getContext("2d");
 
 function samplePitchRate(){
   return Math.pow(2,samplePitchSemitones/12);
@@ -442,6 +444,9 @@ canvas.addEventListener("wheel",ev=>{
 
 function clearPlayhead(){
   ph2d.clearRect(0,0,playheadCanvas.width,playheadCanvas.height);
+  if(sampleTimelinePlayhead2d && sampleTimelinePlayheadCanvas){
+    sampleTimelinePlayhead2d.clearRect(0,0,sampleTimelinePlayheadCanvas.width,sampleTimelinePlayheadCanvas.height);
+  }
 }
 
 function buildLoopPlayheadState(){
@@ -502,6 +507,10 @@ function renderSampleTimeline(){
   const height=86;
   if(sampleTimelineCanvas.width!==width)sampleTimelineCanvas.width=width;
   if(sampleTimelineCanvas.height!==height)sampleTimelineCanvas.height=height;
+  if(sampleTimelinePlayheadCanvas){
+    if(sampleTimelinePlayheadCanvas.width!==width)sampleTimelinePlayheadCanvas.width=width;
+    if(sampleTimelinePlayheadCanvas.height!==height)sampleTimelinePlayheadCanvas.height=height;
+  }
 
   const ctx=sampleTimeline2d;
   const labelWidth=66;
@@ -557,7 +566,13 @@ function renderSampleTimeline(){
   }
 }
 
-function currentPlayheadInfo(){
+function currentLoopTime(){
+  if(!ctx || !isLoopPlaying || lastPreviewMode!=="full" || !loopPlayheadState)return null;
+  const dur=Math.max(.001,loopPlayheadState.duration);
+  return ((ctx.currentTime-loopPlayheadStartedAt)%dur+dur)%dur;
+}
+
+function currentPlayheadInfo(loopTime=currentLoopTime()){
   if(!ctx || !sampleBuffer)return null;
 
   // Clicking a pad has priority over the loop display while the pad audition
@@ -575,12 +590,8 @@ function currentPlayheadInfo(){
     };
   }
 
-  if(!isLoopPlaying || lastPreviewMode!=="full" || !loopPlayheadState){
-    return null;
-  }
+  if(loopTime===null)return null;
 
-  const dur=Math.max(.001,loopPlayheadState.duration);
-  const loopTime=((ctx.currentTime-loopPlayheadStartedAt)%dur+dur)%dur;
   const segment=loopPlayheadState.segments.find(
     seg=>loopTime>=seg.startTime && loopTime<seg.endTime
   );
@@ -609,6 +620,28 @@ function currentPlayheadInfo(){
   };
 }
 
+function drawSampleTimelinePlayhead(loopTime){
+  if(loopTime===null || !sampleTimelinePlayheadCanvas || !sampleTimelinePlayhead2d || !loopPlayheadState)return;
+
+  const width=sampleTimelinePlayheadCanvas.width;
+  const height=sampleTimelinePlayheadCanvas.height;
+  const labelWidth=66;
+  const timelineWidth=Math.max(1,width-labelWidth);
+  const duration=Math.max(.001,loopPlayheadState.duration);
+  const x=labelWidth+(loopTime/duration)*timelineWidth;
+
+  sampleTimelinePlayhead2d.save();
+  sampleTimelinePlayhead2d.strokeStyle="#e2ad5f";
+  sampleTimelinePlayhead2d.lineWidth=2;
+  sampleTimelinePlayhead2d.shadowColor="rgba(226,173,95,.62)";
+  sampleTimelinePlayhead2d.shadowBlur=6;
+  sampleTimelinePlayhead2d.beginPath();
+  sampleTimelinePlayhead2d.moveTo(x,0);
+  sampleTimelinePlayhead2d.lineTo(x,height);
+  sampleTimelinePlayhead2d.stroke();
+  sampleTimelinePlayhead2d.restore();
+}
+
 function startPlayheadAnimation(){
   if(chopPlayheadRAF){
     cancelAnimationFrame(chopPlayheadRAF);
@@ -630,7 +663,9 @@ function stopPlayheadAnimation(clear=true){
 function drawPlayhead(){
   clearPlayhead();
 
-  const info=currentPlayheadInfo();
+  const loopTime=currentLoopTime();
+  drawSampleTimelinePlayhead(loopTime);
+  const info=currentPlayheadInfo(loopTime);
   if(!info){
     chopPlayheadRAF=0;
     setActivePad(-1);
