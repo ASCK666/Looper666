@@ -19,6 +19,7 @@ jobs:
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
+          ref: ${{ github.head_ref || github.ref_name }}
 
       - name: Set up Python
         uses: actions/setup-python@v5
@@ -31,7 +32,7 @@ jobs:
           node-version: "22"
 
       - name: Apply surgical drum cleanup
-        if: github.ref == 'refs/heads/agent/remove-drum-library-meter'
+        if: github.ref == 'refs/heads/agent/remove-drum-library-meter' || github.head_ref == 'agent/remove-drum-library-meter'
         run: python tools/temp_drum_cleanup.py
 
       - name: Install browser test dependency
@@ -44,7 +45,7 @@ jobs:
         run: python tools/test_all.py
 
       - name: Commit clean final tree
-        if: github.ref == 'refs/heads/agent/remove-drum-library-meter'
+        if: github.ref == 'refs/heads/agent/remove-drum-library-meter' || github.head_ref == 'agent/remove-drum-library-meter'
         run: |
           git diff --check
           git checkout origin/main -- .github/workflows/project-checks.yml
