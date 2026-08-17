@@ -178,6 +178,25 @@ $("sampleVolume").onchange=async()=>{
 };
 
 $("sampleBpm").oninput=renderSampleTimeline;
+$("sampleBpm").onchange=async()=>{
+  if(!isLoopPlaying)return;
+  const mode=lastPreviewMode;
+  if(mode!=="full" && mode!=="drums")return;
+
+  try{
+    if(await rerenderPreviewMode(mode)){
+      const bpm=Math.max(40,Number($("sampleBpm").value)||90);
+      if(mode==="full"){
+        $("chopStatus").textContent=`TEMPO ${bpm} BPM ✓`;
+      }else{
+        $("drumStatus").textContent=`DRUMS • ${bpm} BPM • ${(currentDrumSelection?.mode||"ready").toUpperCase()}`;
+      }
+    }
+  }catch(error){
+    const status=mode==="drums"?$("drumStatus"):$("chopStatus");
+    status.textContent=`TEMPO ERROR: ${safeErrorMessage(error)}`;
+  }
+};
 $("samplePitch").oninput=()=>updateSamplePitch($("samplePitch").value);
 $("samplePitch").onchange=async()=>{
   if(isLoopPlaying && lastPreviewMode==="full" && sampleBuffer){

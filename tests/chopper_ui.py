@@ -126,7 +126,17 @@ with tempfile.TemporaryDirectory() as td, sync_playwright() as p:
     assert all(r['width']<=math.ceil(cell_width) for r in two_chop_ranges),two_chop_ranges
     timeline_two_chops=page.evaluate("document.getElementById('sampleTimelineCanvas').toDataURL()")
     assert timeline_two_chops!=timeline_active
-    page.fill('#sampleBpm','120');page.dispatch_event('#sampleBpm','input');page.wait_for_timeout(20)
+    # BPM must remap how much source audio belongs to each fixed musical cell, not merely repaint the canvas.
+    pitch_rate=page.evaluate('samplePitchRate()')
+    span_90=two_chop_ranges[0]['endSec']-two_chop_ranges[0]['startSec']
+    assert abs(span_90-(60/90/2)*pitch_rate)<1e-5,(span_90,pitch_rate)
+    page.fill('#sampleBpm','120')
+    page.evaluate('window.__timelineRanges=[]')
+    page.dispatch_event('#sampleBpm','input');page.wait_for_timeout(20)
+    bpm_ranges=page.evaluate('window.__timelineRanges.slice()')
+    span_120=bpm_ranges[0]['endSec']-bpm_ranges[0]['startSec']
+    assert abs(span_120-(60/120/2)*pitch_rate)<1e-5,(span_120,pitch_rate)
+    assert span_120<span_90,(span_90,span_120)
     timeline_bpm=page.evaluate("document.getElementById('sampleTimelineCanvas').toDataURL()")
     assert timeline_bpm!=timeline_two_chops
     page.click('#clearGrid');page.wait_for_timeout(20)
@@ -159,6 +169,33 @@ with tempfile.TemporaryDirectory() as td, sync_playwright() as p:
       for(let i=3;i<d.length;i+=4)if(d[i]!==0)return true;
       return false;
     }''',timeout=5000)
+    # Input remaps the view immediately but must not launch an expensive audio render until the tempo value is committed.
+    page.evaluate('''() => {
+      window.__tempoBufferBefore=renderedFlip;
+      window.__tempoStateBefore=loopPlayheadState;
+      window.__tempoDurationBefore=loopPlayheadState.duration;
+      document.getElementById('sampleBpm').value='100';
+    }''')
+    page.dispatch_event('#sampleBpm','input');page.wait_for_timeout(30)
+    assert page.evaluate('renderedFlip===window.__tempoBufferBefore && loopPlayheadState===window.__tempoStateBefore') is True
+    page.dispatch_event('#sampleBpm','change')
+    page.wait_for_function('''() =>
+      renderedFlip!==window.__tempoBufferBefore &&
+      loopPlayheadState!==window.__tempoStateBefore &&
+      Math.abs(loopPlayheadState.duration-4.8)<.01
+    ''',timeout=10000)
+    tempo=page.evaluate('''() => ({
+      before:window.__tempoDurationBefore,
+      stateDuration:loopPlayheadState.duration,
+      bufferDuration:renderedFlip.duration,
+      mode:lastPreviewMode,
+      playing:isLoopPlaying,
+      status:document.getElementById('chopStatus').textContent
+    })''')
+    assert abs(tempo['before']-4)<.01,tempo
+    assert abs(tempo['stateDuration']-4.8)<.01 and abs(tempo['bufferDuration']-4.8)<.02,tempo
+    assert tempo['mode']=='full' and tempo['playing'],tempo
+    assert 'TEMPO 100 BPM' in tempo['status'],tempo
     first_playhead=page.evaluate(playhead_pixels)
     page.wait_for_timeout(140)
     second_playhead=page.evaluate(playhead_pixels)
@@ -174,4 +211,4 @@ with tempfile.TemporaryDirectory() as td, sync_playwright() as p:
     assert all(x['w']>20 and x['h']>20 for x in boxes),boxes
     assert not errors,errors
     page.close();browser.close()
-print('OK: Chopper UI — sample import/volume/pitch, cell-partitioned timeline/playhead, AUTO CHOP, 16 pads, 16x16 grid and place/clear')
+print('OK: Chopper UI — sample import/volume/pitch, BPM-remapped cell timeline/playhead, AUTO CHOP, 16 pads, 16x16 grid and place/clear')
