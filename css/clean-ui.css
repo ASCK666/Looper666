@@ -93,6 +93,18 @@
   padding: 8px !important;
 }
 
+#chopper .samplerControlModule.chopTransportPanel {
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: stretch !important;
+  gap: 10px !important;
+  padding: 12px !important;
+}
+
+#chopper .samplerControlModule.chopTransportPanel > .stableTitle {
+  margin: 0 0 14px !important;
+}
+
 #chopper .samplerActionRow {
   grid-template-columns: repeat(6, minmax(0, 1fr)) !important;
   gap: 6px !important;
