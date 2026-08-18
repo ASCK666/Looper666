@@ -1,6 +1,6 @@
 /* Looper faceplate overlay.
-   The approved image is the visual source of truth. This file is the only
-   place that positions Looper hotspots, readouts and crate overlays. */
+   The approved image is the visual source of truth. Runtime controls are
+   mounted directly under #looper; the retired drawn machine stays hidden. */
 
 #looper.asset-ui {
   --asset-amber:#e2ad5f;
@@ -15,7 +15,7 @@
   background:#070605!important;
   box-shadow:0 16px 38px rgba(0,0,0,.38)!important;
 }
-
+#looper.asset-ui>.layout{display:none!important}
 #looper.asset-ui .looper-faceplate {
   position:absolute!important;
   inset:0!important;
@@ -26,7 +26,6 @@
   z-index:0!important;
   pointer-events:none!important;
 }
-
 #looper.asset-ui::before {
   content:"";
   position:absolute;
@@ -36,38 +35,8 @@
   background:linear-gradient(180deg,rgba(255,190,88,.012),transparent 38%);
 }
 
-/* Retired drawn hardware stays in the DOM for behavior/accessibility only. */
-#looper.asset-ui .layout,
-#looper.asset-ui .beatCratePanel,
-#looper.asset-ui .looperMainPanel,
-#looper.asset-ui .looperPlayerHardware,
-#looper.asset-ui .looperDisplay,
-#looper.asset-ui .cassetteDeck,
-#looper.asset-ui .deckHardwareGrid,
-#looper.asset-ui .deckMechanismColumn,
-#looper.asset-ui .deckTransport,
-#looper.asset-ui .looperImportDock,
-#looper.asset-ui .beatCrateControls,
-#looper.asset-ui .tapeCounterModule,
-#looper.asset-ui .beatCrateControls>div,
-#looper.asset-ui #library .cassetteRackColumn {
-  display:contents!important;
-}
-
-#looper.asset-ui :is(.title,.looperFrameHeader,.deckReadout,.tapeCounterLabel,.tapeCounterWindow,.cassetteMechanismCrop,.cassetteDeckHint,.beatImportStatus),
-#looper.asset-ui .beatCrateControls label,
-#looper.asset-ui #cassetteDoorEject,
-#looper.asset-ui :is(#beatFiles,#beatFolder) {
-  display:none!important;
-}
-
-#looper.asset-ui :is(.panel,.display,.cassetteDeck) {
-  padding:0!important;
-  border:0!important;
-  background:transparent!important;
-  box-shadow:none!important;
-  clip-path:none!important;
-}
+/* Source-only state nodes and file inputs are not visual UI. */
+#looper.asset-ui :is(#beatFiles,#beatFolder,#cassetteBeatName,#deckTransportState,#deckSpeedReadout,#deckAutoReadout){display:none!important}
 
 /* Transparent interaction hotspots. */
 #looper.asset-ui :is(#prevBeat,#playBeat,#stopBeat,#nextBeat,#autoLooperToggle,#importFolderBtn,#importBeatsBtn,#tapeCounterReset) {
@@ -86,7 +55,7 @@
   opacity:.001!important;
   cursor:pointer!important;
 }
-#looper.asset-ui :is(#prevBeat,#playBeat,#stopBeat,#nextBeat,#autoLooperToggle,#importFolderBtn,#importBeatsBtn,#tapeCounterReset) * {visibility:hidden!important}
+#looper.asset-ui :is(#prevBeat,#playBeat,#stopBeat,#nextBeat,#autoLooperToggle,#importFolderBtn,#importBeatsBtn,#tapeCounterReset) *{visibility:hidden!important}
 #looper.asset-ui #prevBeat{left:25.65%;top:46.05%;width:8.9%;height:8.7%}
 #looper.asset-ui #playBeat{left:35.55%;top:46.05%;width:8.9%;height:8.7%}
 #looper.asset-ui #stopBeat{left:45.55%;top:46.05%;width:8.9%;height:8.7%}
@@ -101,6 +70,7 @@
 #looper.asset-ui #libraryOrder {
   position:absolute!important;
   z-index:12!important;
+  box-sizing:border-box!important;
   min-height:0!important;
   margin:0!important;
   border:1px solid rgba(226,173,95,.42)!important;
@@ -117,7 +87,7 @@
 #looper.asset-ui #librarySearch{left:23%;top:60.55%;width:14.95%;height:3.55%;padding:0 .7%!important}
 #looper.asset-ui #libraryOrder{left:42.9%;top:60.55%;width:10.75%;height:3.55%;padding:0 .45%!important}
 
-/* Beat Crate: one 3x3 visual page. Empty slots remain present to cover baked data. */
+/* Beat Crate: one 3x3 visual page. Empty slots cover baked placeholder data. */
 #looper.asset-ui #library {
   position:absolute!important;
   z-index:7!important;
@@ -136,6 +106,7 @@
   background:transparent!important;
 }
 #looper.asset-ui #library::before{display:none!important}
+#looper.asset-ui #library .cassetteRackColumn{display:contents!important}
 #looper.asset-ui #library .cassetteRackSlot {
   display:block!important;
   position:relative!important;
@@ -157,10 +128,7 @@
   content:"";
   position:absolute;
   z-index:1;
-  left:29.6%;
-  top:5%;
-  width:69.1%;
-  height:90%;
+  left:29.6%;top:5%;width:69.1%;height:90%;
   background:#080705;
   pointer-events:none;
 }
@@ -188,10 +156,7 @@
 }
 #looper.asset-ui #library .trackMeta {
   position:absolute!important;
-  left:31%!important;
-  top:7%!important;
-  width:65%!important;
-  height:86%!important;
+  left:31%!important;top:7%!important;width:65%!important;height:86%!important;
   min-height:0!important;
   margin:0!important;
   padding:0 2%!important;
@@ -229,10 +194,7 @@
 #looper.asset-ui #library .trackSource{display:none!important}
 #looper.asset-ui #library .track>.btn {
   position:absolute!important;
-  right:1%!important;
-  top:18%!important;
-  width:8%!important;
-  height:64%!important;
+  right:1%!important;top:18%!important;width:8%!important;height:64%!important;
   z-index:7!important;
   min-height:0!important;
   margin:0!important;
@@ -246,7 +208,7 @@
 #looper.asset-ui #library .track.active .trackMeta b{color:#ffd07a!important;text-shadow:0 0 7px rgba(226,173,95,.32)}
 #looper.asset-ui #library .libraryEmptyMessage{display:none!important}
 
-/* Dynamic glyphs: these are the canonical positions. No JS injects CSS. */
+/* Dynamic glyphs: canonical positions live here, never in JS. */
 #looper.asset-ui .asset-readout {
   position:absolute;
   z-index:9;
@@ -260,51 +222,18 @@
   font-family:ui-monospace,SFMono-Regular,Consolas,monospace;
   text-shadow:0 0 7px rgba(226,173,95,.34);
 }
-#looper.asset-ui .asset-header-state-readout {
-  left:5.15%;top:13.72%;width:7.5%;height:3.30%;
-  padding:0 .12%;
-  font-size:clamp(6px,.82vw,13px);
-  letter-spacing:.04em;
-}
-#looper.asset-ui .asset-track-readout {
-  left:5.15%;top:17.70%;width:18.55%;height:3.75%;
-  padding:0 .15%;
-  font-size:clamp(7px,1.12vw,18px);
-  letter-spacing:.03em;
-}
-#looper.asset-ui .asset-state-readout {
-  left:5.15%;top:28.35%;width:10.9%;height:3.75%;
-  padding:0 .12%;
-  font-size:clamp(7px,1.1vw,18px);
-  letter-spacing:.04em;
-}
-#looper.asset-ui .asset-speed-percent-readout {
-  left:18.38%;top:28.35%;width:5.9%;height:3.75%;
-  justify-content:flex-end;
-  padding:0 .25%;
-  font-size:clamp(7px,1.05vw,17px);
-}
-#looper.asset-ui .asset-loop-readout {
-  left:76.62%;top:15.02%;width:2.72%;height:4.08%;
-  justify-content:center;
-  padding:0;
-  font-size:clamp(10px,1.85vw,30px);
-}
-#looper.asset-ui .asset-speed-level-readout {
-  left:77.62%;top:27.08%;width:4.18%;height:4.18%;
-  justify-content:center;
-  padding:0;
-  font-size:clamp(10px,1.85vw,30px);
-}
+#looper.asset-ui .asset-header-state-readout{left:5.15%;top:13.72%;width:7.5%;height:3.30%;padding:0 .12%;font-size:clamp(6px,.82vw,13px);letter-spacing:.04em}
+#looper.asset-ui .asset-track-readout{left:5.15%;top:17.70%;width:18.55%;height:3.75%;padding:0 .15%;font-size:clamp(7px,1.12vw,18px);letter-spacing:.03em}
+#looper.asset-ui .asset-state-readout{left:5.15%;top:28.35%;width:10.9%;height:3.75%;padding:0 .12%;font-size:clamp(7px,1.1vw,18px);letter-spacing:.04em}
+#looper.asset-ui .asset-speed-percent-readout{left:18.38%;top:28.35%;width:5.9%;height:3.75%;justify-content:flex-end;padding:0 .25%;font-size:clamp(7px,1.05vw,17px)}
+#looper.asset-ui .asset-loop-readout{left:76.62%;top:15.02%;width:2.72%;height:4.08%;justify-content:center;padding:0;font-size:clamp(10px,1.85vw,30px)}
+#looper.asset-ui .asset-speed-level-readout{left:77.62%;top:27.08%;width:4.18%;height:4.18%;justify-content:center;padding:0;font-size:clamp(10px,1.85vw,30px)}
 #looper.asset-ui .asset-cassette-label-readout {
   left:43.95%;top:14.35%;width:13.30%;height:4.25%;
   justify-content:center;
   padding:0 .35%;
   color:#24170d;
-  background-image:
-    radial-gradient(circle at 12% 31%,rgba(255,255,255,.18) 0 .45px,transparent .7px),
-    radial-gradient(circle at 66% 71%,rgba(94,68,42,.08) 0 .55px,transparent .8px),
-    linear-gradient(180deg,#e5d4b9 0%,#dec8a7 50%,#d9c19f 100%);
+  background-image:radial-gradient(circle at 12% 31%,rgba(255,255,255,.18) 0 .45px,transparent .7px),radial-gradient(circle at 66% 71%,rgba(94,68,42,.08) 0 .55px,transparent .8px),linear-gradient(180deg,#e5d4b9 0%,#dec8a7 50%,#d9c19f 100%);
   background-size:12px 10px,17px 14px,100% 100%;
   border-radius:0;
   box-shadow:none;
@@ -312,65 +241,21 @@
   font:italic 600 clamp(7px,1vw,16px)/1 Georgia,serif;
   letter-spacing:.01em;
 }
-#looper.asset-ui .asset-page-readout {
-  left:44.1%;top:90.6%;width:11.8%;height:5.7%;
-  justify-content:center;
-  color:#d9aa62;
-  background:#080705;
-  font-size:clamp(7px,1vw,16px);
-}
-#looper.asset-ui .asset-page-button {
-  position:absolute;
-  z-index:12;
-  top:90.1%;
-  width:5.7%;
-  height:5.6%;
-  border:0;
-  background:transparent;
-  opacity:.001;
-  cursor:pointer;
-}
+#looper.asset-ui .asset-page-readout{left:44.1%;top:90.6%;width:11.8%;height:5.7%;justify-content:center;color:#d9aa62;background:#080705;font-size:clamp(7px,1vw,16px)}
+#looper.asset-ui .asset-page-button{position:absolute;z-index:12;top:90.1%;width:5.7%;height:5.6%;border:0;background:transparent;opacity:.001;cursor:pointer}
 #looper.asset-ui .asset-page-prev{left:36%}
 #looper.asset-ui .asset-page-next{left:54.1%}
 
 #looper.asset-ui .asset-cassette-glow {
-  position:absolute;
-  z-index:3;
-  left:30.5%;top:10.7%;width:38.7%;height:27.6%;
-  pointer-events:none;
-  border-radius:4px;
-  opacity:.72;
+  position:absolute;z-index:3;left:30.5%;top:10.7%;width:38.7%;height:27.6%;
+  pointer-events:none;border-radius:4px;opacity:.72;
   background:radial-gradient(ellipse at 50% 11%,rgba(255,177,63,.16),transparent 42%),linear-gradient(90deg,rgba(255,156,36,.04),transparent 11% 89%,rgba(255,156,36,.04));
   box-shadow:inset 0 0 22px rgba(226,129,36,.11),0 0 14px rgba(226,129,36,.06);
-  mix-blend-mode:screen;
-  transition:opacity .15s ease,filter .15s ease,box-shadow .15s ease;
+  mix-blend-mode:screen;transition:opacity .15s ease,filter .15s ease,box-shadow .15s ease;
 }
-#looper.asset-ui.asset-playing .asset-cassette-glow {
-  opacity:1;
-  filter:brightness(1.22);
-  box-shadow:inset 0 0 29px rgba(255,156,36,.17),0 0 18px rgba(255,156,36,.10);
-}
-#looper.asset-ui .asset-speed-glow {
-  position:absolute;
-  z-index:3;
-  left:75.2%;top:22.3%;width:10.7%;height:12%;
-  pointer-events:none;
-  opacity:var(--asset-glow);
-  background:radial-gradient(ellipse at 50% 54%,rgba(255,168,43,.34),transparent 66%);
-  filter:blur(2px);
-  mix-blend-mode:screen;
-  transition:opacity .12s ease,filter .12s ease;
-}
-#looper.asset-ui .asset-speed-button-glow {
-  position:absolute;
-  z-index:3;
-  left:65.45%;top:46.05%;width:9.4%;height:8.7%;
-  pointer-events:none;
-  opacity:var(--asset-glow);
-  border-radius:4px;
-  box-shadow:inset 0 0 12px rgba(255,165,46,.34),0 0 12px rgba(255,165,46,.24);
-  transition:opacity .12s ease,box-shadow .12s ease;
-}
+#looper.asset-ui.asset-playing .asset-cassette-glow{opacity:1;filter:brightness(1.22);box-shadow:inset 0 0 29px rgba(255,156,36,.17),0 0 18px rgba(255,156,36,.10)}
+#looper.asset-ui .asset-speed-glow{position:absolute;z-index:3;left:75.2%;top:22.3%;width:10.7%;height:12%;pointer-events:none;opacity:var(--asset-glow);background:radial-gradient(ellipse at 50% 54%,rgba(255,168,43,.34),transparent 66%);filter:blur(2px);mix-blend-mode:screen;transition:opacity .12s ease,filter .12s ease}
+#looper.asset-ui .asset-speed-button-glow{position:absolute;z-index:3;left:65.45%;top:46.05%;width:9.4%;height:8.7%;pointer-events:none;opacity:var(--asset-glow);border-radius:4px;box-shadow:inset 0 0 12px rgba(255,165,46,.34),0 0 12px rgba(255,165,46,.24);transition:opacity .12s ease,box-shadow .12s ease}
 
 @media(max-width:760px){
   #looper.asset-ui{width:100%!important}
