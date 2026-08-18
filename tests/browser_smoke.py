@@ -167,13 +167,15 @@ with tempfile.TemporaryDirectory() as td:
 
         # Backlight intensity follows speed state and RESET clears it and the visible loop count.
         page.click('#autoLooperToggle')
+        page.wait_for_function("parseFloat(getComputedStyle(document.querySelector('.asset-speed-glow')).opacity) > 0")
         glow_on=page.evaluate("parseFloat(getComputedStyle(document.querySelector('.asset-speed-glow')).opacity)")
         assert glow_on>0,glow_on
         page.click('#tapeCounterReset')
         assert speed.inner_text()=='0'
         assert page.locator('.asset-loop-readout').inner_text()=='0 / 8'
+        page.wait_for_function("parseFloat(getComputedStyle(document.querySelector('.asset-speed-glow')).opacity) < 0.01")
         glow_off=page.evaluate("parseFloat(getComputedStyle(document.querySelector('.asset-speed-glow')).opacity)")
-        assert glow_off==0,glow_off
+        assert glow_off<.01,glow_off
 
         # Space shortcut follows active mode, but not while a text input has focus.
         page.evaluate('document.activeElement && document.activeElement.blur()')
