@@ -35,11 +35,9 @@ jobs:
           assert before.shape==(1024,1536,3), before.shape
           h,w=before.shape[:2]
           yy,xx=np.mgrid[:h,:w]
-
           allowed=np.zeros((h,w),dtype=bool)
 
-          # 1) White cassette label: remove baked handwriting only inside the
-          #    central paper strip, preserving its borders and surrounding deck.
+          # 1) White cassette label: remove only the baked handwriting.
           label_allowed=np.zeros((h,w),dtype=bool)
           label_allowed[146:196,655:905]=True
           allowed |= label_allowed
@@ -51,11 +49,20 @@ jobs:
           dark=cv2.dilate(dark,np.ones((3,3),np.uint8),iterations=1)
           text_mask[150:193,665:895]=dark
           text_mask[~label_allowed]=0
-          inpainted=cv2.inpaint(cv2.cvtColor(before,cv2.COLOR_RGB2BGR),text_mask,7,cv2.INPAINT_TELEA)
-          working=cv2.cvtColor(inpainted,cv2.COLOR_BGR2RGB).astype(np.float32)
 
-          # 2) Central shell haze: correct the low-contrast milky patch with a
-          #    feathered local luminance/clarity adjustment. No geometry is rebuilt.
+          bgr=cv2.cvtColor(before,cv2.COLOR_RGB2BGR)
+          inpainted=cv2.inpaint(bgr,text_mask,7,cv2.INPAINT_TELEA)
+
+          # Remove tiny inpaint speckles without touching the label border.
+          smooth_mask=cv2.dilate(text_mask,np.ones((11,11),np.uint8),iterations=1)
+          smooth_mask=cv2.GaussianBlur(smooth_mask,(0,0),3.0).astype(np.float32)/255.0
+          smooth_mask[~label_allowed]=0
+          blurred=cv2.GaussianBlur(inpainted,(0,0),2.2)
+          label_mix=(inpainted.astype(np.float32)*(1-smooth_mask[...,None]*0.78)+
+                     blurred.astype(np.float32)*(smooth_mask[...,None]*0.78))
+          working=cv2.cvtColor(np.clip(label_mix,0,255).astype(np.uint8),cv2.COLOR_BGR2RGB).astype(np.float32)
+
+          # 2) Central shell haze: local luminance/clarity correction only.
           cx,cy=(690+855)/2,(185+305)/2
           rx,ry=(855-690)/2,(305-185)/2
           d=((xx-cx)/rx)**2+((yy-cy)/ry)**2
@@ -72,8 +79,7 @@ jobs:
           sharp=np.clip(base.astype(np.float32)*1.25-blur.astype(np.float32)*0.25,0,255)
           working=working*(1-haze[...,None]*0.35)+sharp*(haze[...,None]*0.35)
 
-          # 3) Restore visual continuity of the wound tape around both reels using
-          #    deterministic tonal treatment of the existing faceplate pixels.
+          # 3) Restore wound-tape continuity around both reels from existing pixels.
           tape_total=np.zeros((h,w),dtype=np.float32)
           for cx,cy in ((648.0,249.0),(893.5,249.0)):
               r=np.sqrt((xx-cx)**2+(yy-cy)**2)
@@ -88,8 +94,7 @@ jobs:
           working *= (1-0.22*tape_total[...,None])
           candidate=np.clip(np.rint(working),0,255).astype(np.uint8)
 
-          # Absolute safety boundary: even if an upstream operation touched more,
-          # production candidate pixels outside the explicit union are copied back.
+          # Hard safety boundary.
           candidate[~allowed]=before[~allowed]
 
           candidate_path=out/'faceplate-candidate.webp'
