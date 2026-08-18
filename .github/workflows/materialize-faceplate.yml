@@ -1,4 +1,4 @@
-name: Materialize Looper faceplate
+name: Finalize static Looper faceplate
 
 on:
   push:
@@ -9,22 +9,69 @@ permissions:
   contents: write
 
 jobs:
-  materialize:
-    if: ${{ !contains(github.event.head_commit.message, '[faceplate-materialized]') }}
+  finalize:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
-      - name: Build static WebP from approved payload
+      - name: Replace runtime assembly with static faceplate
         run: |
-          cat assets/looper-ui/part00 assets/looper-ui/part01 assets/looper-ui/part02 assets/looper-ui/part03 assets/looper-ui/part04 | tr -d '\r\n' | base64 -d > assets/looper-ui/faceplate.webp
           test -s assets/looper-ui/faceplate.webp
-          file assets/looper-ui/faceplate.webp
-      - name: Commit static faceplate
+          python - <<'PY'
+          from pathlib import Path
+          import re
+
+          css_path=Path('assets/looper-ui/overlay.css')
+          css=css_path.read_text(encoding='utf-8')
+          css=css.replace('background-image: var(--looper-asset-url) !important;','background-image: url("./faceplate.webp") !important;')
+          css=re.sub(r'\n#looper\.asset-ui\.asset-load-error \{\n  background-image: none !important;\n\}\n','\n',css,count=1)
+          css_path.write_text(css,encoding='utf-8')
+
+          index_path=Path('index.html')
+          html=index_path.read_text(encoding='utf-8')
+          overlay='<link rel="stylesheet" href="./assets/looper-ui/overlay.css">'
+          if overlay not in html:
+              html=html.replace('<link rel="stylesheet" href="./css/clean-ui.css">','<link rel="stylesheet" href="./css/clean-ui.css">\n'+overlay)
+          html=html.replace('<section id="looper" class="screen active">','<section id="looper" class="screen active asset-ui">',1)
+          index_path.write_text(html,encoding='utf-8')
+
+          boot_path=Path('js/bootstrap.js')
+          boot=boot_path.read_text(encoding='utf-8')
+          boot=re.sub(
+              r'const looperAssetCss=document\.createElement\("link"\);.*?document\.head\.appendChild\(looperAssetCss\);\n\n',
+              '',boot,count=1,flags=re.S
+          )
+          boot=re.sub(
+              r'const LOOPER_ASSET_PARTS=\[.*?let looperAssetObjectUrl="";\n\n',
+              '',boot,count=1,flags=re.S
+          )
+          replacement='''function loadLooperAsset(){\n  const looper=document.getElementById("looper");\n  if(!looper)return;\n  looper.classList.add("asset-ui");\n  installLooperAssetReadouts(looper);\n  installAssetLibraryPager(looper);\n}\n\n'''
+          boot,n=re.subn(
+              r'async function loadLooperAsset\(\)\{.*?\n\}\n\n(?=function installAssetSpeedControl)',
+              replacement,boot,count=1,flags=re.S
+          )
+          if n!=1:
+              raise SystemExit('Could not replace loadLooperAsset()')
+          boot=boot.replace('void loadLooperAsset();','loadLooperAsset();',1)
+          boot_path.write_text(boot,encoding='utf-8')
+          PY
+
+          rm -f assets/looper-ui/part00 assets/looper-ui/part01 assets/looper-ui/part02 assets/looper-ui/part03 assets/looper-ui/part04
+          rm -f .github/workflows/materialize-faceplate.yml
+
+      - name: Validate package shape
+        run: |
+          test -s assets/looper-ui/faceplate.webp
+          grep -F 'background-image: url("./faceplate.webp")' assets/looper-ui/overlay.css
+          grep -F './assets/looper-ui/overlay.css' index.html
+          ! grep -q 'LOOPER_ASSET_PARTS' js/bootstrap.js
+          ! test -e assets/looper-ui/part00
+
+      - name: Commit cleanup
         run: |
           git config user.name github-actions[bot]
           git config user.email 41898282+github-actions[bot]@users.noreply.github.com
-          git add assets/looper-ui/faceplate.webp
-          git commit -m "Materialize approved Looper faceplate [faceplate-materialized]"
+          git add -A
+          git commit -m "Use approved Looper faceplate as a static WebP [faceplate-static]"
           git push origin HEAD:fix/asset-ui-static-faceplate
