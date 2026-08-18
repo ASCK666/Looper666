@@ -19,25 +19,6 @@ window.addEventListener("unhandledrejection",event=>{
 
 // The approved Looper artwork is the visual surface. CSS/HTML only provide
 // hit areas, live readouts, dynamic library labels and lighting.
-const looperAssetCss=document.createElement("link");
-looperAssetCss.rel="stylesheet";
-looperAssetCss.href="./assets/looper-ui/overlay.css";
-looperAssetCss.onerror=()=>{
-  if(location.protocol!=="about:" && location.protocol!=="data:"){
-    window.__SP.report("LOOPER CSS",new Error("Looper overlay stylesheet unavailable"));
-  }
-};
-document.head.appendChild(looperAssetCss);
-
-const LOOPER_ASSET_PARTS=[
-  "./assets/looper-ui/part00",
-  "./assets/looper-ui/part01",
-  "./assets/looper-ui/part02",
-  "./assets/looper-ui/part03",
-  "./assets/looper-ui/part04"
-];
-let looperAssetObjectUrl="";
-
 function addAssetReadout(looper,className,text=""){
   const el=document.createElement("div");
   el.className=`asset-readout ${className}`;
@@ -123,38 +104,12 @@ function installAssetLibraryPager(looper){
   paint();
 }
 
-async function loadLooperAsset(){
+function loadLooperAsset(){
   const looper=document.getElementById("looper");
   if(!looper)return;
-
-  // Enter asset mode immediately. A missing faceplate is an explicit boot error,
-  // never a silent fallback to the retired Looper skin.
   looper.classList.add("asset-ui");
   installLooperAssetReadouts(looper);
   installAssetLibraryPager(looper);
-
-  // Browser tests render index.html into about:blank without a base URL. The
-  // geometry/readout layer is still testable there, but relative asset fetches are not.
-  if(location.protocol==="about:" || location.protocol==="data:")return;
-
-  try{
-    const parts=await Promise.all(LOOPER_ASSET_PARTS.map(async url=>{
-      const response=await fetch(url,{cache:"force-cache"});
-      if(!response.ok)throw new Error(`Looper asset part unavailable (${response.status})`);
-      return (await response.text()).trim();
-    }));
-    const binary=atob(parts.join(""));
-    const bytes=new Uint8Array(binary.length);
-    for(let i=0;i<binary.length;i++)bytes[i]=binary.charCodeAt(i);
-    const blob=new Blob([bytes],{type:"image/webp"});
-    if(looperAssetObjectUrl)URL.revokeObjectURL(looperAssetObjectUrl);
-    looperAssetObjectUrl=URL.createObjectURL(blob);
-    looper.style.setProperty("--looper-asset-url",`url("${looperAssetObjectUrl}")`);
-    looper.classList.remove("asset-load-error");
-  }catch(error){
-    looper.classList.add("asset-load-error");
-    window.__SP.report("LOOPER ASSET",error);
-  }
 }
 
 function installAssetSpeedControl(){
@@ -232,7 +187,7 @@ function installAssetSpeedControl(){
   paintLoops();
 }
 
-void loadLooperAsset();
+loadLooperAsset();
 window.addEventListener("load",()=>{
   // events.js owns the native controls by this point; replace only SPEED and
   // augment RESET once, with no retry loop.
