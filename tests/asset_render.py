@@ -42,7 +42,7 @@ with contextlib.ExitStack() as stack:
         info=page.evaluate('''() => {
           const looper=document.getElementById('looper');
           const r=looper.getBoundingClientRect();
-          const ids=['prevBeat','playBeat','stopBeat','nextBeat','autoLooperToggle','importFolderBtn','importBeatsBtn','tapeCounterReset'];
+          const ids=['prevBeat','playBeat','stopBeat','nextBeat','autoLooperToggle','importFolderBtn','importBeatsBtn'];
           return {
             looper:{width:r.width,height:r.height,display:getComputedStyle(looper).display},
             faceplates:document.querySelectorAll('.looper-faceplate').length,
@@ -62,7 +62,6 @@ with contextlib.ExitStack() as stack:
         assert 'Aucun résultat' in info['emptyText'], info
         assert all(c['display']!='none' and c['visibility']=='visible' and c['opacity']>.5 and c['w']>20 and c['h']>20 and c['handler']=='function' for c in info['controls']), info
 
-        # Verify actual click paths, not just geometry/handlers.
         page.click('#tapeCounterReset')
         page.click('#stopBeat')
         with page.expect_file_chooser(timeout=3000):
