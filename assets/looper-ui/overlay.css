@@ -1,34 +1,42 @@
-/* Asset-driven Looper surface. The approved artwork remains the visual source of truth;
-   HTML is only used for hit areas, live readouts, dynamic library text and state lighting. */
+/* Looper faceplate overlay.
+   The approved image is the visual source of truth. This file is the only
+   place that positions Looper hotspots, readouts and crate overlays. */
 
 #looper.asset-ui {
-  --asset-amber: #e2ad5f;
-  --asset-glow: 0;
-  position: relative !important;
-  width: 100% !important;
-  aspect-ratio: 1536 / 1024 !important;
-  min-height: 0 !important;
-  padding: 0 !important;
-  overflow: hidden !important;
-  border: 0 !important;
-  background-color: #070605 !important;
-  background-image: url("./faceplate.webp") !important;
-  background-size: 100% 100% !important;
-  background-position: center !important;
-  background-repeat: no-repeat !important;
-  box-shadow: 0 16px 38px rgba(0,0,0,.38) !important;
+  --asset-amber:#e2ad5f;
+  --asset-glow:0;
+  position:relative!important;
+  width:100%!important;
+  aspect-ratio:1536/1024!important;
+  min-height:0!important;
+  padding:0!important;
+  overflow:hidden!important;
+  border:0!important;
+  background:#070605!important;
+  box-shadow:0 16px 38px rgba(0,0,0,.38)!important;
 }
 
+#looper.asset-ui .looper-faceplate {
+  position:absolute!important;
+  inset:0!important;
+  width:100%!important;
+  height:100%!important;
+  object-fit:fill!important;
+  display:block!important;
+  z-index:0!important;
+  pointer-events:none!important;
+}
 
 #looper.asset-ui::before {
-  content: "";
-  position: absolute;
-  inset: 0;
-  z-index: 1;
-  pointer-events: none;
-  background: linear-gradient(180deg,rgba(255,190,88,.012),transparent 38%);
+  content:"";
+  position:absolute;
+  inset:0;
+  z-index:1;
+  pointer-events:none;
+  background:linear-gradient(180deg,rgba(255,190,88,.012),transparent 38%);
 }
 
+/* Retired drawn hardware stays in the DOM for behavior/accessibility only. */
 #looper.asset-ui .layout,
 #looper.asset-ui .beatCratePanel,
 #looper.asset-ui .looperMainPanel,
@@ -40,339 +48,332 @@
 #looper.asset-ui .deckTransport,
 #looper.asset-ui .looperImportDock,
 #looper.asset-ui .beatCrateControls,
-#looper.asset-ui .tapeCounterModule {
-  display: contents !important;
+#looper.asset-ui .tapeCounterModule,
+#looper.asset-ui .beatCrateControls>div,
+#looper.asset-ui #library .cassetteRackColumn {
+  display:contents!important;
 }
 
-#looper.asset-ui :is(.title,.looperFrameHeader,.deckReadout,.tapeCounterLabel,.tapeCounterWindow,.cassetteMechanismCrop,.cassetteDeckHint,.beatImportStatus) {
-  display: none !important;
+#looper.asset-ui :is(.title,.looperFrameHeader,.deckReadout,.tapeCounterLabel,.tapeCounterWindow,.cassetteMechanismCrop,.cassetteDeckHint,.beatImportStatus),
+#looper.asset-ui .beatCrateControls label,
+#looper.asset-ui #cassetteDoorEject,
+#looper.asset-ui :is(#beatFiles,#beatFolder) {
+  display:none!important;
 }
 
 #looper.asset-ui :is(.panel,.display,.cassetteDeck) {
-  padding: 0 !important;
-  border: 0 !important;
-  background: transparent !important;
-  box-shadow: none !important;
-  clip-path: none !important;
+  padding:0!important;
+  border:0!important;
+  background:transparent!important;
+  box-shadow:none!important;
+  clip-path:none!important;
 }
 
+/* Transparent interaction hotspots. */
 #looper.asset-ui :is(#prevBeat,#playBeat,#stopBeat,#nextBeat,#autoLooperToggle,#importFolderBtn,#importBeatsBtn,#tapeCounterReset) {
-  position: absolute !important;
-  z-index: 12 !important;
-  min-width: 0 !important;
-  min-height: 0 !important;
-  margin: 0 !important;
-  padding: 0 !important;
-  border: 0 !important;
-  border-radius: 0 !important;
-  background: transparent !important;
-  box-shadow: none !important;
-  clip-path: none !important;
-  color: transparent !important;
-  opacity: .001 !important;
-  cursor: pointer !important;
+  position:absolute!important;
+  z-index:12!important;
+  min-width:0!important;
+  min-height:0!important;
+  margin:0!important;
+  padding:0!important;
+  border:0!important;
+  border-radius:0!important;
+  background:transparent!important;
+  box-shadow:none!important;
+  clip-path:none!important;
+  color:transparent!important;
+  opacity:.001!important;
+  cursor:pointer!important;
 }
+#looper.asset-ui :is(#prevBeat,#playBeat,#stopBeat,#nextBeat,#autoLooperToggle,#importFolderBtn,#importBeatsBtn,#tapeCounterReset) * {visibility:hidden!important}
+#looper.asset-ui #prevBeat{left:25.65%;top:46.05%;width:8.9%;height:8.7%}
+#looper.asset-ui #playBeat{left:35.55%;top:46.05%;width:8.9%;height:8.7%}
+#looper.asset-ui #stopBeat{left:45.55%;top:46.05%;width:8.9%;height:8.7%}
+#looper.asset-ui #nextBeat{left:55.55%;top:46.05%;width:8.9%;height:8.7%}
+#looper.asset-ui #autoLooperToggle{left:65.55%;top:46.05%;width:9.2%;height:8.7%}
+#looper.asset-ui #importFolderBtn{left:86.55%;top:10.25%;width:10.3%;height:11.2%}
+#looper.asset-ui #importBeatsBtn{left:86.55%;top:23.25%;width:10.3%;height:11.8%}
+#looper.asset-ui #tapeCounterReset{left:78.55%;top:37.45%;width:2.45%;height:3.55%}
 
-#looper.asset-ui :is(#prevBeat,#playBeat,#stopBeat,#nextBeat,#autoLooperToggle,#importFolderBtn,#importBeatsBtn,#tapeCounterReset) * {
-  visibility: hidden !important;
-}
-
-#looper.asset-ui #prevBeat { left: 25.65%; top: 46.05%; width: 8.9%; height: 8.7%; }
-#looper.asset-ui #playBeat { left: 35.55%; top: 46.05%; width: 8.9%; height: 8.7%; }
-#looper.asset-ui #stopBeat { left: 45.55%; top: 46.05%; width: 8.9%; height: 8.7%; }
-#looper.asset-ui #nextBeat { left: 55.55%; top: 46.05%; width: 8.9%; height: 8.7%; }
-#looper.asset-ui #autoLooperToggle { left: 65.55%; top: 46.05%; width: 9.2%; height: 8.7%; }
-#looper.asset-ui #importFolderBtn { left: 86.55%; top: 10.25%; width: 10.3%; height: 11.2%; }
-#looper.asset-ui #importBeatsBtn { left: 86.55%; top: 23.25%; width: 10.3%; height: 11.8%; }
-#looper.asset-ui #tapeCounterReset { left: 78.55%; top: 37.45%; width: 2.45%; height: 3.55%; }
-#looper.asset-ui #cassetteDoorEject { display: none !important; }
-#looper.asset-ui :is(#beatFiles,#beatFolder) { display: none !important; }
-
-/* SEARCH and SORT are real controls. They mask the baked placeholder text instead of becoming invisible. */
+/* Search/sort are the only visible native controls on the faceplate. */
 #looper.asset-ui #librarySearch,
 #looper.asset-ui #libraryOrder {
-  position: absolute !important;
-  z-index: 12 !important;
-  min-height: 0 !important;
-  margin: 0 !important;
-  border: 1px solid rgba(226,173,95,.32) !important;
-  border-radius: 3px !important;
-  background: rgba(9,7,5,.96) !important;
-  box-shadow: inset 0 0 7px rgba(0,0,0,.72) !important;
-  color: #d9aa62 !important;
-  caret-color: var(--asset-amber) !important;
-  opacity: 1 !important;
-  font: 500 clamp(7px,.82vw,13px)/1 ui-monospace,SFMono-Regular,Consolas,monospace !important;
-  outline: none !important;
+  position:absolute!important;
+  z-index:12!important;
+  min-height:0!important;
+  margin:0!important;
+  border:1px solid rgba(226,173,95,.42)!important;
+  border-radius:3px!important;
+  background:#090705!important;
+  box-shadow:inset 0 0 7px rgba(0,0,0,.72)!important;
+  color:#d9aa62!important;
+  caret-color:var(--asset-amber)!important;
+  opacity:1!important;
+  font:500 clamp(7px,.82vw,13px)/1 ui-monospace,SFMono-Regular,Consolas,monospace!important;
+  outline:none!important;
 }
+#looper.asset-ui #librarySearch::placeholder{color:rgba(217,170,98,.62)!important}
+#looper.asset-ui #librarySearch{left:23%;top:60.55%;width:14.95%;height:3.55%;padding:0 .7%!important}
+#looper.asset-ui #libraryOrder{left:42.9%;top:60.55%;width:10.75%;height:3.55%;padding:0 .45%!important}
 
-#looper.asset-ui #librarySearch::placeholder { color: rgba(217,170,98,.62) !important; }
-#looper.asset-ui #librarySearch { left: 23.05%; top: 60.55%; width: 14.85%; height: 3.8%; padding: 0 .7% !important; }
-#looper.asset-ui #libraryOrder { left: 43.45%; top: 60.55%; width: 9.75%; height: 3.8%; padding: 0 .45% !important; }
-
+/* Beat Crate: one 3x3 visual page. Empty slots remain present to cover baked data. */
 #looper.asset-ui #library {
-  position: absolute !important;
-  z-index: 7 !important;
-  left: 3.45% !important;
-  top: 65.85% !important;
-  width: 93.2% !important;
-  height: 23.25% !important;
-  display: grid !important;
-  grid-template-columns: repeat(3,minmax(0,1fr)) !important;
-  grid-template-rows: repeat(3,minmax(0,1fr)) !important;
-  gap: 1.15% 1.15% !important;
-  margin: 0 !important;
-  padding: 0 !important;
-  overflow: hidden !important;
-  border: 0 !important;
-  background: transparent !important;
+  position:absolute!important;
+  z-index:7!important;
+  left:3.45%!important;
+  top:65.85%!important;
+  width:93.2%!important;
+  height:23.25%!important;
+  display:grid!important;
+  grid-template-columns:repeat(3,minmax(0,1fr))!important;
+  grid-template-rows:repeat(3,minmax(0,1fr))!important;
+  gap:1.15%!important;
+  margin:0!important;
+  padding:0!important;
+  overflow:hidden!important;
+  border:0!important;
+  background:transparent!important;
 }
-
-/* Mask only the text/BPM area printed into the static artwork. Cassette thumbnails remain visible. */
-#looper.asset-ui #library::before {
-  content: "";
-  position: absolute;
-  inset: 0;
-  z-index: 0;
-  pointer-events: none;
-  background: repeating-linear-gradient(
-    90deg,
-    transparent 0,
-    transparent 10.2%,
-    rgba(8,7,5,.985) 10.2%,
-    rgba(8,7,5,.985) 33.333%
-  );
-}
-
-#looper.asset-ui #library .cassetteRackColumn { display: contents !important; }
-
+#looper.asset-ui #library::before{display:none!important}
 #looper.asset-ui #library .cassetteRackSlot {
-  position: relative !important;
-  z-index: 1 !important;
-  min-width: 0 !important;
-  min-height: 0 !important;
-  margin: 0 !important;
-  padding: 0 !important;
-  border: 0 !important;
-  background: transparent !important;
+  display:block!important;
+  position:relative!important;
+  min-width:0!important;
+  min-height:0!important;
+  margin:0!important;
+  padding:0!important;
+  overflow:hidden!important;
+  border:0!important;
+  background:transparent!important;
 }
-
-#looper.asset-ui #library .cassetteRackSlot.asset-page-hidden,
+#looper.asset-ui #library .cassetteRackSlot.asset-page-hidden{display:none!important}
 #looper.asset-ui #library .cassetteRackSlot.asset-slot-empty {
-  display: none !important;
+  display:block!important;
+  background:linear-gradient(180deg,#0a0806,#070605)!important;
+  box-shadow:inset 0 0 0 1px rgba(226,173,95,.04)!important;
 }
-
+#looper.asset-ui #library .cassetteRackSlot::after {
+  content:"";
+  position:absolute;
+  z-index:1;
+  left:29.6%;
+  top:5%;
+  width:69.1%;
+  height:90%;
+  background:#080705;
+  pointer-events:none;
+}
+#looper.asset-ui #library .cassetteRackSlot.asset-slot-empty::before {
+  content:"";
+  position:absolute;
+  z-index:3;
+  inset:0;
+  background:#080705;
+  pointer-events:none;
+}
 #looper.asset-ui #library .track {
-  position: relative !important;
-  width: 100% !important;
-  height: 100% !important;
-  min-height: 0 !important;
-  margin: 0 !important;
-  padding: 0 !important;
-  border: 0 !important;
-  background: transparent !important;
-  box-shadow: none !important;
-  opacity: 1 !important;
-  color: #d9aa62 !important;
+  position:relative!important;
+  z-index:4!important;
+  width:100%!important;
+  height:100%!important;
+  min-height:0!important;
+  margin:0!important;
+  padding:0!important;
+  border:0!important;
+  background:transparent!important;
+  box-shadow:none!important;
+  opacity:1!important;
+  color:#d9aa62!important;
 }
-
 #looper.asset-ui #library .trackMeta {
-  position: absolute !important;
-  left: 31% !important;
-  top: 9% !important;
-  width: 61% !important;
-  height: 82% !important;
-  min-height: 0 !important;
-  margin: 0 !important;
-  padding: 0 2% !important;
-  border: 0 !important;
-  background: rgba(8,7,5,.985) !important;
-  box-shadow: none !important;
-  color: #dda94d !important;
-  opacity: 1 !important;
-  text-align: left !important;
-  display: flex !important;
-  flex-direction: column !important;
-  justify-content: center !important;
-  overflow: hidden !important;
+  position:absolute!important;
+  left:31%!important;
+  top:7%!important;
+  width:65%!important;
+  height:86%!important;
+  min-height:0!important;
+  margin:0!important;
+  padding:0 2%!important;
+  border:0!important;
+  background:#080705!important;
+  box-shadow:none!important;
+  color:#dda94d!important;
+  opacity:1!important;
+  text-align:left!important;
+  display:flex!important;
+  flex-direction:column!important;
+  justify-content:center!important;
+  overflow:hidden!important;
+  z-index:5!important;
 }
-
 #looper.asset-ui #library .trackMeta b {
-  display: block !important;
-  max-width: 100% !important;
-  overflow: hidden !important;
-  text-overflow: ellipsis !important;
-  white-space: nowrap !important;
-  font: 500 clamp(7px,1.02vw,16px)/1.1 ui-monospace,SFMono-Regular,Consolas,monospace !important;
-  letter-spacing: .01em !important;
+  display:block!important;
+  max-width:100%!important;
+  overflow:hidden!important;
+  text-overflow:ellipsis!important;
+  white-space:nowrap!important;
+  font:500 clamp(7px,1.02vw,16px)/1.1 ui-monospace,SFMono-Regular,Consolas,monospace!important;
+  letter-spacing:.01em!important;
 }
-
 #looper.asset-ui #library .trackMeta small {
-  display: block !important;
-  margin-top: 3% !important;
-  max-width: 100% !important;
-  overflow: hidden !important;
-  text-overflow: ellipsis !important;
-  white-space: nowrap !important;
-  color: rgba(221,169,77,.72) !important;
-  font: 500 clamp(5px,.58vw,9px)/1 ui-monospace,SFMono-Regular,Consolas,monospace !important;
+  display:block!important;
+  margin-top:3%!important;
+  max-width:100%!important;
+  overflow:hidden!important;
+  text-overflow:ellipsis!important;
+  white-space:nowrap!important;
+  color:rgba(221,169,77,.72)!important;
+  font:500 clamp(5px,.58vw,9px)/1 ui-monospace,SFMono-Regular,Consolas,monospace!important;
 }
-
-#looper.asset-ui #library .trackSource,
-#looper.asset-ui #library .track > .btn {
-  position: absolute !important;
-  right: 1.5% !important;
-  top: 29% !important;
-  width: 6% !important;
-  height: 42% !important;
-  min-height: 0 !important;
-  margin: 0 !important;
-  padding: 0 !important;
-  border: 0 !important;
-  background: rgba(8,7,5,.985) !important;
-  box-shadow: none !important;
-  color: rgba(221,169,77,.66) !important;
-  opacity: 1 !important;
-  display: grid !important;
-  place-items: center !important;
-  font: 600 clamp(5px,.58vw,9px)/1 ui-monospace,SFMono-Regular,Consolas,monospace !important;
+#looper.asset-ui #library .trackSource{display:none!important}
+#looper.asset-ui #library .track>.btn {
+  position:absolute!important;
+  right:1%!important;
+  top:18%!important;
+  width:8%!important;
+  height:64%!important;
+  z-index:7!important;
+  min-height:0!important;
+  margin:0!important;
+  padding:0!important;
+  opacity:.001!important;
+  color:transparent!important;
+  background:transparent!important;
+  border:0!important;
+  box-shadow:none!important;
 }
+#looper.asset-ui #library .track.active .trackMeta b{color:#ffd07a!important;text-shadow:0 0 7px rgba(226,173,95,.32)}
+#looper.asset-ui #library .libraryEmptyMessage{display:none!important}
 
-#looper.asset-ui #library .track.active .trackMeta b { color: #ffd07a !important; text-shadow: 0 0 7px rgba(226,173,95,.32); }
-#looper.asset-ui #library .libraryEmptyMessage { display: none !important; }
-
+/* Dynamic glyphs: these are the canonical positions. No JS injects CSS. */
 #looper.asset-ui .asset-readout {
-  position: absolute;
-  z-index: 9;
-  display: flex;
-  align-items: center;
-  pointer-events: none;
-  overflow: hidden;
-  white-space: nowrap;
-  color: #e4aa48;
-  background: #090705;
-  font-family: ui-monospace,SFMono-Regular,Consolas,monospace;
-  text-shadow: 0 0 7px rgba(226,173,95,.34);
+  position:absolute;
+  z-index:9;
+  display:flex;
+  align-items:center;
+  pointer-events:none;
+  overflow:hidden;
+  white-space:nowrap;
+  color:#e4aa48;
+  background:#090705;
+  font-family:ui-monospace,SFMono-Regular,Consolas,monospace;
+  text-shadow:0 0 7px rgba(226,173,95,.34);
 }
-
 #looper.asset-ui .asset-header-state-readout {
-  left: 5.15%; top: 12.25%; width: 13.2%; height: 3.8%;
-  padding-left: .15%;
-  font-size: clamp(7px,1.05vw,17px);
-  letter-spacing: .04em;
+  left:5.15%;top:13.72%;width:7.5%;height:3.30%;
+  padding:0 .12%;
+  font-size:clamp(6px,.82vw,13px);
+  letter-spacing:.04em;
 }
-
 #looper.asset-ui .asset-track-readout {
-  left: 5.15%; top: 17.25%; width: 19.25%; height: 4.35%;
-  padding-left: .15%;
-  font-size: clamp(8px,1.35vw,22px);
-  letter-spacing: .03em;
+  left:5.15%;top:17.70%;width:18.55%;height:3.75%;
+  padding:0 .15%;
+  font-size:clamp(7px,1.12vw,18px);
+  letter-spacing:.03em;
 }
-
 #looper.asset-ui .asset-state-readout {
-  left: 5.15%; top: 28.15%; width: 11.15%; height: 4.45%;
-  font-size: clamp(8px,1.45vw,24px);
-  letter-spacing: .04em;
+  left:5.15%;top:28.35%;width:10.9%;height:3.75%;
+  padding:0 .12%;
+  font-size:clamp(7px,1.1vw,18px);
+  letter-spacing:.04em;
 }
-
 #looper.asset-ui .asset-speed-percent-readout {
-  left: 18.55%; top: 28.15%; width: 6.25%; height: 4.45%;
-  justify-content: flex-end;
-  padding-right: .4%;
-  font-size: clamp(8px,1.3vw,21px);
+  left:18.38%;top:28.35%;width:5.9%;height:3.75%;
+  justify-content:flex-end;
+  padding:0 .25%;
+  font-size:clamp(7px,1.05vw,17px);
 }
-
 #looper.asset-ui .asset-loop-readout {
-  left: 75.7%; top: 14.55%; width: 8.0%; height: 5.35%;
-  justify-content: center;
-  font-size: clamp(10px,1.85vw,30px);
+  left:76.62%;top:15.02%;width:2.72%;height:4.08%;
+  justify-content:center;
+  padding:0;
+  font-size:clamp(10px,1.85vw,30px);
 }
-
 #looper.asset-ui .asset-speed-level-readout {
-  left: 76.15%; top: 27.3%; width: 7.45%; height: 5.25%;
-  justify-content: center;
-  font-size: clamp(10px,1.85vw,30px);
+  left:77.62%;top:27.08%;width:4.18%;height:4.18%;
+  justify-content:center;
+  padding:0;
+  font-size:clamp(10px,1.85vw,30px);
 }
-
 #looper.asset-ui .asset-cassette-label-readout {
-  left: 37.65%; top: 13.75%; width: 28.25%; height: 4.15%;
-  justify-content: center;
-  padding: 0 .5%;
-  color: #24170d;
-  background: rgba(218,198,166,.97);
-  text-shadow: none;
-  font: italic 600 clamp(7px,1.22vw,20px)/1.1 Georgia,serif;
-  letter-spacing: .01em;
+  left:43.95%;top:14.35%;width:13.30%;height:4.25%;
+  justify-content:center;
+  padding:0 .35%;
+  color:#24170d;
+  background-image:
+    radial-gradient(circle at 12% 31%,rgba(255,255,255,.18) 0 .45px,transparent .7px),
+    radial-gradient(circle at 66% 71%,rgba(94,68,42,.08) 0 .55px,transparent .8px),
+    linear-gradient(180deg,#e5d4b9 0%,#dec8a7 50%,#d9c19f 100%);
+  background-size:12px 10px,17px 14px,100% 100%;
+  border-radius:0;
+  box-shadow:none;
+  text-shadow:none;
+  font:italic 600 clamp(7px,1vw,16px)/1 Georgia,serif;
+  letter-spacing:.01em;
 }
-
 #looper.asset-ui .asset-page-readout {
-  left: 45.8%; top: 91.2%; width: 7.6%; height: 4.2%;
-  justify-content: center;
-  color: #d9aa62;
-  background: rgba(8,7,5,.97);
-  font-size: clamp(7px,1vw,16px);
+  left:44.1%;top:90.6%;width:11.8%;height:5.7%;
+  justify-content:center;
+  color:#d9aa62;
+  background:#080705;
+  font-size:clamp(7px,1vw,16px);
 }
-
 #looper.asset-ui .asset-page-button {
-  position: absolute;
-  z-index: 12;
-  top: 90.1%;
-  width: 5.7%;
-  height: 5.6%;
-  border: 0;
-  background: transparent;
-  opacity: .001;
-  cursor: pointer;
+  position:absolute;
+  z-index:12;
+  top:90.1%;
+  width:5.7%;
+  height:5.6%;
+  border:0;
+  background:transparent;
+  opacity:.001;
+  cursor:pointer;
 }
-#looper.asset-ui .asset-page-prev { left: 36.0%; }
-#looper.asset-ui .asset-page-next { left: 54.1%; }
+#looper.asset-ui .asset-page-prev{left:36%}
+#looper.asset-ui .asset-page-next{left:54.1%}
 
 #looper.asset-ui .asset-cassette-glow {
-  position: absolute;
-  z-index: 3;
-  left: 30.5%; top: 10.7%; width: 38.7%; height: 27.6%;
-  pointer-events: none;
-  border-radius: 4px;
-  opacity: .72;
-  background:
-    radial-gradient(ellipse at 50% 11%,rgba(255,177,63,.16),transparent 42%),
-    linear-gradient(90deg,rgba(255,156,36,.04),transparent 11% 89%,rgba(255,156,36,.04));
-  box-shadow: inset 0 0 22px rgba(226,129,36,.11),0 0 14px rgba(226,129,36,.06);
-  mix-blend-mode: screen;
-  transition: opacity .15s ease,filter .15s ease,box-shadow .15s ease;
+  position:absolute;
+  z-index:3;
+  left:30.5%;top:10.7%;width:38.7%;height:27.6%;
+  pointer-events:none;
+  border-radius:4px;
+  opacity:.72;
+  background:radial-gradient(ellipse at 50% 11%,rgba(255,177,63,.16),transparent 42%),linear-gradient(90deg,rgba(255,156,36,.04),transparent 11% 89%,rgba(255,156,36,.04));
+  box-shadow:inset 0 0 22px rgba(226,129,36,.11),0 0 14px rgba(226,129,36,.06);
+  mix-blend-mode:screen;
+  transition:opacity .15s ease,filter .15s ease,box-shadow .15s ease;
 }
-
 #looper.asset-ui.asset-playing .asset-cassette-glow {
-  opacity: 1;
-  filter: brightness(1.22);
-  box-shadow: inset 0 0 29px rgba(255,156,36,.17),0 0 18px rgba(255,156,36,.10);
+  opacity:1;
+  filter:brightness(1.22);
+  box-shadow:inset 0 0 29px rgba(255,156,36,.17),0 0 18px rgba(255,156,36,.10);
 }
-
 #looper.asset-ui .asset-speed-glow {
-  position: absolute;
-  z-index: 3;
-  left: 75.2%; top: 22.3%; width: 10.7%; height: 12.0%;
-  pointer-events: none;
-  opacity: var(--asset-glow);
-  background: radial-gradient(ellipse at 50% 54%,rgba(255,168,43,.34),transparent 66%);
-  filter: blur(2px);
-  mix-blend-mode: screen;
-  transition: opacity .12s ease,filter .12s ease;
+  position:absolute;
+  z-index:3;
+  left:75.2%;top:22.3%;width:10.7%;height:12%;
+  pointer-events:none;
+  opacity:var(--asset-glow);
+  background:radial-gradient(ellipse at 50% 54%,rgba(255,168,43,.34),transparent 66%);
+  filter:blur(2px);
+  mix-blend-mode:screen;
+  transition:opacity .12s ease,filter .12s ease;
 }
-
 #looper.asset-ui .asset-speed-button-glow {
-  position: absolute;
-  z-index: 3;
-  left: 65.45%; top: 46.05%; width: 9.4%; height: 8.7%;
-  pointer-events: none;
-  opacity: var(--asset-glow);
-  border-radius: 4px;
-  box-shadow: inset 0 0 12px rgba(255,165,46,.34),0 0 12px rgba(255,165,46,.24);
-  transition: opacity .12s ease,box-shadow .12s ease;
+  position:absolute;
+  z-index:3;
+  left:65.45%;top:46.05%;width:9.4%;height:8.7%;
+  pointer-events:none;
+  opacity:var(--asset-glow);
+  border-radius:4px;
+  box-shadow:inset 0 0 12px rgba(255,165,46,.34),0 0 12px rgba(255,165,46,.24);
+  transition:opacity .12s ease,box-shadow .12s ease;
 }
 
-@media (max-width: 760px) {
-  #looper.asset-ui { width: 100% !important; }
-  #looper.asset-ui .asset-readout { text-shadow: 0 0 4px rgba(226,173,95,.3); }
-  #looper.asset-ui #library .trackMeta small { display: none !important; }
+@media(max-width:760px){
+  #looper.asset-ui{width:100%!important}
+  #looper.asset-ui .asset-readout{text-shadow:0 0 4px rgba(226,173,95,.3)}
+  #looper.asset-ui #library .trackMeta small{display:none!important}
 }
