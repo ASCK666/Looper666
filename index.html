@@ -9,6 +9,7 @@
 <link rel="manifest" href="manifest.json">
 <link rel="stylesheet" href="./css/base.css">
 <link rel="stylesheet" href="./css/clean-ui.css">
+<link rel="stylesheet" href="./assets/looper-ui/overlay.css">
 </head>
 <body>
 <div id="appBootError" role="alert" aria-live="assertive"></div>
@@ -66,7 +67,7 @@
   </div>
 
   <!-- LOOPER -->
-  <section id="looper" class="screen active">
+  <section id="looper" class="screen active asset-ui">
     <div class="layout">
       <div class="panel beatCratePanel">
         <div class="title stableTitle"><span>BEAT CRATE <i class="blueLed"></i></span><span class="titleMeta">LOCAL CASSETTE RACK</span></div>
@@ -237,64 +238,169 @@
               <div><label>SNAP</label><select id="snapMode"><option value="transient">TRANSIENT</option><option value="grid">GRID</option><option value="free">FREE</option></select></div>
             </div>
             <div class="grid2 advancedInner">
-              <div><label>GRID DIVISION</label><select id="gridDivision"><option value="8">1/8</option><option value="16" selected>1/16</option><option value="32">1/32</option></select></div>
-              <div><label>TRANSIENT RADIUS</label><select id="transientRadius"><option value="10">10 ms</option><option value="25" selected>25 ms</option><option value="50">50 ms</option><option value="100">100 ms</option></select></div>
+              <div><label>GRID PRECISION</label><select id="gridDivision"><option value="0.25">1/4 beat</option><option value="0.125">1/8 beat</option><option value="0.0625" selected>1/16 beat</option><option value="0.03125">1/32 beat</option></select></div>
+              <div><label>TRANSIENT RANGE</label><select id="transientRadius"><option value="20">20 ms</option><option value="40">40 ms</option><option value="80" selected>80 ms</option><option value="120">120 ms</option><option value="200">200 ms</option></select></div>
             </div>
           </details>
+
+          <div class="samplerControlLegend">wheel = zoom • drag chop = free placement</div>
         </div>
 
-        <div class="panel samplerScreenModule">
-          <div class="samplerDisplayActions">
+        <div class="panel chopperMainPanel samplerScreenModule">
+          <div class="grid4 samplerTransportButtons samplerDisplayActions" role="group" aria-label="Transport du Chopper">
+            <button id="previewFlip" class="btn primary">PLAY</button>
             <button id="loadSampleBtn" class="btn primary">LOAD SAMPLE</button>
-            <button id="previewFlip" class="btn good">PLAY</button>
-            <button id="stopFlip" class="btn danger">STOP</button>
-            <button id="saveBeatBtn" class="btn blue">SAVE BEAT</button>
+            <button id="stopFlip" class="btn">STOP</button>
+            <button id="addFlipLibrary" class="btn good">SAVE BEAT</button>
           </div>
-          <div class="title stableTitle"><span>SAMPLE <i class="blueLed"></i></span><span class="titleMeta">WAVE / MARKERS</span></div>
-          <div class="sampleKnob samplePitchKnob" data-range-knob="samplePitch">
-            <label for="samplePitch">PITCH</label><div class="sampleKnobControl"><div class="sampleKnobFace"></div><input id="samplePitch" class="sampleKnobInput" type="range" min="-12" max="12" step="1" value="0"></div><div id="samplePitchReadout" class="sampleKnobReadout">0 st</div>
-          </div>
-          <div class="sampleTempoControl"><div><label for="sampleBpm">BPM</label><input id="sampleBpm" type="number" min="40" max="220" value="90"></div></div>
-          <div class="sampleKnob sampleVolumeKnob" data-range-knob="sampleVolume">
-            <label for="sampleVolume">VOLUME</label><div class="sampleKnobControl"><div class="sampleKnobFace"></div><input id="sampleVolume" class="sampleKnobInput" type="range" min="0" max="100" step="1" value="80"></div><div id="sampleVolumeReadout" class="sampleKnobReadout">80%</div>
-          </div>
+
+          <div class="title stableTitle"><span>SAMPLE DISPLAY <i class="blueLed"></i></span><span class="titleMeta">WAVE / CHOPS</span></div>
+
           <div class="samplerDisplayBody">
-            <div class="samplerScreen"><canvas id="waveCanvas" width="1200" height="250"></canvas></div>
+            <div class="sampleKnob samplePitchKnob" data-range-knob="samplePitch">
+              <label for="samplePitch">PITCH</label>
+              <div class="sampleKnobControl">
+                <span class="sampleKnobFace" aria-hidden="true"></span>
+                <input id="samplePitch" class="sampleKnobInput" type="range" min="-6" max="6" step="1" value="0" aria-label="Pitch du sample">
+              </div>
+              <span id="samplePitchReadout" class="sampleKnobReadout">0 st</span>
+            </div>
+
+            <div class="wavewrap largeWave samplerScreen">
+              <canvas id="waveCanvas" width="1500" height="210"></canvas>
+              <canvas id="playheadCanvas" width="1500" height="210" aria-hidden="true"></canvas>
+              <div class="waveScrollbar">
+                <input id="waveScroll" type="range" min="0" max="1000" step="1" value="0" aria-label="Scroll sample waveform">
+              </div>
+            </div>
+
+            <div class="friendlyControls sampleTempoControl">
+              <div><label for="sampleBpm">TEMPO</label><input id="sampleBpm" type="number" min="40" max="220" step="0.1" value="90"></div>
+            </div>
+
+            <div class="sampleKnob sampleVolumeKnob" data-range-knob="sampleVolume">
+              <label for="sampleVolume">SAMPLE VOL</label>
+              <div class="sampleKnobControl">
+                <span class="sampleKnobFace" aria-hidden="true"></span>
+                <input id="sampleVolume" class="sampleKnobInput" type="range" min="0" max="100" step="1" value="80" aria-label="Volume du sample">
+              </div>
+              <span id="sampleVolumeReadout" class="sampleKnobReadout">80%</span>
+            </div>
           </div>
-          <div id="sampleInfo" class="samplerSampleInfo">NO SAMPLE</div>
+
+          <div id="sampleInfo" class="status samplerSampleInfo">Charge un sample, place tes chops et joue.</div>
+          <div class="help sampleConditionHelp">AUTO CONDITION • coupe le rumble et crée du headroom uniquement si le sample arrive trop HOT/DENSE. Aucun boost automatique.</div>
         </div>
       </div>
 
-      <div class="panel samplerPadsModule">
-        <div class="title stableTitle"><span>PADS <i class="blueLed"></i></span><span class="titleMeta">CHOP TRIGGERS</span></div>
-        <div id="pads" class="pads"></div>
+      <div class="samplerPerformanceDeck">
+        <div class="panel padsPanel samplerPadsModule">
+          <div class="title compactTitle samplerSectionTitle">CHOP PADS <span class="titleMeta">01–16</span></div>
+          <div id="pads" class="pads"></div>
+          <div class="samplerModuleHint">Tap a pad to audition from that chop to the end.</div>
+        </div>
+
+        <div class="panel gridPanel samplerSequenceModule">
+          <div class="samplerSequenceHead">
+            <div class="title compactTitle samplerSectionTitle">SEQUENCE <span class="titleMeta">2 BARS / 8TH</span></div>
+            <button id="clearGrid" class="btn">CLEAR GRID</button>
+          </div>
+          <div class="loopGridWrap">
+            <div class="sampleTimelineStack">
+              <canvas id="sampleTimelineCanvas" width="830" height="86" aria-label="Timeline du sample alignée sur la séquence de deux mesures">Sample timeline</canvas>
+              <canvas id="sampleTimelinePlayheadCanvas" width="830" height="86" aria-hidden="true"></canvas>
+            </div>
+            <div id="loopGrid" class="matrixGrid"></div>
+            <div id="drumPatternPreview" class="drumPatternPreview" aria-label="Aperçu nominal de la batterie sur deux mesures"></div>
+          </div>
+          <div class="samplerModuleHint">Click = place • right click = clear • one chop per step.</div>
+        </div>
       </div>
 
-      <div class="panel loopGridModule">
-        <div class="title stableTitle"><span>LOOP GRID <i class="blueLed"></i></span><span class="titleMeta">2 BARS</span></div>
-        <div id="loopGrid" class="loopGrid"></div>
-      </div>
+      <div class="panel controlPanel samplerDrumSection">
+        <div class="title stableTitle"><span>DRUM MACHINE <i class="blueLed"></i></span><span class="titleMeta">GROOVE / OUTPUT</span></div>
+        <div class="drumSelector">
+          <div>
+            <label>STYLE POUR LA PROCHAINE SÉLECTION</label>
+            <select id="drumMode"><option value="auto" selected>AUTO / 30 GROOVES</option><option value="classic">BOOM BAP</option><option value="sparse">DUSTY / SPARSE</option><option value="hard">HARD</option><option value="wonky">WONKY</option><option value="west">WEST COAST</option><option value="off">OFF</option></select>
+          </div>
+          <button id="newDrums" class="btn blue">NEW DRUMS</button>
+        </div>
 
-      <div class="panel drumEditBox">
-        <div class="title stableTitle"><span>DRUMS <i class="blueLed"></i></span><span class="titleMeta">PATTERN / EDIT</span></div>
-        <div class="grid3">
-          <div><label>VIEW</label><select id="drumEditView"><option value="kick">KICK</option><option value="snare">SNARE</option><option value="hat">HAT</option></select></div>
-          <button id="newDrums" class="btn">NEW DRUMS</button>
-          <button id="clearDrumEdits" class="btn danger">CLEAR EDITS</button>
+        <div class="snareFx">
+          <div class="snareFxHead">
+            <label class="fxToggle">
+              <input id="snareReverbOn" type="checkbox">
+              <span>SNARE REVERB</span>
+            </label>
+            <select id="snareReverbType">
+              <option value="room">ROOM</option>
+              <option value="plate" selected>PLATE</option>
+              <option value="dark">DARK</option>
+            </select>
+          </div>
+          <div class="snareMixRow">
+            <label>MIX <span id="snareReverbMixReadout">25%</span></label>
+            <input id="snareReverbMix" type="range" min="0" max="70" step="1" value="25">
+          </div>
+          <div class="help">Le réglage reste fixe quand tu fais NEW DRUMS.</div>
         </div>
-        <div id="drumPatternPreview" class="drumPatternPreview"></div>
-        <div id="drumEditor" class="drumEditor"></div>
-        <div class="grid2">
-          <div><label>SNARE REVERB</label><input id="snareReverbMix" type="range" min="0" max="100" value="20"><span id="snareReverbMixReadout">20%</span></div>
-          <div><label>PUNCH</label><select id="punchMode"><option value="clean">CLEAN</option><option value="warm">WARM</option><option value="hard">HARD</option></select></div>
+
+        <div class="snareFx punchFx">
+          <div class="snareFxHead">
+            <label>PUNCH / MASTER</label>
+            <select id="punchMode">
+              <option value="off">OFF</option>
+              <option value="warm" selected>WARM</option>
+              <option value="knock">KNOCK</option>
+              <option value="hard">HARD</option>
+            </select>
+          </div>
+          <div id="punchDesc" class="help">WARM • glue légère, transitoires préservées, limiteur de sécurité.</div>
         </div>
-        <div id="drumStatus" class="status">READY</div>
+
+        <div class="currentDrums">
+          <div class="currentDrumsTitle">BATTERIE COURANTE</div>
+          <div id="drumSelectionStatus">Pas encore sélectionnée — le premier PLAY en choisira une.</div>
+          <div class="drumParts">
+            <span id="currentKick">KICK —</span>
+            <span id="currentSnare">SNARE —</span>
+            <span id="currentHat">HAT —</span>
+            <span id="currentPattern">PATTERN —</span>
+          </div>
+        </div>
+
+        <div class="drumEditBox">
+          <div class="drumEditHead">
+            <div>
+              <div class="currentDrumsTitle">EDIT GROOVE</div>
+              <div class="help">1 mesure • clic = ajouter/enlever • molette sur une case = volume 10–100%</div>
+            </div>
+            <div class="drumEditActions">
+              <select id="drumEditView" aria-label="Drum editor resolution">
+                <option value="8">8TH</option>
+                <option value="16" selected>16TH</option>
+              </select>
+              <button id="clearDrumEdits" class="btn">CLEAR DRUMS</button>
+            </div>
+          </div>
+          <div id="drumEditor" class="drumEditor"></div>
+          <div id="drumStatus" class="status drumEditStatus" aria-live="polite">READY</div>
+          <input id="kickFolderFallback" class="hidden" type="file" accept="audio/*" webkitdirectory multiple>
+          <input id="snareFolderFallback" class="hidden" type="file" accept="audio/*" webkitdirectory multiple>
+          <input id="hatFolderFallback" class="hidden" type="file" accept="audio/*" webkitdirectory multiple>
+        </div>
+
+
       </div>
     </div>
   </section>
+
+  
 </div>
 </div>
-<script src="./js/bootstrap.js" defer></script>
+
+<script src="./js/bootstrap.js"></script>
 <script src="./js/core.js" defer></script>
 <script src="./js/looper.js" defer></script>
 <script src="./js/practice.js" defer></script>
