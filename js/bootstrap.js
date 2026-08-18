@@ -21,15 +21,15 @@ window.addEventListener("unhandledrejection",event=>{
 // hit areas, live readouts and lighting; the artwork itself is never redrawn.
 const looperAssetCss=document.createElement("link");
 looperAssetCss.rel="stylesheet";
-looperAssetCss.href="./assets/looper-overlay.css";
+looperAssetCss.href="./assets/looper-ui/overlay.css";
 document.head.appendChild(looperAssetCss);
 
 const LOOPER_ASSET_PARTS=[
-  "./assets/looper-ui-q50.part00",
-  "./assets/looper-ui-q50.part01",
-  "./assets/looper-ui-q50.part02",
-  "./assets/looper-ui-q50.part03",
-  "./assets/looper-ui-q50.part04"
+  "./assets/looper-ui/part00",
+  "./assets/looper-ui/part01",
+  "./assets/looper-ui/part02",
+  "./assets/looper-ui/part03",
+  "./assets/looper-ui/part04"
 ];
 let looperAssetObjectUrl="";
 
