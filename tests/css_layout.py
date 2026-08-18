@@ -14,7 +14,15 @@ html=re.sub(r'<link rel="manifest"[^>]*>','',html)
 for rel in ['./css/base.css','./css/clean-ui.css']:
     css=(ROOT/rel[2:]).read_text(encoding='utf-8')
     html=html.replace(f'<link rel="stylesheet" href="{rel}">',f'<style>{css}</style>')
-# Broken images are fine here: geometry is fixed by CSS aspect-ratio.
+
+# The approved Looper faceplate stylesheet is loaded dynamically in production.
+# Inline it here and force the asset-ui class so geometry can be tested without
+# network/file URL access to the image payload itself.
+asset_css=(ROOT/'assets'/'looper-ui'/'overlay.css').read_text(encoding='utf-8')
+html=html.replace('</head>',f'<style>{asset_css}</style></head>')
+html=html.replace('<section id="looper" class="screen active">','<section id="looper" class="screen active asset-ui">')
+
+# Broken images are fine here: the faceplate geometry is fixed by CSS aspect-ratio.
 html=re.sub(r'src="assets/[^"]+"','src=""',html)
 for rel in ['./js/bootstrap.js','./js/core.js','./js/looper.js','./js/practice.js','./js/chopper.js','./js/drums.js','./js/events.js']:
     js=(ROOT/rel[2:]).read_text(encoding='utf-8')
@@ -30,44 +38,69 @@ with sync_playwright() as p:
         page.on('pageerror',lambda e:errors.append(str(e)))
         page.set_content(html,wait_until='load',timeout=20000)
         page.wait_for_function('window.__SP && window.__SP.ready === true',timeout=10000)
-        page.wait_for_timeout(180)
+        page.evaluate('''() => {
+          const looper=document.getElementById('looper');
+          installLooperAssetReadouts(looper);
+          installAssetSpeedControl();
+        }''')
+        page.wait_for_timeout(120)
 
-        # Core shell must actually occupy the viewport without accidental horizontal overflow.
         metrics=page.evaluate('''() => ({
           bodyW:document.body.scrollWidth,
           viewportW:innerWidth,
           machine:document.querySelector('.machine').getBoundingClientRect().toJSON(),
           looper:document.getElementById('looper').getBoundingClientRect().toJSON(),
-          deck:document.querySelector('.cassetteDeckStage').getBoundingClientRect().toJSON(),
-          mechanism:document.querySelector('.cassetteMechanismCrop').getBoundingClientRect().toJSON(),
-          transport:document.querySelector('.deckTransport').getBoundingClientRect().toJSON(),
-          crate:document.querySelector('.beatCratePanel').getBoundingClientRect().toJSON()
+          library:document.getElementById('library').getBoundingClientRect().toJSON(),
+          track:document.querySelector('.asset-track-readout').getBoundingClientRect().toJSON(),
+          state:document.querySelector('.asset-state-readout').getBoundingClientRect().toJSON(),
+          loops:document.querySelector('.asset-loop-readout').getBoundingClientRect().toJSON(),
+          speed:document.querySelector('.asset-speed-level-readout').getBoundingClientRect().toJSON()
         })''')
         assert metrics['machine']['width'] > 300, metrics
-        assert metrics['looper']['height'] > 300, metrics
-        assert metrics['deck']['width'] > 250 and metrics['deck']['height'] > 150, metrics
-        assert abs(metrics['mechanism']['width']-metrics['transport']['width']) <= 1, metrics
-        assert metrics['crate']['width'] > 220 and metrics['crate']['height'] > 250, metrics
+        assert metrics['looper']['width'] > 300 and metrics['looper']['height'] > 200, metrics
+        assert abs(metrics['looper']['width']/metrics['looper']['height'] - 1.5) < .03, metrics
+        assert metrics['library']['width'] > 200 and metrics['library']['height'] > 80, metrics
+        assert metrics['track']['width'] > 40 and metrics['state']['width'] > 30, metrics
+        assert metrics['loops']['width'] > 20 and metrics['speed']['width'] > 20, metrics
         assert metrics['bodyW'] <= metrics['viewportW'] + 2, metrics
 
-        # Transport and loading controls must sit inside the unified cassette deck.
+        # Transparent HTML controls must remain inside the approved faceplate.
         inside=page.evaluate('''() => {
-          const deck=document.querySelector('.cassetteDeck').getBoundingClientRect();
-          return ['cassetteDoorEject','tapeCounterReset','prevBeat','playBeat','stopBeat','nextBeat','autoLooperToggle','importBeatsBtn','importFolderBtn'].map(id=>{
+          const deck=document.getElementById('looper').getBoundingClientRect();
+          return ['tapeCounterReset','prevBeat','playBeat','stopBeat','nextBeat','autoLooperToggle','importBeatsBtn','importFolderBtn'].map(id=>{
             const r=document.getElementById(id).getBoundingClientRect();
             return {id,ok:r.left>=deck.left-1&&r.top>=deck.top-1&&r.right<=deck.right+1&&r.bottom<=deck.bottom+1,w:r.width,h:r.height};
           });
         }''')
-        assert all(x['ok'] and x['w']>20 and x['h']>20 for x in inside), inside
+        assert all(x['ok'] and x['w']>8 and x['h']>8 for x in inside), inside
 
         rack=page.evaluate('''() => ({
           columns:document.querySelectorAll('#library .cassetteRackColumn').length,
           slots:document.querySelectorAll('#library .cassetteRackSlot').length,
-          tracks:document.querySelectorAll('#library .track').length,
-          spine:(()=>{const r=document.querySelector('#library .cassetteRackSlot').getBoundingClientRect();return r.width/r.height})()
+          visibleSlots:[...document.querySelectorAll('#library .cassetteRackSlot')].filter(x=>getComputedStyle(x).display!='none').length,
+          tracks:document.querySelectorAll('#library .track').length
         })''')
         assert rack['columns'] >= 3 and rack['slots'] >= 12 and rack['tracks'] >= 3, rack
-        assert 6.35 <= rack['spine'] <= 6.45, rack
+        assert rack['visibleSlots'] >= 9, rack
+
+        # Manual speed selector follows the faceplate contract: +1..+5 then 0.
+        sequence=[]
+        for _ in range(6):
+            page.click('#autoLooperToggle')
+            sequence.append(page.locator('.asset-speed-level-readout').inner_text())
+        assert sequence == ['+1','+2','+3','+4','+5','0'], sequence
+        page.click('#autoLooperToggle')
+        page.click('#tapeCounterReset')
+        assert page.locator('.asset-speed-level-readout').inner_text() == '0'
+
+        # PLAYING is a real HTML state readout, not baked into the artwork.
+        page.evaluate("document.getElementById('deckTransportState').textContent='PLAYING'")
+        page.wait_for_timeout(30)
+        state=page.evaluate('''() => ({
+          text:document.querySelector('.asset-state-readout').textContent,
+          playing:document.getElementById('looper').classList.contains('asset-playing')
+        })''')
+        assert state == {'text':'PLAYING','playing':True}, state
 
         # Chopper must reveal its real workstation blocks and hide the looper.
         page.click('[data-tab="chopper"]')
@@ -101,4 +134,4 @@ with sync_playwright() as p:
         page.close()
     browser.close()
 
-print('OK: CSS layout — unified deck width, cassette rack, Chopper and Practice overlay')
+print('OK: CSS layout — approved Looper faceplate overlays, manual speed selector, Chopper and Practice overlay')
