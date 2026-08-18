@@ -60,10 +60,10 @@ with tempfile.TemporaryDirectory() as td:
         assert page.locator('#deckTransportState').inner_text()=='PLAYING'
         page.click('#stopBeat'); page.wait_for_function('deckSource === null')
 
+        initial_mode=page.evaluate('autoLooperModeIndex')
         page.click('#autoLooperToggle')
+        assert page.evaluate('autoLooperModeIndex') != initial_mode
         assert page.evaluate('autoLooperEnabledState === true') is True
-        page.click('#autoLooperToggle')
-        assert page.evaluate('autoLooperEnabledState === false') is True
         page.click('#tapeCounterReset')
 
         page.evaluate('document.activeElement && document.activeElement.blur()')
