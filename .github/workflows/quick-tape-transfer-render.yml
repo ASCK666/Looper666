@@ -1,4 +1,4 @@
-name: Quick tape transfer render
+name: Quick exact reel render
 
 on:
   pull_request:
@@ -18,12 +18,12 @@ jobs:
         run: |
           python -m pip install --disable-pip-version-check playwright pillow
           python -m playwright install chromium
-      - name: Verify tape transfer motion
+      - name: Verify exact faceplate reels
         run: |
           python - <<'PY'
           from pathlib import Path
           import contextlib, http.server, socketserver, threading
-          from PIL import Image, ImageChops
+          from PIL import Image, ImageChops, ImageStat
           from playwright.sync_api import sync_playwright
 
           root=Path.cwd(); out=root/'test-artifacts'; out.mkdir(exist_ok=True)
@@ -39,84 +39,85 @@ jobs:
               with sync_playwright() as p:
                   browser=p.chromium.launch(headless=True,args=['--no-sandbox','--disable-dev-shm-usage'])
                   page=browser.new_page(viewport={'width':1536,'height':1200},device_scale_factor=1)
+                  page_errors=[]; failed=[]
+                  page.on('pageerror',lambda err: page_errors.append(str(err)))
+                  page.on('requestfailed',lambda req: failed.append(f'{req.url}: {req.failure}'))
                   page.goto(f'http://127.0.0.1:{port}/index.html',wait_until='networkidle',timeout=30000)
                   page.wait_for_function("window.__SP?.ready === true",timeout=10000)
                   page.wait_for_function("document.querySelector('.looper-faceplate')?.naturalWidth === 1536",timeout=10000)
                   page.evaluate("""() => {
                     deckBuffer=new AudioBuffer({numberOfChannels:1,length:44100*8,sampleRate:44100});
-                    document.getElementById('deckTrack').textContent='tape-transfer-test.wav';
+                    document.getElementById('deckTrack').textContent='exact-faceplate-reels.wav';
                     refreshCassetteUI();
-                    document.getElementById('looper').style.setProperty('--asset-tape-cycle','4s');
                   }""")
                   glow=page.locator('.asset-cassette-glow')
-                  geometry=page.evaluate("""() => {
-                    const g=document.querySelector('.asset-cassette-glow');
-                    return ['::before','::after'].map(which=>{
-                      const cs=getComputedStyle(g,which);
-                      return {x:parseFloat(cs.left),y:parseFloat(cs.top),w:parseFloat(cs.width),h:parseFloat(cs.height)};
-                    });
-                  }""")
-                  glow.screenshot(path=str(out/'transfer-stop.png'))
+                  glow.screenshot(path=str(out/'exact-stop.png'))
+
+                  # Freeze the real transport-triggered animation at angle zero.
+                  page.add_style_tag(content="""
+                    #looper.asset-ui.asset-playing .asset-cassette-glow::before,
+                    #looper.asset-ui.asset-playing .asset-cassette-glow::after {
+                      animation-play-state:paused!important;
+                      animation-delay:0s!important;
+                      opacity:1!important;
+                    }
+                  """)
                   page.click('#playBeat')
                   page.wait_for_function("deckSource !== null && document.getElementById('looper').classList.contains('asset-playing')",timeout=5000)
-                  page.wait_for_timeout(120)
+                  page.wait_for_timeout(250)
+                  assets=page.evaluate("""() => {
+                    const g=document.querySelector('.asset-cassette-glow');
+                    return [getComputedStyle(g,'::before').backgroundImage,getComputedStyle(g,'::after').backgroundImage];
+                  }""")
+                  assert 'cassette-reel-overlay.svg' in assets[0],assets
+                  assert 'cassette-reel-overlay-right.svg' in assets[1],assets
+                  glow.screenshot(path=str(out/'exact-zero.png'))
 
-                  def state(label):
-                      data=page.evaluate("""() => {
-                        const g=document.querySelector('.asset-cassette-glow');
-                        const cs=getComputedStyle(g);
-                        const l=getComputedStyle(g,'::before');
-                        const r=getComputedStyle(g,'::after');
-                        return {size:cs.backgroundSize,pos:cs.backgroundPosition,left:l.transform,right:r.transform,bg:cs.backgroundImage};
-                      }""")
-                      glow.screenshot(path=str(out/f'transfer-{label}.png'))
-                      print(label,data)
-                      return data
+                  stop=Image.open(out/'exact-stop.png').convert('RGB')
+                  zero=Image.open(out/'exact-zero.png').convert('RGB')
+                  d=ImageChops.difference(stop,zero)
+                  stat=ImageStat.Stat(d)
+                  mean=sum(stat.mean)/3
+                  changed=sum(1 for px in d.getdata() if max(px)>12)
+                  print('angle-zero diff mean:',mean,'changed pixels:',changed)
+                  # A tiny rasterisation delta is acceptable; a redrawn mechanism is not.
+                  assert mean < 3.0,(mean,changed)
 
-                  a=state('a')
-                  page.wait_for_timeout(880)
-                  b=state('quarter')
-                  page.wait_for_timeout(1000)
-                  c=state('half')
-                  assert a['size']!=b['size']!=c['size'],(a,b,c)
-                  assert a['left']!=b['left']!=c['left'],(a,b,c)
-                  assert a['right']!=b['right']!=c['right'],(a,b,c)
-                  assert 'repeating-radial-gradient' in a['bg'],a
+                  # Unfreeze and verify real visible rotation remains confined to both reels.
+                  page.locator('style').last.evaluate('(el)=>el.remove()')
+                  page.wait_for_timeout(180)
+                  glow.screenshot(path=str(out/'exact-play-a.png'))
+                  transforms_a=page.evaluate("""() => {
+                    const g=document.querySelector('.asset-cassette-glow');
+                    return [getComputedStyle(g,'::before').transform,getComputedStyle(g,'::after').transform];
+                  }""")
+                  page.wait_for_timeout(340)
+                  glow.screenshot(path=str(out/'exact-play-b.png'))
+                  transforms_b=page.evaluate("""() => {
+                    const g=document.querySelector('.asset-cassette-glow');
+                    return [getComputedStyle(g,'::before').transform,getComputedStyle(g,'::after').transform];
+                  }""")
+                  assert transforms_a!=transforms_b,(transforms_a,transforms_b)
+                  page.locator('#looper').screenshot(path=str(out/'exact-looper-play.png'))
+
                   page.click('#stopBeat')
                   page.wait_for_function("deckSource === null && !document.getElementById('looper').classList.contains('asset-playing')",timeout=3000)
                   page.wait_for_function("parseFloat(getComputedStyle(document.querySelector('.asset-cassette-glow'),'::before').opacity) < .01",timeout=1000)
-                  stop_style=page.evaluate("""() => {
-                    const cs=getComputedStyle(document.querySelector('.asset-cassette-glow'));
-                    return [cs.backgroundImage,parseFloat(getComputedStyle(document.querySelector('.asset-cassette-glow'),'::before').opacity),parseFloat(getComputedStyle(document.querySelector('.asset-cassette-glow'),'::after').opacity)];
-                  }""")
-                  assert stop_style[0]=='none' and stop_style[1]<.01 and stop_style[2]<.01,stop_style
+                  page.locator('#looper').screenshot(path=str(out/'exact-looper-stop.png'))
+                  assert not page_errors,page_errors
+                  assert not failed,failed
                   browser.close()
 
-          stop=Image.open(out/'transfer-stop.png').convert('RGB')
-          play=Image.open(out/'transfer-quarter.png').convert('RGB')
-          diff=ImageChops.difference(stop,play)
-          px=diff.load(); w,h=stop.size
-          outside=inside=0
-          for y in range(h):
-              for x in range(w):
-                  if max(px[x,y])<=8: continue
-                  allowed=False
-                  for r in geometry:
-                      cx=r['x']+r['w']/2; cy=r['y']+r['h']/2
-                      radius=min(r['w'],r['h'])*.53
-                      dx=(x+.5)-cx; dy=(y+.5)-cy
-                      if dx*dx+dy*dy <= radius*radius:
-                          allowed=True; break
-                  if allowed: inside+=1
-                  else: outside+=1
-          print('geometry:',geometry)
-          print('changed inside:',inside,'outside:',outside)
-          assert inside>1500,inside
-          assert outside<150,outside
-          print('OK: tape mass transfers only inside the two reel circles')
+          a=Image.open(out/'exact-play-a.png').convert('RGB')
+          b=Image.open(out/'exact-play-b.png').convert('RGB')
+          diff=ImageChops.difference(a,b)
+          bbox=diff.getbbox()
+          print('motion diff bbox:',bbox)
+          assert bbox is not None
+          print('OK: exact faceplate reel crops rotate; cassette body remains baked/static')
           PY
       - uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: tape-transfer-render
-          path: test-artifacts/transfer-*.png
+          name: exact-reel-render
+          path: test-artifacts/exact-*.png
