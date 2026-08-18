@@ -43,6 +43,10 @@ with contextlib.ExitStack() as stack:
         info=page.evaluate('''() => {
           const looper=document.getElementById('looper');
           const face=document.querySelector('.looper-faceplate');
+          const glow=document.querySelector('.asset-cassette-glow');
+          const layer=getComputedStyle(glow);
+          const leftReel=getComputedStyle(glow,'::before');
+          const rightReel=getComputedStyle(glow,'::after');
           const ids=['prevBeat','playBeat','stopBeat','nextBeat','autoLooperToggle','importFolderBtn','importBeatsBtn'];
           const readouts=['asset-header-state-readout','asset-track-readout','asset-state-readout','asset-speed-percent-readout','asset-loop-readout','asset-speed-level-readout'];
           return {
@@ -53,6 +57,11 @@ with contextlib.ExitStack() as stack:
             tracks:document.querySelectorAll('#library .track').length,
             controls:ids.map(id=>{const el=document.getElementById(id),b=el.getBoundingClientRect(),cs=getComputedStyle(el);return {id,w:b.width,h:b.height,display:cs.display,visibility:cs.visibility,opacity:parseFloat(cs.opacity),handler:typeof el.onclick};}),
             readouts:readouts.map(cls=>{const el=document.querySelector('.'+cls),cs=getComputedStyle(el);return [cls,cs.backgroundColor];}),
+            reelCount:document.querySelectorAll('.asset-cassette-glow').length,
+            reelAsset:[leftReel.backgroundImage,rightReel.backgroundImage],
+            reelCrop:[leftReel.backgroundSize,rightReel.backgroundSize,leftReel.backgroundPosition,rightReel.backgroundPosition],
+            reelStopped:[leftReel.animationPlayState,rightReel.animationPlayState,leftReel.opacity,rightReel.opacity],
+            cassetteLayer:[layer.backgroundColor,layer.backgroundImage,layer.boxShadow,layer.filter,layer.mixBlendMode,layer.opacity],
             appErrors:window.__SP?.errors||[]
           };
         }''')
@@ -72,17 +81,106 @@ with contextlib.ExitStack() as stack:
           'asset-speed-level-readout',
         ]}
         assert dict(info['readouts'])==expected, info['readouts']
+        assert info['reelCount']==1, info
+        assert all('faceplate.webp' in value for value in info['reelAsset']), info['reelAsset']
+        assert info['reelCrop'][0]==info['reelCrop'][1], info['reelCrop']
+        assert info['reelCrop'][2]!=info['reelCrop'][3], info['reelCrop']
+        assert info['reelStopped']==['paused','paused','0','0'], info['reelStopped']
+        assert info['cassetteLayer']==['rgba(0, 0, 0, 0)','none','none','none','normal','1'], info['cassetteLayer']
         assert not info['appErrors'], info
         assert not page_errors, page_errors
         assert not failed, failed
 
-        page.click('#tapeCounterReset')
+        def reel_centers():
+            return page.evaluate('''() => {
+              const looper=document.getElementById('looper');
+              const glow=document.querySelector('.asset-cassette-glow');
+              const lb=looper.getBoundingClientRect();
+              const gb=glow.getBoundingClientRect();
+              return ['::before','::after'].map(which=>{
+                const cs=getComputedStyle(glow,which);
+                const left=parseFloat(cs.left),top=parseFloat(cs.top),width=parseFloat(cs.width),height=parseFloat(cs.height);
+                return [(gb.left-lb.left+left+width/2)/lb.width,(gb.top-lb.top+top+height/2)/lb.height];
+              });
+            }''')
+
+        centers_large=reel_centers()
+        page.set_viewport_size({'width':1000,'height':900})
+        page.wait_for_timeout(100)
+        centers_small=reel_centers()
+        assert all(abs(a-b)<.004 for pair_a,pair_b in zip(centers_large,centers_small) for a,b in zip(pair_a,pair_b)), (centers_large,centers_small)
+        page.set_viewport_size({'width':1536,'height':1200})
+
+        page.evaluate('''() => {
+          deckBuffer=new AudioBuffer({numberOfChannels:1,length:44100,sampleRate:44100});
+          document.getElementById('deckTrack').textContent='motion-test.wav';
+          refreshCassetteUI();
+        }''')
+        page.click('#playBeat')
+        page.wait_for_function("deckSource !== null && document.getElementById('looper').classList.contains('asset-playing')",timeout=5000)
+        page.wait_for_function("parseFloat(getComputedStyle(document.querySelector('.asset-cassette-glow'),'::before').opacity) > .5",timeout=1000)
+        playing=page.evaluate('''() => {
+          const glow=document.querySelector('.asset-cassette-glow');
+          const left=getComputedStyle(glow,'::before');
+          const right=getComputedStyle(glow,'::after');
+          return [left.animationPlayState,right.animationPlayState,left.opacity,right.opacity,left.animationDuration,right.animationDuration,left.transform,right.transform];
+        }''')
+        assert playing[0:2]==['running','running'], playing
+        assert all(float(v)>.5 for v in playing[2:4]), playing
+        assert all(value!='none' for value in playing[6:8]), playing
+        cassette_layer_playing=page.evaluate('''() => {
+          const cs=getComputedStyle(document.querySelector('.asset-cassette-glow'));
+          return [cs.backgroundColor,cs.backgroundImage,cs.boxShadow,cs.filter,cs.mixBlendMode,cs.opacity];
+        }''')
+        assert cassette_layer_playing==info['cassetteLayer'], (info['cassetteLayer'],cassette_layer_playing)
+        page.locator('#looper').screenshot(path=str(ARTIFACTS/'looper-reels-playing.png'))
+        page.wait_for_timeout(320)
+        moved=page.evaluate('''() => {
+          const glow=document.querySelector('.asset-cassette-glow');
+          return [getComputedStyle(glow,'::before').transform,getComputedStyle(glow,'::after').transform];
+        }''')
+        assert moved!=playing[6:8], (playing[6:8],moved)
+
+        page.click('#autoLooperToggle')
+        page.wait_for_function("document.getElementById('looper').dataset.speedLevel === '1'",timeout=3000)
+        sped=page.evaluate('''() => {
+          const glow=document.querySelector('.asset-cassette-glow');
+          return [getComputedStyle(glow,'::before').animationDuration,getComputedStyle(glow,'::after').animationDuration];
+        }''')
+        assert sped!=playing[4:6], (playing,sped)
+
+        for _ in range(2):
+            page.click('#stopBeat')
+            page.wait_for_function("deckSource === null && !document.getElementById('looper').classList.contains('asset-playing')",timeout=3000)
+            page.wait_for_function("parseFloat(getComputedStyle(document.querySelector('.asset-cassette-glow'),'::before').opacity) < .01",timeout=1000)
+            stopped=page.evaluate('''() => {
+              const glow=document.querySelector('.asset-cassette-glow');
+              return [
+                getComputedStyle(glow,'::before').animationPlayState,
+                getComputedStyle(glow,'::after').animationPlayState,
+                parseFloat(getComputedStyle(glow,'::before').opacity),
+                parseFloat(getComputedStyle(glow,'::after').opacity),
+                document.querySelectorAll('.asset-cassette-glow').length
+              ];
+            }''')
+            assert stopped[0:2]==['paused','paused'] and stopped[2]<.01 and stopped[3]<.01 and stopped[4]==1, stopped
+            page.click('#playBeat')
+            page.wait_for_function("deckSource !== null && document.getElementById('looper').classList.contains('asset-playing')",timeout=3000)
+            page.wait_for_function("parseFloat(getComputedStyle(document.querySelector('.asset-cassette-glow'),'::before').opacity) > .5",timeout=1000)
+
         page.click('#stopBeat')
+        page.wait_for_function("deckSource === null && !document.getElementById('looper').classList.contains('asset-playing')",timeout=3000)
+        page.wait_for_function("parseFloat(getComputedStyle(document.querySelector('.asset-cassette-glow'),'::before').opacity) < .01",timeout=1000)
+        page.click('#tapeCounterReset')
         with page.expect_file_chooser(timeout=3000):
             page.click('#importBeatsBtn')
 
         page.locator('#looper').screenshot(path=str(ARTIFACTS/'looper-render.png'))
         page.screenshot(path=str(ARTIFACTS/'full-render.png'),full_page=True)
+        assert not page_errors,page_errors
+        assert not failed,failed
+        context_errors=page.evaluate('window.__SP?.errors||[]')
+        assert not context_errors,context_errors
         browser.close()
 
-print('OK: approved faceplate.webp is mounted, dynamic deck readouts are transparent, and primary controls execute click paths')
+print('OK: faceplate and cassette body stay fixed; exact faceplate reel crops visibly rotate with PLAY/STOP, speed and responsive alignment')
