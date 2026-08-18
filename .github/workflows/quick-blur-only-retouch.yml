@@ -25,8 +25,8 @@ jobs:
         id: retouch
         run: |
           current=$(git hash-object assets/looper-ui/faceplate.webp)
-          if [ "$current" != "54656fa1986ec0951a1f3daf7a054b54a1a40441" ]; then
-            echo "Faceplate no longer matches the current approved label/tape asset; skipping."
+          if [ "$current" != "da78ba76051975f845c34a0296bee35bc19b7790" ]; then
+            echo "Faceplate no longer matches the current blur-retouch input; skipping."
             echo "built=false" >> "$GITHUB_OUTPUT"
             exit 0
           fi
@@ -47,38 +47,34 @@ jobs:
           h,w=before.shape[:2]
           yy,xx=np.mgrid[:h,:w]
 
-          # Blur-only scope: the broad milky plastic veil immediately below the
-          # already-clean white label and across the cassette's inner window.
-          # The label itself, printed legend, screws and reel mechanisms are excluded.
+          # Blur-only region: broad milky veil under the white label, stopping
+          # before the printed cassette legend. Label and reel mechanisms excluded.
           cx,cy=770.0,250.0
-          rx,ry=210.0,78.0
+          rx,ry=205.0,72.0
           d=(np.abs(xx-cx)/rx)**6 + (np.abs(yy-cy)/ry)**4
-          influence=np.clip(1.35-d,0,1)**1.1
+          influence=np.clip(1.25-d,0,1)**1.25
           influence *= ((yy>=198)&(yy<=308))
           for rcx,rcy in ((648.0,249.0),(893.5,249.0)):
               r=np.sqrt((xx-rcx)**2+(yy-rcy)**2)
-              influence *= np.clip((r-62.0)/10.0,0,1)
+              influence *= np.clip((r-62.0)/12.0,0,1)
           allowed=influence>0
 
           work=before.astype(np.float32)
-          luminance=.2126*work[:,:,0]+.7152*work[:,:,1]+.0722*work[:,:,2]
+          low=cv2.GaussianBlur(work,(0,0),sigmaX=16,sigmaY=12)
+          high=work-low
 
-          # Remove the low-contrast milkiness by reducing only excess luminance;
-          # dark tape/mechanical structure remains structurally untouched.
-          desired=44.0+7.0*np.clip((yy-198.0)/110.0,0,1)
-          excess=np.maximum(luminance-desired,0)
-          reduction=excess*0.92*influence
-          scale=np.maximum(luminance-reduction,1)/np.maximum(luminance,1)
-          target=work*scale[...,None]
-
-          # Restore a little local clarity without synthesizing or replacing detail.
-          base=np.clip(target,0,255).astype(np.uint8)
-          blur=cv2.GaussianBlur(base,(0,0),0.8)
-          sharp=np.clip(base.astype(np.float32)*1.20-blur.astype(np.float32)*0.20,0,255)
-          candidate=work*(1-influence[...,None]*0.98)+sharp*(influence[...,None]*0.98)
+          # Flatten only the low-frequency haze while retaining the asset's own
+          # high-frequency shell/tape detail. No generated pixels or donor image.
+          t=np.clip((yy-198.0)/(308.0-198.0),0,1)
+          top=np.array([42.0,35.0,28.0],dtype=np.float32)
+          bottom=np.array([30.0,24.0,18.0],dtype=np.float32)
+          target_low=top[None,None,:]*(1-t[...,None])+bottom[None,None,:]*t[...,None]
+          target=np.clip(target_low+high*1.35,0,255)
+          candidate=work*(1-influence[...,None])+target*influence[...,None]
           candidate=np.clip(np.rint(candidate),0,255).astype(np.uint8)
 
-          # Absolute safety boundary.
+          # Absolute safety boundary: everything outside the blur mask is copied
+          # back from the already-approved current faceplate.
           candidate[~allowed]=before[~allowed]
           candidate_path=out/'faceplate-blur-only.webp'
           Image.fromarray(candidate,'RGB').save(candidate_path,'WEBP',lossless=True,quality=100,method=6)
@@ -97,7 +93,7 @@ jobs:
             'changed_pixels':int(changed.sum()),
             'outside_allowed_pixels':int(outside.sum()),
             'allowed_pixels':int(allowed.sum()),
-            'input_blob':'54656fa1986ec0951a1f3daf7a054b54a1a40441',
+            'input_blob':'da78ba76051975f845c34a0296bee35bc19b7790',
           }
           (out/'blur-stats.json').write_text(json.dumps(stats,indent=2))
           print(json.dumps(stats,indent=2))
@@ -109,7 +105,7 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add assets/looper-ui/faceplate.webp
-          git commit -m "fix: clear cassette shell haze"
+          git commit -m "fix: remove remaining cassette shell blur"
           git push origin HEAD:fix/cassette-shell-label-retouch
       - uses: actions/upload-artifact@v4
         if: steps.retouch.outputs.built == 'true'
