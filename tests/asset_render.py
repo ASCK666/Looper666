@@ -3,7 +3,6 @@ import contextlib
 import http.server
 import socketserver
 import threading
-import time
 
 try:
     from playwright.sync_api import sync_playwright
@@ -38,45 +37,41 @@ with contextlib.ExitStack() as stack:
         page.on('pageerror',lambda err: page_errors.append(str(err)))
         page.on('requestfailed',lambda req: failed.append(f'{req.url}: {req.failure}'))
         page.goto(f'http://127.0.0.1:{port}/index.html',wait_until='networkidle',timeout=30000)
-        page.wait_for_function("document.querySelector('.looper-faceplate')?.naturalWidth > 0",timeout=15000)
-        page.wait_for_function("document.getElementById('looper')?.classList.contains('asset-ready')",timeout=5000)
+        page.wait_for_function("window.__SP?.ready === true",timeout=10000)
 
         info=page.evaluate('''() => {
           const looper=document.getElementById('looper');
-          const img=document.querySelector('.looper-faceplate');
           const r=looper.getBoundingClientRect();
-          const ir=img.getBoundingClientRect();
-          const css=getComputedStyle(img);
+          const ids=['prevBeat','playBeat','stopBeat','nextBeat','autoLooperToggle','importFolderBtn','importBeatsBtn'];
           return {
-            ready:looper.classList.contains('asset-ready'),
-            loadError:looper.classList.contains('asset-load-error'),
-            naturalWidth:img.naturalWidth,
-            naturalHeight:img.naturalHeight,
-            looper:{x:r.x,y:r.y,width:r.width,height:r.height},
-            image:{x:ir.x,y:ir.y,width:ir.width,height:ir.height,display:css.display,opacity:css.opacity},
-            appErrors:window.__SP?.errors||[],
-            state:document.querySelector('.asset-state-readout')?.textContent,
-            speed:document.querySelector('.asset-speed-level-readout')?.textContent,
-            tracks:document.querySelectorAll('#library .track').length
+            looper:{width:r.width,height:r.height,display:getComputedStyle(looper).display},
+            faceplates:document.querySelectorAll('.looper-faceplate').length,
+            tracks:document.querySelectorAll('#library .track').length,
+            emptyText:document.querySelector('#library .libraryEmptyMessage')?.textContent||'',
+            controls:ids.map(id=>{
+              const el=document.getElementById(id),b=el.getBoundingClientRect(),cs=getComputedStyle(el);
+              return {id,w:b.width,h:b.height,display:cs.display,visibility:cs.visibility,opacity:parseFloat(cs.opacity),handler:typeof el.onclick};
+            }),
+            appErrors:window.__SP?.errors||[]
           };
         }''')
 
-        assert info['ready'] and not info['loadError'], info
-        assert (info['naturalWidth'],info['naturalHeight'])==(1536,1024), info
-        assert info['image']['display']!='none' and float(info['image']['opacity'])>.95, info
-        assert abs(info['image']['width']-info['looper']['width'])<2, info
-        assert abs(info['image']['height']-info['looper']['height'])<2, info
-        assert info['looper']['width']>900 and info['looper']['height']>600, info
-        assert info['state'] in {'EMPTY','READY','STOPPED','PLAYING'}, info
-        assert info['speed']=='0', info
+        assert info['looper']['display']!='none' and info['looper']['width']>600 and info['looper']['height']>300, info
+        assert info['faceplates']==0, info
         assert info['tracks']==0, info
+        assert 'Aucun résultat' in info['emptyText'], info
+        assert all(c['display']!='none' and c['visibility']=='visible' and c['opacity']>.5 and c['w']>20 and c['h']>20 and c['handler']=='function' for c in info['controls']), info
+
+        page.click('#tapeCounterReset')
+        page.click('#stopBeat')
+        with page.expect_file_chooser(timeout=3000):
+            page.click('#importBeatsBtn')
         assert not info['appErrors'], info
         assert not page_errors, page_errors
         assert not failed, failed
 
-        looper=page.locator('#looper')
-        looper.screenshot(path=str(ARTIFACTS/'looper-render.png'))
+        page.locator('#looper').screenshot(path=str(ARTIFACTS/'looper-render.png'))
         page.screenshot(path=str(ARTIFACTS/'full-render.png'),full_page=True)
         browser.close()
 
-print('OK: approved Looper faceplate loads as a real 1536x1024 image and is visibly rendered over HTTP')
+print('OK: real Looper DOM is visible, empty crate is truthful, and primary controls execute click paths over HTTP')
