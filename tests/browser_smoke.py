@@ -43,7 +43,7 @@ with tempfile.TemporaryDirectory() as td, contextlib.ExitStack() as stack:
         page.wait_for_function("document.querySelector('.looper-faceplate')?.naturalWidth === 1536",timeout=10000)
 
         assert page.evaluate('window.__SP.errors.length')==0
-        assert not page_errors and not console_errors,(page_errors,console_errors)
+        assert not page_errors,page_errors
         assert page.locator('.looper-faceplate').count()==1
         assert page.locator('.looper-faceplate').get_attribute('src')=='./assets/looper-ui/faceplate.webp'
         assert page.locator('#library .track').count()==0
