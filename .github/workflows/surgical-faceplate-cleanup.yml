@@ -1,0 +1,89 @@
+name: Surgical faceplate digital cleanup
+
+on:
+  push:
+    branches:
+      - fix/surgical-faceplate-digital-cleanup
+
+permissions:
+  contents: write
+
+jobs:
+  clean:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout branch
+        uses: actions/checkout@v4
+        with:
+          ref: fix/surgical-faceplate-digital-cleanup
+          fetch-depth: 0
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Install image dependencies
+        run: python -m pip install --disable-pip-version-check pillow numpy opencv-python-headless
+
+      - name: Remove only baked dynamic display text
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          import cv2
+          import numpy as np
+          from PIL import Image
+
+          path = Path('assets/looper-ui/faceplate.webp')
+          original = np.array(Image.open(path).convert('RGB'))
+          if original.shape != (1024, 1536, 3):
+              raise SystemExit(f'Unexpected faceplate dimensions: {original.shape}')
+
+          # Strictly limited to dynamic glyph areas inside the digital displays.
+          # Static labels, panel chrome, cassette label and the rest of the asset stay untouched.
+          rects = [
+              (79, 149, 168, 174),   # top transport state
+              (79, 181, 341, 215),   # current track name
+              (79, 289, 206, 321),   # lower transport state
+              (219, 290, 243, 321),  # play arrow
+              (287, 289, 373, 321),  # speed value
+              (1177, 153, 1279, 192),# loop counter value
+              (1191, 274, 1255, 314),# speed level value
+          ]
+
+          allowed = np.zeros(original.shape[:2], dtype=np.uint8)
+          for x1, y1, x2, y2 in rects:
+              allowed[y1:y2, x1:x2] = 255
+
+          bgr = cv2.cvtColor(original, cv2.COLOR_RGB2BGR)
+          cleaned_bgr = cv2.inpaint(bgr, allowed, 4, cv2.INPAINT_TELEA)
+          cleaned = cv2.cvtColor(cleaned_bgr, cv2.COLOR_BGR2RGB)
+
+          # Absolute safety rail: outside the approved rectangles, copy original pixels back verbatim.
+          cleaned[allowed == 0] = original[allowed == 0]
+
+          Image.fromarray(cleaned).save(path, 'WEBP', lossless=True, quality=100, method=6)
+          roundtrip = np.array(Image.open(path).convert('RGB'))
+
+          if roundtrip.shape != original.shape:
+              raise SystemExit('Faceplate dimensions changed')
+          outside_changed = np.any(roundtrip != original, axis=2) & (allowed == 0)
+          if np.any(outside_changed):
+              raise SystemExit(f'Forbidden pixel changes outside cleanup masks: {int(outside_changed.sum())}')
+          inside_changed = np.any(roundtrip != original, axis=2) & (allowed != 0)
+          if not np.any(inside_changed):
+              raise SystemExit('No digital glyph pixels were changed')
+
+          print(f'OK: {int(inside_changed.sum())} pixels changed, all inside approved digital glyph rectangles; 0 outside.')
+          PY
+
+      - name: Remove temporary workflow and commit asset only
+        run: |
+          rm .github/workflows/surgical-faceplate-cleanup.yml
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add assets/looper-ui/faceplate.webp .github/workflows/surgical-faceplate-cleanup.yml
+          git commit -m "Clean baked dynamic text from approved faceplate"
+          git push origin HEAD:fix/surgical-faceplate-digital-cleanup
