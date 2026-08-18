@@ -41,6 +41,12 @@
 9. **Do not merge automatically.**
    - Asset edits stay on a branch/PR until the visual result has been reviewed.
 
+10. **Stop when retouching reaches diminishing returns.**
+   - Do not keep making exploratory passes on the same visual defect just because another small change is possible.
+   - After at most **two correction iterations for the same defect**, stop and present the current before/after result plus the objective mask/diff evidence.
+   - A third iteration is allowed only after a new explicit user request that identifies what is still wrong; treat it as a newly scoped correction rather than automatic polishing.
+   - If a new pass broadens the changed area, reduces fidelity to the approved source, or makes the result less clearly better, keep or restore the last better/approved result instead of continuing to retouch.
+
 ## Recommended safety check
 
 For a local edit, keep a copy of the decoded image before modification and a binary mask of the approved region. After saving and decoding the new `faceplate.webp`, compare the two pixel arrays and fail the edit if any changed pixel lies outside the mask.
