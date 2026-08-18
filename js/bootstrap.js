@@ -1,5 +1,5 @@
 "use strict";
-window.__SP={version:"100-pixel-aligned-crate-truth",ready:false,errors:[]};
+window.__SP={version:"101-integrated-label-crate-truth",ready:false,errors:[]};
 window.__SP.report=(scope,error)=>{
   const message=error?.message||String(error||"Unknown error");
   const item={scope,message,time:new Date().toISOString()};
@@ -34,7 +34,7 @@ function installLooperAlignmentFixes(){
 #looper.asset-ui #library .track>.btn{position:absolute!important;right:1%!important;top:18%!important;width:8%!important;height:64%!important;z-index:7!important;opacity:.001!important;color:transparent!important;background:transparent!important;border:0!important;box-shadow:none!important}
 
 /* Pixel-aligned masks over only the baked changing text. */
-#looper.asset-ui .asset-header-state-readout{left:5.15%!important;top:13.72%!important;width:7.5%!important;height:3.05%!important;padding:0 .12%!important;background:#090705!important;font-size:clamp(6px,.82vw,13px)!important;align-items:center!important}
+#looper.asset-ui .asset-header-state-readout{left:5.15%!important;top:13.72%!important;width:7.5%!important;height:3.30%!important;padding:0 .12%!important;background:#090705!important;font-size:clamp(6px,.82vw,13px)!important;align-items:center!important}
 #looper.asset-ui .asset-track-readout{left:5.15%!important;top:17.70%!important;width:18.55%!important;height:3.75%!important;padding:0 .15%!important;background:#090705!important;font-size:clamp(7px,1.12vw,18px)!important;align-items:center!important}
 #looper.asset-ui .asset-state-readout{left:5.15%!important;top:28.35%!important;width:10.9%!important;height:3.75%!important;padding:0 .12%!important;background:#090705!important;font-size:clamp(7px,1.1vw,18px)!important;align-items:center!important}
 #looper.asset-ui .asset-speed-percent-readout{left:18.38%!important;top:28.35%!important;width:5.9%!important;height:3.75%!important;padding:0 .25%!important;background:#090705!important;font-size:clamp(7px,1.05vw,17px)!important;justify-content:flex-end!important;align-items:center!important}
@@ -44,8 +44,8 @@ function installLooperAlignmentFixes(){
 /* Replace the complete baked +2 group at its original position. */
 #looper.asset-ui .asset-speed-level-readout{left:77.62%!important;top:27.08%!important;width:4.18%!important;height:4.18%!important;padding:0!important;background:#090705!important;justify-content:center!important;align-items:center!important;font-size:clamp(10px,1.85vw,30px)!important}
 
-/* Mask only the printed title inside the existing paper label, preserving its edges. */
-#looper.asset-ui .asset-cassette-label-readout{left:43.95%!important;top:14.62%!important;width:12.25%!important;height:3.02%!important;padding:0 .35%!important;color:#24170d!important;background-image:radial-gradient(circle at 12% 31%,rgba(255,255,255,.18) 0 .45px,transparent .7px),radial-gradient(circle at 66% 71%,rgba(94,68,42,.08) 0 .55px,transparent .8px),linear-gradient(180deg,#e5d4b9 0%,#dec8a7 50%,#d9c19f 100%)!important;background-size:12px 10px,17px 14px,100% 100%!important;border-radius:0!important;box-shadow:none!important;text-shadow:none!important;font:italic 600 clamp(7px,1vw,16px)/1 Georgia,serif!important;justify-content:center!important;align-items:center!important}
+/* Cover the original ink inside the existing paper strip without covering its edges. */
+#looper.asset-ui .asset-cassette-label-readout{left:43.95%!important;top:14.35%!important;width:12.25%!important;height:4.25%!important;padding:0 .35%!important;color:#24170d!important;background-image:radial-gradient(circle at 12% 31%,rgba(255,255,255,.18) 0 .45px,transparent .7px),radial-gradient(circle at 66% 71%,rgba(94,68,42,.08) 0 .55px,transparent .8px),linear-gradient(180deg,#e5d4b9 0%,#dec8a7 50%,#d9c19f 100%)!important;background-size:12px 10px,17px 14px,100% 100%!important;border-radius:0!important;box-shadow:none!important;text-shadow:none!important;font:italic 600 clamp(7px,1vw,16px)/1 Georgia,serif!important;justify-content:center!important;align-items:center!important}
 
 #looper.asset-ui #librarySearch{left:23.0%!important;top:60.55%!important;width:14.95%!important;height:3.55%!important;background:#090705!important;border-color:rgba(226,173,95,.42)!important}
 #looper.asset-ui #libraryOrder{left:42.9%!important;top:60.55%!important;width:10.75%!important;height:3.55%!important;background:#090705!important;border-color:rgba(226,173,95,.42)!important}
@@ -125,7 +125,8 @@ function installLooperAssetReadouts(looper){
   const syncTrack=()=>{
     const value=(sourceTrack?.textContent||"NO BEAT LOADED").trim();
     track.textContent=value;
-    cassetteLabel.textContent=value==="NO BEAT LOADED"?"NO BEAT":value;
+    const empty=/^(AUCUN BEAT|NO BEAT)/i.test(value);
+    cassetteLabel.textContent=empty?"NO BEAT":(value.length>22?`${value.slice(0,21)}…`:value);
     queueMicrotask(()=>{void ensureCurrentTrackInCrate();});
   };
   const syncState=()=>{
