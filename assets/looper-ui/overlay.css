@@ -247,8 +247,8 @@
   left:43.95%;top:14.35%;width:13.30%;height:4.25%;
   justify-content:center;
   padding:0 .35%;
-  color:#24170d;
-  background-image:radial-gradient(circle at 12% 31%,rgba(255,255,255,.18) 0 .45px,transparent .7px),radial-gradient(circle at 66% 71%,rgba(94,68,42,.08) 0 .55px,transparent .8px),linear-gradient(180deg,#e5d4b9 0%,#dec8a7 50%,#d9c19f 100%);
+  color:#17100b;
+  background-image:radial-gradient(circle at 12% 31%,rgba(255,255,255,.10) 0 .45px,transparent .7px),radial-gradient(circle at 66% 71%,rgba(74,50,32,.07) 0 .55px,transparent .8px),linear-gradient(90deg,#d1ae8b 0%,#b89c86 48%,#c3a389 70%,#e1b489 100%);
   background-size:12px 10px,17px 14px,100% 100%;
   border-radius:0;
   box-shadow:none;
