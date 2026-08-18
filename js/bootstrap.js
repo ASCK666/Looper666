@@ -21,7 +21,7 @@ window.addEventListener("unhandledrejection",event=>{
 // hit areas, live readouts and lighting; the artwork itself is never redrawn.
 const looperAssetCss=document.createElement("link");
 looperAssetCss.rel="stylesheet";
-looperAssetCss.href="./css/asset-ui.css";
+looperAssetCss.href="./assets/looper-overlay.css";
 document.head.appendChild(looperAssetCss);
 
 const LOOPER_ASSET_PARTS=[
@@ -99,6 +99,7 @@ async function loadLooperAsset(){
 function installAssetSpeedControl(){
   const looper=document.getElementById("looper");
   const button=document.getElementById("autoLooperToggle");
+  const resetButton=document.getElementById("tapeCounterReset");
   if(!looper||!button||!looper.__assetReadouts)return;
 
   const readouts=looper.__assetReadouts;
@@ -112,7 +113,7 @@ function installAssetSpeedControl(){
     readouts.speedLevel.textContent=speedLevel?`+${speedLevel}`:"0";
     readouts.speedPercent.textContent=(100+speedLevel).toFixed(1);
     looper.dataset.speedLevel=String(speedLevel);
-    looper.style.setProperty("--asset-glow",String(.06+speedLevel*.08));
+    looper.style.setProperty("--asset-glow",speedLevel?String(.08+speedLevel*.10):"0");
   };
 
   const applySpeedLevel=level=>{
@@ -127,11 +128,22 @@ function installAssetSpeedControl(){
   };
 
   button.addEventListener("click",event=>{
-    // Capture phase intentionally replaces the retired AUTO cadence behavior.
+    // Six-state manual speed selector: 0 -> +1 ... +5 -> 0.
     event.preventDefault();
     event.stopImmediatePropagation();
     applySpeedLevel((speedLevel+1)%6);
   },true);
+
+  if(resetButton){
+    resetButton.addEventListener("click",event=>{
+      event.preventDefault();
+      event.stopImmediatePropagation();
+      loopCount=0;
+      loopSourceSeconds=0;
+      readouts.loops.textContent="0 / 8";
+      applySpeedLevel(0);
+    },true);
+  }
 
   const trackName=document.getElementById("cassetteBeatName");
   if(trackName){
