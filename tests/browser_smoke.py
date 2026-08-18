@@ -113,15 +113,29 @@ with tempfile.TemporaryDirectory() as td:
         page.wait_for_timeout(120)
         assert page.evaluate('deckSource === null') is True
 
-        # AUTO toggle still works.
-        if page.locator('#autoLooperToggle').get_attribute('aria-pressed')!='false':
-            page.click('#autoLooperToggle')
-        page.click('#autoLooperToggle')
-        assert page.locator('#autoLooperToggle').get_attribute('aria-pressed')=='true'
-        assert page.locator('#deckAutoReadout').inner_text() == 'ON'
-        page.click('#autoLooperToggle')
-        assert page.locator('#autoLooperToggle').get_attribute('aria-pressed')=='false'
+        # AUTO SPEED is a five-position hardware cycle: OFF -> 8 -> 4 -> 2 -> 1 -> OFF.
+        auto=page.locator('#autoLooperToggle')
+        assert auto.get_attribute('data-auto-step') == '0'
+        assert auto.get_attribute('aria-pressed') == 'false'
         assert page.locator('#deckAutoReadout').inner_text() == 'OFF'
+        off_glow=page.evaluate("getComputedStyle(document.getElementById('autoLooperToggle'),'::before').borderTopColor")
+        auto_states=[
+            ('1','true','1/8'),
+            ('2','true','1/4'),
+            ('3','true','1/2'),
+            ('4','true','1/1'),
+            ('0','false','OFF'),
+        ]
+        step4_glow=None
+        for step,pressed,readout in auto_states:
+            page.click('#autoLooperToggle')
+            assert auto.get_attribute('data-auto-step') == step
+            assert auto.get_attribute('aria-pressed') == pressed
+            assert page.locator('#deckAutoReadout').inner_text() == readout
+            if step=='4':
+                step4_glow=page.evaluate("getComputedStyle(document.getElementById('autoLooperToggle'),'::before').borderTopColor")
+        assert step4_glow and step4_glow != off_glow,(off_glow,step4_glow)
+        assert page.evaluate('autoLooperEnabledState === false && autoLooperModeIndex === 0 && autoLooperSpeedPercent === 100') is True
 
         # Real CHOPPER sample import.
         page.click('[data-tab="chopper"]')
@@ -146,4 +160,4 @@ with tempfile.TemporaryDirectory() as td:
         context.close()
         browser.close()
 
-print('OK: browser startup, tape counter, real imports, transport, shortcuts, AUTO and filename-XSS regression')
+print('OK: browser startup, tape counter, real imports, transport, shortcuts, five-state AUTO SPEED and filename-XSS regression')
