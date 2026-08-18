@@ -1,5 +1,5 @@
 "use strict";
-window.__SP={version:"94-asset-ui",ready:false,errors:[]};
+window.__SP={version:"95-asset-ui-fix",ready:false,errors:[]};
 window.__SP.report=(scope,error)=>{
   const message=error?.message||String(error||"Unknown error");
   const item={scope,message,time:new Date().toISOString()};
@@ -18,10 +18,15 @@ window.addEventListener("unhandledrejection",event=>{
 });
 
 // The approved Looper artwork is the visual surface. CSS/HTML only provide
-// hit areas, live readouts and lighting; the artwork itself is never redrawn.
+// hit areas, live readouts, dynamic library labels and lighting.
 const looperAssetCss=document.createElement("link");
 looperAssetCss.rel="stylesheet";
 looperAssetCss.href="./assets/looper-ui/overlay.css";
+looperAssetCss.onerror=()=>{
+  if(location.protocol!=="about:" && location.protocol!=="data:"){
+    window.__SP.report("LOOPER CSS",new Error("Looper overlay stylesheet unavailable"));
+  }
+};
 document.head.appendChild(looperAssetCss);
 
 const LOOPER_ASSET_PARTS=[
@@ -44,11 +49,13 @@ function addAssetReadout(looper,className,text=""){
 
 function installLooperAssetReadouts(looper){
   if(looper.querySelector(".asset-track-readout"))return;
+  const headerState=addAssetReadout(looper,"asset-header-state-readout","EMPTY");
   const track=addAssetReadout(looper,"asset-track-readout","NO BEAT LOADED");
-  const state=addAssetReadout(looper,"asset-state-readout","READY");
+  const state=addAssetReadout(looper,"asset-state-readout","EMPTY");
   const speedPercent=addAssetReadout(looper,"asset-speed-percent-readout","100.0");
   const loops=addAssetReadout(looper,"asset-loop-readout","0 / 8");
   const speedLevel=addAssetReadout(looper,"asset-speed-level-readout","0");
+  const cassetteLabel=addAssetReadout(looper,"asset-cassette-label-readout","NO BEAT");
 
   for(const className of ["asset-cassette-glow","asset-speed-glow","asset-speed-button-glow"]){
     const glow=document.createElement("div");
@@ -59,9 +66,14 @@ function installLooperAssetReadouts(looper){
 
   const sourceTrack=document.getElementById("cassetteBeatName");
   const sourceState=document.getElementById("deckTransportState");
-  const syncTrack=()=>{ track.textContent=(sourceTrack?.textContent||"NO BEAT LOADED").trim(); };
+  const syncTrack=()=>{
+    const value=(sourceTrack?.textContent||"NO BEAT LOADED").trim();
+    track.textContent=value;
+    cassetteLabel.textContent=value==="NO BEAT LOADED"?"NO BEAT":value;
+  };
   const syncState=()=>{
-    const value=(sourceState?.textContent||"READY").trim();
+    const value=(sourceState?.textContent||"EMPTY").trim();
+    headerState.textContent=value;
     state.textContent=value;
     looper.classList.toggle("asset-playing",value==="PLAYING");
   };
@@ -70,15 +82,64 @@ function installLooperAssetReadouts(looper){
   syncTrack();
   syncState();
 
-  looper.__assetReadouts={track,state,speedPercent,loops,speedLevel};
+  looper.__assetReadouts={headerState,track,state,speedPercent,loops,speedLevel,cassetteLabel};
+}
+
+function installAssetLibraryPager(looper){
+  if(looper.querySelector(".asset-page-readout"))return;
+  const library=document.getElementById("library");
+  if(!library)return;
+
+  const readout=addAssetReadout(looper,"asset-page-readout","1 / 1");
+  const prev=document.createElement("button");
+  const next=document.createElement("button");
+  prev.type=next.type="button";
+  prev.className="asset-page-button asset-page-prev";
+  next.className="asset-page-button asset-page-next";
+  prev.setAttribute("aria-label","Page précédente de la Beat Crate");
+  next.setAttribute("aria-label","Page suivante de la Beat Crate");
+  looper.append(prev,next);
+
+  let page=0;
+  const paint=()=>{
+    const allSlots=[...library.querySelectorAll(".cassetteRackSlot")];
+    const occupied=allSlots.filter(slot=>slot.querySelector(".track"));
+    const pages=Math.max(1,Math.ceil(occupied.length/9));
+    page=Math.max(0,Math.min(page,pages-1));
+    allSlots.forEach(slot=>slot.classList.toggle("asset-slot-empty",!slot.querySelector(".track")));
+    occupied.forEach((slot,index)=>slot.classList.toggle("asset-page-hidden",Math.floor(index/9)!==page));
+    readout.textContent=`${page+1} / ${pages}`;
+    prev.disabled=pages<=1;
+    next.disabled=pages<=1;
+  };
+  prev.onclick=()=>{ page=Math.max(0,page-1); paint(); };
+  next.onclick=()=>{
+    const count=[...library.querySelectorAll(".cassetteRackSlot .track")].length;
+    const pages=Math.max(1,Math.ceil(count/9));
+    page=Math.min(pages-1,page+1);
+    paint();
+  };
+  new MutationObserver(()=>{ page=0; paint(); }).observe(library,{childList:true,subtree:true});
+  paint();
 }
 
 async function loadLooperAsset(){
   const looper=document.getElementById("looper");
   if(!looper)return;
+
+  // Enter asset mode immediately. A missing faceplate is an explicit boot error,
+  // never a silent fallback to the retired Looper skin.
+  looper.classList.add("asset-ui");
+  installLooperAssetReadouts(looper);
+  installAssetLibraryPager(looper);
+
+  // Browser tests render index.html into about:blank without a base URL. The
+  // geometry/readout layer is still testable there, but relative asset fetches are not.
+  if(location.protocol==="about:" || location.protocol==="data:")return;
+
   try{
     const parts=await Promise.all(LOOPER_ASSET_PARTS.map(async url=>{
-      const response=await fetch(url,{cache:"no-store"});
+      const response=await fetch(url,{cache:"force-cache"});
       if(!response.ok)throw new Error(`Looper asset part unavailable (${response.status})`);
       return (await response.text()).trim();
     }));
@@ -89,10 +150,10 @@ async function loadLooperAsset(){
     if(looperAssetObjectUrl)URL.revokeObjectURL(looperAssetObjectUrl);
     looperAssetObjectUrl=URL.createObjectURL(blob);
     looper.style.setProperty("--looper-asset-url",`url("${looperAssetObjectUrl}")`);
-    installLooperAssetReadouts(looper);
-    looper.classList.add("asset-ui");
+    looper.classList.remove("asset-load-error");
   }catch(error){
-    console.warn("Scratch Practice: approved Looper asset could not be loaded; keeping legacy surface.",error);
+    looper.classList.add("asset-load-error");
+    window.__SP.report("LOOPER ASSET",error);
   }
 }
 
@@ -104,16 +165,28 @@ function installAssetSpeedControl(){
 
   const readouts=looper.__assetReadouts;
   let speedLevel=0;
-  let loopCount=0;
-  let loopSourceSeconds=0;
-  let loopLastCtxTime=0;
-  let wasPlaying=false;
+  let loopBaseUnits=typeof tapeCounterUnits==="number"?tapeCounterUnits:0;
 
   const paintSpeed=()=>{
     readouts.speedLevel.textContent=speedLevel?`+${speedLevel}`:"0";
     readouts.speedPercent.textContent=(100+speedLevel).toFixed(1);
     looper.dataset.speedLevel=String(speedLevel);
     looper.style.setProperty("--asset-glow",speedLevel?String(.08+speedLevel*.10):"0");
+    button.dataset.speedLevel=String(speedLevel);
+    button.setAttribute("aria-pressed",speedLevel?"true":"false");
+    button.setAttribute("aria-label",`Speed +1, niveau ${speedLevel?`+${speedLevel}`:"0"}`);
+    button.title=`SPEED ${speedLevel?`+${speedLevel}`:"0"}`;
+  };
+
+  const paintLoops=()=>{
+    if(!deckBuffer || typeof tapeCounterUnits!=="number"){
+      readouts.loops.textContent="0 / 8";
+      return;
+    }
+    const sourceUnits=Math.max(0,tapeCounterUnits-loopBaseUnits);
+    const completed=Math.floor(sourceUnits/Math.max(.01,deckBuffer.duration||.01));
+    const visible=completed===0?0:((completed-1)%8)+1;
+    readouts.loops.textContent=`${visible} / 8`;
   };
 
   const applySpeedLevel=level=>{
@@ -127,83 +200,43 @@ function installAssetSpeedControl(){
     paintSpeed();
   };
 
-  button.addEventListener("click",event=>{
-    // Six-state manual speed selector: 0 -> +1 ... +5 -> 0.
-    event.preventDefault();
-    event.stopImmediatePropagation();
+  // Replace the retired AUTO action at its native onclick owner instead of
+  // intercepting events with capture/stopImmediatePropagation.
+  button.onclick=event=>{
+    event.stopPropagation();
     applySpeedLevel((speedLevel+1)%6);
-  },true);
+  };
 
   if(resetButton){
-    resetButton.addEventListener("click",event=>{
-      event.preventDefault();
-      event.stopImmediatePropagation();
-      loopCount=0;
-      loopSourceSeconds=0;
-      readouts.loops.textContent="0 / 8";
+    const nativeReset=resetButton.onclick;
+    resetButton.onclick=event=>{
+      if(typeof nativeReset==="function")nativeReset.call(resetButton,event);
+      loopBaseUnits=typeof tapeCounterUnits==="number"?tapeCounterUnits:0;
       applySpeedLevel(0);
-    },true);
+      paintLoops();
+    };
   }
 
   const trackName=document.getElementById("cassetteBeatName");
   if(trackName){
     new MutationObserver(()=>{
-      // A newly loaded beat always starts at original speed.
+      // Loading a different beat resets the manual speed and its loop baseline.
+      loopBaseUnits=typeof tapeCounterUnits==="number"?tapeCounterUnits:0;
       if(autoLooperSpeedPercent===100 && speedLevel!==0)applySpeedLevel(0);
+      paintLoops();
     }).observe(trackName,{childList:true,subtree:true,characterData:true});
   }
 
-  setInterval(()=>{
-    const playing=!!deckSource && !!deckBuffer && !!ctx;
-    if(!playing){
-      if(wasPlaying){
-        loopCount=0;
-        loopSourceSeconds=0;
-        readouts.loops.textContent="0 / 8";
-      }
-      wasPlaying=false;
-      loopLastCtxTime=ctx?.currentTime||0;
-      return;
-    }
-
-    const now=ctx.currentTime;
-    if(!wasPlaying){
-      wasPlaying=true;
-      loopCount=0;
-      loopSourceSeconds=0;
-      loopLastCtxTime=now;
-      readouts.loops.textContent="0 / 8";
-      return;
-    }
-
-    const delta=Math.max(0,now-loopLastCtxTime);
-    loopLastCtxTime=now;
-    loopSourceSeconds+=delta*deckRate();
-    const duration=Math.max(.01,deckBuffer.duration||.01);
-    while(loopSourceSeconds>=duration){
-      loopSourceSeconds-=duration;
-      loopCount++;
-      if(loopCount>8)loopCount=1;
-      readouts.loops.textContent=`${loopCount} / 8`;
-    }
-  },100);
-
+  setInterval(paintLoops,100);
   paintSpeed();
+  paintLoops();
 }
 
 void loadLooperAsset();
 window.addEventListener("load",()=>{
-  // Deferred runtime files are initialized by now. If the image assembled
-  // slightly later, wait for the asset-ui class before wiring its behavior.
-  const tryInstall=()=>{
-    const looper=document.getElementById("looper");
-    if(looper?.classList.contains("asset-ui")){
-      installAssetSpeedControl();
-      return;
-    }
-    setTimeout(tryInstall,60);
-  };
-  tryInstall();
+  // events.js owns the native controls by this point; replace only SPEED and
+  // augment RESET once, with no retry loop.
+  installAssetSpeedControl();
 },{once:true});
 
 // Visual-only knob binding: native range inputs remain the single source of truth.

@@ -41,6 +41,7 @@ with sync_playwright() as p:
         page.evaluate('''() => {
           const looper=document.getElementById('looper');
           installLooperAssetReadouts(looper);
+          installAssetLibraryPager(looper);
           installAssetSpeedControl();
         }''')
         page.wait_for_timeout(120)
@@ -74,14 +75,38 @@ with sync_playwright() as p:
         }''')
         assert all(x['ok'] and x['w']>8 and x['h']>8 for x in inside), inside
 
-        rack=page.evaluate('''() => ({
-          columns:document.querySelectorAll('#library .cassetteRackColumn').length,
-          slots:document.querySelectorAll('#library .cassetteRackSlot').length,
-          visibleSlots:[...document.querySelectorAll('#library .cassetteRackSlot')].filter(x=>getComputedStyle(x).display!='none').length,
-          tracks:document.querySelectorAll('#library .track').length
-        })''')
+        # The rack shows real rows only: no fake empty slots are exposed to users.
+        rack=page.evaluate('''() => {
+          const slots=[...document.querySelectorAll('#library .cassetteRackSlot')];
+          const tracks=[...document.querySelectorAll('#library .track')];
+          const visibleSlots=slots.filter(x=>getComputedStyle(x).display!='none');
+          const firstMeta=document.querySelector('#library .trackMeta');
+          return {
+            columns:document.querySelectorAll('#library .cassetteRackColumn').length,
+            slots:slots.length,
+            visibleSlots:visibleSlots.length,
+            tracks:tracks.length,
+            visibleTracks:tracks.filter(x=>getComputedStyle(x).display!='none').length,
+            metaOpacity:firstMeta?parseFloat(getComputedStyle(firstMeta).opacity):0,
+            metaColor:firstMeta?getComputedStyle(firstMeta).color:'',
+            page:document.querySelector('.asset-page-readout')?.textContent||'',
+            prev:document.querySelector('.asset-page-prev')?.getBoundingClientRect().width||0,
+            next:document.querySelector('.asset-page-next')?.getBoundingClientRect().width||0
+          };
+        }''')
         assert rack['columns'] >= 3 and rack['slots'] >= 12 and rack['tracks'] >= 3, rack
-        assert rack['visibleSlots'] >= 9, rack
+        assert rack['visibleSlots'] == min(rack['tracks'],9), rack
+        assert rack['visibleTracks'] == min(rack['tracks'],9), rack
+        assert rack['metaOpacity'] > .9 and rack['metaColor'] not in ('rgba(0, 0, 0, 0)','transparent'), rack
+        assert rack['page'] == '1 / 1' and rack['prev'] > 8 and rack['next'] > 8, rack
+
+        # Search is a real visible text control instead of an invisible hotspot.
+        search=page.evaluate('''() => {
+          const el=document.getElementById('librarySearch'),cs=getComputedStyle(el);
+          return {opacity:parseFloat(cs.opacity),color:cs.color,caret:cs.caretColor,w:el.getBoundingClientRect().width};
+        }''')
+        assert search['opacity'] > .9 and search['w'] > 40, search
+        assert search['color'] not in ('rgba(0, 0, 0, 0)','transparent'), search
 
         # Manual speed selector follows the faceplate contract: +1..+5 then 0.
         sequence=[]
@@ -98,9 +123,10 @@ with sync_playwright() as p:
         page.wait_for_timeout(30)
         state=page.evaluate('''() => ({
           text:document.querySelector('.asset-state-readout').textContent,
+          header:document.querySelector('.asset-header-state-readout').textContent,
           playing:document.getElementById('looper').classList.contains('asset-playing')
         })''')
-        assert state == {'text':'PLAYING','playing':True}, state
+        assert state == {'text':'PLAYING','header':'PLAYING','playing':True}, state
 
         # Chopper must reveal its real workstation blocks and hide the looper.
         page.click('[data-tab="chopper"]')
@@ -134,4 +160,4 @@ with sync_playwright() as p:
         page.close()
     browser.close()
 
-print('OK: CSS layout — approved Looper faceplate overlays, manual speed selector, Chopper and Practice overlay')
+print('OK: CSS layout — approved Looper faceplate, truthful rack overlays, manual speed selector, Chopper and Practice overlay')
