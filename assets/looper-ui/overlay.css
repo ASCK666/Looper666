@@ -1,3 +1,7 @@
 /* Retired decorative Looper faceplate overlay.
-   The functional DOM in index.html is the only active Looper UI.
-   Keep this file intentionally inert while older cached HTML may still request it. */
+   The functional DOM in index.html is the only active Looper UI. */
+
+/* An empty crate is actually empty: do not draw placeholder cassette slots. */
+#library:not(:has(.track)) .cassetteRackColumn {
+  display: none !important;
+}
