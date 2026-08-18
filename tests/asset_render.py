@@ -81,7 +81,8 @@ with contextlib.ExitStack() as stack:
         ]}
         assert dict(info['readouts'])==expected, info['readouts']
         assert info['reelCount']==1, info
-        assert all('cassette-reel-overlay.svg' in value for value in info['reelAsset']), info['reelAsset']
+        assert 'cassette-reel-overlay.svg' in info['reelAsset'][0], info['reelAsset']
+        assert 'cassette-reel-overlay-right.svg' in info['reelAsset'][1], info['reelAsset']
         assert info['reelStopped']==['paused','paused','0','0'], info['reelStopped']
         assert info['cassetteLayer']==['rgba(0, 0, 0, 0)','none','none','none','normal','1'], info['cassetteLayer']
         assert not info['appErrors'], info
@@ -174,4 +175,4 @@ with contextlib.ExitStack() as stack:
         assert not context_errors,context_errors
         browser.close()
 
-print('OK: faceplate and cassette body stay fixed; only reel mechanisms visibly rotate with PLAY/STOP, speed and responsive alignment')
+print('OK: faceplate and cassette body stay fixed; exact faceplate-derived reel mechanisms visibly rotate with PLAY/STOP, speed and responsive alignment')
