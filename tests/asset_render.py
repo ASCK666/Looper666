@@ -69,7 +69,7 @@ with contextlib.ExitStack() as stack:
         assert info['looper']['width']>900 and info['looper']['height']>600, info
         assert info['state'] in {'EMPTY','READY','STOPPED','PLAYING'}, info
         assert info['speed']=='0', info
-        assert info['tracks']>=3, info
+        assert info['tracks']==0, info
         assert not info['appErrors'], info
         assert not page_errors, page_errors
         assert not failed, failed

@@ -65,7 +65,7 @@ assert.equal(evaluate("transactionError({error:{name:'AbortError'}},{error:{name
 assert.equal(evaluate("beatSpineTone({id:'same'})===beatSpineTone({id:'same'})"),true);
 assert.equal(evaluate("beatSpineTone({id:'same'})>=0 && beatSpineTone({id:'same'})<5"),true);
 assert.equal(evaluate("isFolderBeat({source:'beat-folder-cache'})"),true);
-assert.equal(evaluate("isFolderBeat({source:'bundled'})"),false);
+assert.equal(evaluate("isFolderBeat({source:'user-import'})"),false);
 assert.equal(evaluate("MIN_RACK_COLUMNS"),3);
 assert.equal(evaluate("RACK_SLOTS_PER_COLUMN"),4);
 assert.equal(evaluate("AUTO_LOOP_BATCH"),8);
