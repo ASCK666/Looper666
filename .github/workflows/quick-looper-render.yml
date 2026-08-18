@@ -4,6 +4,9 @@ on:
   push:
     branches:
       - fix/html-transparent-readouts
+  pull_request:
+    branches:
+      - fix/surgical-faceplate-digital-cleanup
 
 jobs:
   render:
@@ -21,7 +24,7 @@ jobs:
           mkdir -p test-artifacts
           python - <<'PY'
           from pathlib import Path
-          import contextlib, http.server, socketserver, threading
+          import http.server, socketserver, threading
           from playwright.sync_api import sync_playwright
 
           root=Path('.').resolve()
