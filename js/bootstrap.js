@@ -1,5 +1,5 @@
 "use strict";
-window.__SP={version:"102-integrated-label-crate-truth",ready:false,errors:[]};
+window.__SP={version:"103-clean-overlay-stack",ready:false,errors:[]};
 window.__SP.report=(scope,error)=>{
   const message=error?.message||String(error||"Unknown error");
   const item={scope,message,time:new Date().toISOString()};
@@ -11,48 +11,6 @@ window.addEventListener("error",event=>window.__SP.report("RUNTIME",event.error|
 window.addEventListener("unhandledrejection",event=>window.__SP.report("PROMISE",event.reason));
 
 const LOOPER_FACEPLATE_URL="./assets/looper-ui/faceplate.webp";
-
-function installLooperAlignmentFixes(){
-  if(document.getElementById("looperAlignmentFixes"))return;
-  const style=document.createElement("style");
-  style.id="looperAlignmentFixes";
-  style.textContent=`
-#looper.asset-ui .looper-faceplate{position:absolute!important;inset:0!important;width:100%!important;height:100%!important;object-fit:fill!important;display:block!important;z-index:0!important;pointer-events:none!important}
-#looper.asset-ui .beatCrateControls>div{display:contents!important}
-#looper.asset-ui .beatCrateControls label{display:none!important}
-#looper.asset-ui #library{grid-template-columns:repeat(3,minmax(0,1fr))!important;grid-template-rows:repeat(3,minmax(0,1fr))!important;gap:1.15%!important}
-#looper.asset-ui #library::before{display:none!important}
-#looper.asset-ui #library .cassetteRackColumn{display:contents!important}
-#looper.asset-ui #library .cassetteRackSlot{display:block!important;position:relative!important;min-width:0!important;min-height:0!important;overflow:hidden!important}
-#looper.asset-ui #library .cassetteRackSlot.asset-slot-empty{display:block!important;background:linear-gradient(180deg,#0a0806,#070605)!important;box-shadow:inset 0 0 0 1px rgba(226,173,95,.04)!important}
-#looper.asset-ui #library .cassetteRackSlot.asset-page-hidden{display:none!important}
-#looper.asset-ui #library .cassetteRackSlot::after{content:"";position:absolute;z-index:1;left:29.6%;top:5%;width:69.1%;height:90%;background:#080705;pointer-events:none}
-#looper.asset-ui #library .cassetteRackSlot.asset-slot-empty::before{content:"";position:absolute;z-index:3;inset:0;background:#080705;pointer-events:none}
-#looper.asset-ui #library .track{position:relative!important;z-index:4!important}
-#looper.asset-ui #library .trackMeta{left:31%!important;top:7%!important;width:65%!important;height:86%!important;background:#080705!important;padding:0 2%!important;z-index:5!important}
-#looper.asset-ui #library .trackSource{display:none!important}
-#looper.asset-ui #library .track>.btn{position:absolute!important;right:1%!important;top:18%!important;width:8%!important;height:64%!important;z-index:7!important;opacity:.001!important;color:transparent!important;background:transparent!important;border:0!important;box-shadow:none!important}
-
-/* Pixel-aligned masks over only the baked changing text. */
-#looper.asset-ui .asset-header-state-readout{left:5.15%!important;top:13.72%!important;width:7.5%!important;height:3.30%!important;padding:0 .12%!important;background:#090705!important;font-size:clamp(6px,.82vw,13px)!important;align-items:center!important}
-#looper.asset-ui .asset-track-readout{left:5.15%!important;top:17.70%!important;width:18.55%!important;height:3.75%!important;padding:0 .15%!important;background:#090705!important;font-size:clamp(7px,1.12vw,18px)!important;align-items:center!important}
-#looper.asset-ui .asset-state-readout{left:5.15%!important;top:28.35%!important;width:10.9%!important;height:3.75%!important;padding:0 .12%!important;background:#090705!important;font-size:clamp(7px,1.1vw,18px)!important;align-items:center!important}
-#looper.asset-ui .asset-speed-percent-readout{left:18.38%!important;top:28.35%!important;width:5.9%!important;height:3.75%!important;padding:0 .25%!important;background:#090705!important;font-size:clamp(7px,1.05vw,17px)!important;justify-content:flex-end!important;align-items:center!important}
-
-/* Faceplate owns “/ 8”; HTML replaces exactly the baked loop digit. */
-#looper.asset-ui .asset-loop-readout{left:76.62%!important;top:15.02%!important;width:2.72%!important;height:4.08%!important;padding:0!important;background:#090705!important;justify-content:center!important;align-items:center!important;font-size:clamp(10px,1.85vw,30px)!important}
-/* Replace the complete baked +2 group at its original position. */
-#looper.asset-ui .asset-speed-level-readout{left:77.62%!important;top:27.08%!important;width:4.18%!important;height:4.18%!important;padding:0!important;background:#090705!important;justify-content:center!important;align-items:center!important;font-size:clamp(10px,1.85vw,30px)!important}
-
-/* Cover the full original ink inside the existing paper strip, preserving its height and edges. */
-#looper.asset-ui .asset-cassette-label-readout{left:43.95%!important;top:14.35%!important;width:13.30%!important;height:4.25%!important;padding:0 .35%!important;color:#24170d!important;background-image:radial-gradient(circle at 12% 31%,rgba(255,255,255,.18) 0 .45px,transparent .7px),radial-gradient(circle at 66% 71%,rgba(94,68,42,.08) 0 .55px,transparent .8px),linear-gradient(180deg,#e5d4b9 0%,#dec8a7 50%,#d9c19f 100%)!important;background-size:12px 10px,17px 14px,100% 100%!important;border-radius:0!important;box-shadow:none!important;text-shadow:none!important;font:italic 600 clamp(7px,1vw,16px)/1 Georgia,serif!important;justify-content:center!important;align-items:center!important}
-
-#looper.asset-ui #librarySearch{left:23.0%!important;top:60.55%!important;width:14.95%!important;height:3.55%!important;background:#090705!important;border-color:rgba(226,173,95,.42)!important}
-#looper.asset-ui #libraryOrder{left:42.9%!important;top:60.55%!important;width:10.75%!important;height:3.55%!important;background:#090705!important;border-color:rgba(226,173,95,.42)!important}
-#looper.asset-ui .asset-page-readout{left:44.1%!important;top:90.6%!important;width:11.8%!important;height:5.7%!important;background:#080705!important}
-`;
-  document.head.appendChild(style);
-}
 
 function ensureLooperFaceplate(looper){
   let image=looper.querySelector(".looper-faceplate");
@@ -212,7 +170,6 @@ function installCrateTruthTransport(){
 function loadLooperAsset(){
   const looper=document.getElementById("looper");
   if(!looper)return;
-  installLooperAlignmentFixes();
   looper.classList.add("asset-ui");
   ensureLooperFaceplate(looper);
   installLooperAssetReadouts(looper);
