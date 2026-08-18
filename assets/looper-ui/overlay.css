@@ -223,8 +223,8 @@
 #looper.asset-ui #library .track.active .trackMeta b{color:#ffd07a!important;text-shadow:0 0 7px rgba(226,173,95,.32)}
 #looper.asset-ui #library .libraryEmptyMessage{display:none!important}
 
-/* Dynamic HTML readouts. Backgrounds are sampled from their exact locations in
-   faceplate.webp rather than using one generic black rectangle. */
+/* Dynamic HTML readouts. The cleaned digital panels come directly from
+   faceplate.webp; HTML contributes glyphs only, with transparent backgrounds. */
 #looper.asset-ui .asset-readout {
   position:absolute;
   z-index:9;
@@ -237,12 +237,12 @@
   font-family:ui-monospace,SFMono-Regular,Consolas,monospace;
   text-shadow:0 0 7px rgba(226,173,95,.34);
 }
-#looper.asset-ui .asset-header-state-readout{left:5.15%;top:13.72%;width:7.5%;height:3.30%;padding:0 .12%;font-size:clamp(6px,.82vw,13px);letter-spacing:.04em;background:#060300}
-#looper.asset-ui .asset-track-readout{left:5.15%;top:17.70%;width:18.55%;height:3.75%;padding:0 .15%;font-size:clamp(7px,1.12vw,18px);letter-spacing:.03em;background:#100700}
-#looper.asset-ui .asset-state-readout{left:5.15%;top:28.35%;width:10.9%;height:3.75%;padding:0 .12%;font-size:clamp(7px,1.1vw,18px);letter-spacing:.04em;background:#0b0500}
-#looper.asset-ui .asset-speed-percent-readout{left:18.38%;top:28.35%;width:5.9%;height:3.75%;justify-content:flex-end;padding:0 .25%;font-size:clamp(7px,1.05vw,17px);background:#0e0500}
-#looper.asset-ui .asset-loop-readout{left:76.62%;top:15.02%;width:2.72%;height:4.08%;justify-content:center;padding:0;font-size:clamp(10px,1.85vw,30px);background:#090602}
-#looper.asset-ui .asset-speed-level-readout{left:77.62%;top:27.08%;width:4.18%;height:4.18%;justify-content:center;padding:0;font-size:clamp(10px,1.85vw,30px);background:#070502}
+#looper.asset-ui .asset-header-state-readout{left:5.15%;top:13.72%;width:7.5%;height:3.30%;padding:0 .12%;font-size:clamp(6px,.82vw,13px);letter-spacing:.04em;background:transparent}
+#looper.asset-ui .asset-track-readout{left:5.15%;top:17.70%;width:18.55%;height:3.75%;padding:0 .15%;font-size:clamp(7px,1.12vw,18px);letter-spacing:.03em;background:transparent}
+#looper.asset-ui .asset-state-readout{left:5.15%;top:28.35%;width:10.9%;height:3.75%;padding:0 .12%;font-size:clamp(7px,1.1vw,18px);letter-spacing:.04em;background:transparent}
+#looper.asset-ui .asset-speed-percent-readout{left:18.38%;top:28.35%;width:5.9%;height:3.75%;justify-content:flex-end;padding:0 .25%;font-size:clamp(7px,1.05vw,17px);background:transparent}
+#looper.asset-ui .asset-loop-readout{left:76.62%;top:15.02%;width:2.72%;height:4.08%;justify-content:center;padding:0;font-size:clamp(10px,1.85vw,30px);background:transparent}
+#looper.asset-ui .asset-speed-level-readout{left:77.62%;top:27.08%;width:4.18%;height:4.18%;justify-content:center;padding:0;font-size:clamp(10px,1.85vw,30px);background:transparent}
 #looper.asset-ui .asset-cassette-label-readout {
   left:43.95%;top:14.35%;width:13.30%;height:4.25%;
   justify-content:center;
