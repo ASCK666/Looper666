@@ -77,6 +77,7 @@ jobs:
                   assert 'repeating-radial-gradient' in a['bg'],a
                   page.click('#stopBeat')
                   page.wait_for_function("deckSource === null && !document.getElementById('looper').classList.contains('asset-playing')",timeout=3000)
+                  page.wait_for_function("parseFloat(getComputedStyle(document.querySelector('.asset-cassette-glow'),'::before').opacity) < .01",timeout=1000)
                   stop_style=page.evaluate("""() => {
                     const cs=getComputedStyle(document.querySelector('.asset-cassette-glow'));
                     return [cs.backgroundImage,getComputedStyle(document.querySelector('.asset-cassette-glow'),'::before').opacity,getComputedStyle(document.querySelector('.asset-cassette-glow'),'::after').opacity];
@@ -88,7 +89,6 @@ jobs:
           play=Image.open(out/'transfer-quarter.png').convert('RGB')
           diff=ImageChops.difference(stop,play)
           px=diff.load(); w,h=stop.size
-          # Same two physical reel circles as the production overlay.
           circles=[(.302,.493,.0835),(.715,.493,.0835)]
           outside=inside=0
           for y in range(h):
