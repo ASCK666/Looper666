@@ -32,3 +32,11 @@ jobs:
 
       - name: Run maintained checks
         run: python tools/test_all.py
+
+      - name: Upload render screenshots
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: looper-render
+          path: test-artifacts/*.png
+          if-no-files-found: ignore
