@@ -49,6 +49,13 @@ jobs:
                     document.getElementById('looper').style.setProperty('--asset-tape-cycle','4s');
                   }""")
                   glow=page.locator('.asset-cassette-glow')
+                  geometry=page.evaluate("""() => {
+                    const g=document.querySelector('.asset-cassette-glow');
+                    return ['::before','::after'].map(which=>{
+                      const cs=getComputedStyle(g,which);
+                      return {x:parseFloat(cs.left),y:parseFloat(cs.top),w:parseFloat(cs.width),h:parseFloat(cs.height)};
+                    });
+                  }""")
                   glow.screenshot(path=str(out/'transfer-stop.png'))
                   page.click('#playBeat')
                   page.wait_for_function("deckSource !== null && document.getElementById('looper').classList.contains('asset-playing')",timeout=5000)
@@ -89,21 +96,27 @@ jobs:
           play=Image.open(out/'transfer-quarter.png').convert('RGB')
           diff=ImageChops.difference(stop,play)
           px=diff.load(); w,h=stop.size
-          circles=[(.302,.493,.0835),(.715,.493,.0835)]
           outside=inside=0
           for y in range(h):
               for x in range(w):
                   if max(px[x,y])<=8: continue
-                  xn=(x+.5)/w; yn=(y+.5)/h
-                  allowed=any(((xn-cx)/rad)**2+((yn-cy)/(rad*2.103))**2<=1 for cx,cy,rad in circles)
+                  allowed=False
+                  for r in geometry:
+                      cx=r['x']+r['w']/2; cy=r['y']+r['h']/2
+                      radius=min(r['w'],r['h'])*.53
+                      dx=(x+.5)-cx; dy=(y+.5)-cy
+                      if dx*dx+dy*dy <= radius*radius:
+                          allowed=True; break
                   if allowed: inside+=1
                   else: outside+=1
+          print('geometry:',geometry)
           print('changed inside:',inside,'outside:',outside)
           assert inside>1500,inside
           assert outside<150,outside
           print('OK: tape mass transfers only inside the two reel circles')
           PY
       - uses: actions/upload-artifact@v4
+        if: always()
         with:
           name: tape-transfer-render
           path: test-artifacts/transfer-*.png
