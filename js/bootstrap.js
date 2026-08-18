@@ -1,5 +1,5 @@
 "use strict";
-window.__SP={version:"96-visible-faceplate",ready:false,errors:[]};
+window.__SP={version:"97-visual-cleanup-b",ready:false,errors:[]};
 window.__SP.report=(scope,error)=>{
   const message=error?.message||String(error||"Unknown error");
   const item={scope,message,time:new Date().toISOString()};
@@ -24,19 +24,24 @@ function installLooperAlignmentFixes(){
 #looper.asset-ui #library::before{display:none!important}
 #looper.asset-ui #library .cassetteRackColumn{display:contents!important}
 #looper.asset-ui #library .cassetteRackSlot{display:block!important;position:relative!important;min-width:0!important;min-height:0!important;overflow:hidden!important}
-#looper.asset-ui #library .cassetteRackSlot.asset-slot-empty{display:block!important}
+#looper.asset-ui #library .cassetteRackSlot.asset-slot-empty{display:block!important;background:linear-gradient(180deg,#0a0806,#070605)!important;box-shadow:inset 0 0 0 1px rgba(226,173,95,.04)!important}
 #looper.asset-ui #library .cassetteRackSlot.asset-page-hidden{display:none!important}
-#looper.asset-ui #library .cassetteRackSlot::after{content:"";position:absolute;z-index:0;left:30%;top:7%;width:68%;height:86%;background:rgba(8,7,5,.97);pointer-events:none}
-#looper.asset-ui #library .track{position:relative!important;z-index:1!important}
-#looper.asset-ui #library .trackMeta{left:31%!important;top:8%!important;width:61%!important;height:84%!important;background:transparent!important;padding:0 2%!important}
-#looper.asset-ui #library .trackSource,#looper.asset-ui #library .track>.btn{z-index:2!important;background:transparent!important}
-#looper.asset-ui .asset-cassette-label-readout{left:38.9%!important;top:13.25%!important;width:26.1%!important;height:5.05%!important;font-size:clamp(7px,1.02vw,17px)!important}
-#looper.asset-ui .asset-header-state-readout{left:5.25%!important;top:12.35%!important;width:9.2%!important;height:4.0%!important;background:#090705!important;font-size:clamp(6px,.82vw,13px)!important}
-#looper.asset-ui .asset-track-readout{left:5.25%!important;top:17.6%!important;width:18.8%!important;height:3.2%!important;background:#090705!important;font-size:clamp(7px,1.12vw,18px)!important}
-#looper.asset-ui .asset-state-readout{left:5.25%!important;top:28.6%!important;width:8.4%!important;height:3.2%!important;background:#090705!important;font-size:clamp(7px,1.1vw,18px)!important}
-#looper.asset-ui .asset-speed-percent-readout{left:18.4%!important;top:28.6%!important;width:5.4%!important;height:3.2%!important;background:#090705!important;font-size:clamp(7px,1.05vw,17px)!important}
-#looper.asset-ui #librarySearch{left:23.1%!important;top:60.75%!important;width:14.6%!important;height:3.15%!important}
-#looper.asset-ui #libraryOrder{left:43.35%!important;top:60.75%!important;width:9.4%!important;height:3.15%!important}
+#looper.asset-ui #library .cassetteRackSlot::after{content:"";position:absolute;z-index:1;left:29.6%;top:5%;width:69.1%;height:90%;background:#080705;pointer-events:none}
+#looper.asset-ui #library .cassetteRackSlot.asset-slot-empty::before{content:"";position:absolute;z-index:3;inset:0;background:#080705;pointer-events:none}
+#looper.asset-ui #library .track{position:relative!important;z-index:4!important}
+#looper.asset-ui #library .trackMeta{left:31%!important;top:7%!important;width:65%!important;height:86%!important;background:#080705!important;padding:0 2%!important;z-index:5!important}
+#looper.asset-ui #library .trackSource{display:none!important}
+#looper.asset-ui #library .track>.btn{position:absolute!important;right:1%!important;top:18%!important;width:8%!important;height:64%!important;z-index:7!important;opacity:.001!important;color:transparent!important;background:transparent!important;border:0!important;box-shadow:none!important}
+#looper.asset-ui .asset-cassette-label-readout{left:38.55%!important;top:13.05%!important;width:26.65%!important;height:5.45%!important;background:#dbc7a5!important;color:#21150c!important;box-shadow:none!important;border-radius:2px!important;font-size:clamp(7px,1.02vw,17px)!important}
+#looper.asset-ui .asset-header-state-readout{left:5.2%!important;top:12.0%!important;width:18.9%!important;height:5.0%!important;background:#090705!important;font-size:clamp(6px,.82vw,13px)!important;padding-left:.2%!important}
+#looper.asset-ui .asset-track-readout{left:5.2%!important;top:17.35%!important;width:18.9%!important;height:4.2%!important;background:#090705!important;font-size:clamp(7px,1.12vw,18px)!important;padding-left:.2%!important}
+#looper.asset-ui .asset-state-readout{left:5.2%!important;top:28.0%!important;width:11.55%!important;height:4.35%!important;background:#090705!important;font-size:clamp(7px,1.1vw,18px)!important;padding-left:.15%!important}
+#looper.asset-ui .asset-speed-percent-readout{left:18.25%!important;top:28.0%!important;width:6.1%!important;height:4.35%!important;background:#090705!important;font-size:clamp(7px,1.05vw,17px)!important;padding-right:.55%!important}
+#looper.asset-ui .asset-loop-readout{left:75.65%!important;top:14.15%!important;width:8.25%!important;height:6.05%!important;background:#090705!important}
+#looper.asset-ui .asset-speed-level-readout{left:75.55%!important;top:26.55%!important;width:8.55%!important;height:6.75%!important;background:#090705!important}
+#looper.asset-ui #librarySearch{left:23.0%!important;top:60.55%!important;width:14.95%!important;height:3.55%!important;background:#090705!important;border-color:rgba(226,173,95,.42)!important}
+#looper.asset-ui #libraryOrder{left:42.9%!important;top:60.55%!important;width:10.75%!important;height:3.55%!important;background:#090705!important;border-color:rgba(226,173,95,.42)!important}
+#looper.asset-ui .asset-page-readout{left:44.1%!important;top:90.6%!important;width:11.8%!important;height:5.7%!important;background:#080705!important}
 `;
   document.head.appendChild(style);
 }
