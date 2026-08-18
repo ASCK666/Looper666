@@ -1,0 +1,145 @@
+name: Quick reel mechanism render
+
+on:
+  pull_request:
+    branches:
+      - fix/html-transparent-readouts
+
+jobs:
+  render:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install render dependencies
+        run: |
+          python -m pip install --disable-pip-version-check playwright pillow
+          python -m playwright install chromium
+      - name: Verify reel-only motion
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          import contextlib, http.server, socketserver, threading
+          from PIL import Image, ImageChops
+          from playwright.sync_api import sync_playwright
+
+          root=Path.cwd()
+          out=root/'test-artifacts'
+          out.mkdir(exist_ok=True)
+
+          class Quiet(http.server.SimpleHTTPRequestHandler):
+              def log_message(self,*_): pass
+
+          with contextlib.ExitStack() as stack:
+              handler=lambda *a,**kw: Quiet(*a,directory=str(root),**kw)
+              server=socketserver.TCPServer(('127.0.0.1',0),handler)
+              stack.callback(server.server_close)
+              threading.Thread(target=server.serve_forever,daemon=True).start()
+              stack.callback(server.shutdown)
+              port=server.server_address[1]
+
+              with sync_playwright() as p:
+                  browser=p.chromium.launch(headless=True,args=['--no-sandbox','--disable-dev-shm-usage'])
+                  page=browser.new_page(viewport={'width':1536,'height':1200},device_scale_factor=1)
+                  page.goto(f'http://127.0.0.1:{port}/index.html',wait_until='networkidle',timeout=30000)
+                  page.wait_for_function("window.__SP?.ready === true",timeout=10000)
+                  page.wait_for_function("document.querySelector('.looper-faceplate')?.naturalWidth === 1536",timeout=10000)
+                  page.evaluate("""() => {
+                    deckBuffer=new AudioBuffer({numberOfChannels:1,length:44100*8,sampleRate:44100});
+                    document.getElementById('deckTrack').textContent='mechanism-test.wav';
+                    refreshCassetteUI();
+                  }""")
+
+                  glow=page.locator('.asset-cassette-glow')
+                  fixed=page.evaluate("""() => {
+                    const g=document.querySelector('.asset-cassette-glow');
+                    const cs=getComputedStyle(g);
+                    return [cs.backgroundColor,cs.backgroundImage,cs.boxShadow,cs.filter,cs.mixBlendMode,cs.opacity];
+                  }""")
+                  print('fixed cassette layer:',fixed)
+                  assert fixed==['rgba(0, 0, 0, 0)','none','none','none','normal','1'], fixed
+
+                  glow.screenshot(path=str(out/'reel-stop.png'))
+                  geometry=page.evaluate("""() => {
+                    const g=document.querySelector('.asset-cassette-glow');
+                    const gb=g.getBoundingClientRect();
+                    return ['::before','::after'].map(which=>{
+                      const cs=getComputedStyle(g,which);
+                      return {
+                        x:parseFloat(cs.left), y:parseFloat(cs.top),
+                        w:parseFloat(cs.width), h:parseFloat(cs.height)
+                      };
+                    });
+                  }""")
+
+                  page.click('#playBeat')
+                  page.wait_for_function("deckSource !== null && document.getElementById('looper').classList.contains('asset-playing')",timeout=5000)
+                  page.wait_for_function("parseFloat(getComputedStyle(document.querySelector('.asset-cassette-glow'),'::before').opacity) > .95",timeout=1000)
+                  page.wait_for_timeout(120)
+                  t1=page.evaluate("""() => {
+                    const g=document.querySelector('.asset-cassette-glow');
+                    return [getComputedStyle(g,'::before').transform,getComputedStyle(g,'::after').transform];
+                  }""")
+                  glow.screenshot(path=str(out/'reel-play-a.png'))
+                  page.wait_for_timeout(480)
+                  t2=page.evaluate("""() => {
+                    const g=document.querySelector('.asset-cassette-glow');
+                    return [getComputedStyle(g,'::before').transform,getComputedStyle(g,'::after').transform];
+                  }""")
+                  glow.screenshot(path=str(out/'reel-play-b.png'))
+                  print('transforms A:',t1)
+                  print('transforms B:',t2)
+                  assert t1!=t2,(t1,t2)
+
+                  fixed_play=page.evaluate("""() => {
+                    const cs=getComputedStyle(document.querySelector('.asset-cassette-glow'));
+                    return [cs.backgroundColor,cs.backgroundImage,cs.boxShadow,cs.filter,cs.mixBlendMode,cs.opacity];
+                  }""")
+                  assert fixed_play==fixed,(fixed,fixed_play)
+                  page.click('#stopBeat')
+                  page.wait_for_function("deckSource === null && !document.getElementById('looper').classList.contains('asset-playing')",timeout=3000)
+                  browser.close()
+
+          stop=Image.open(out/'reel-stop.png').convert('RGB')
+          play=Image.open(out/'reel-play-a.png').convert('RGB')
+          assert stop.size==play.size
+          diff=ImageChops.difference(stop,play)
+          px=diff.load()
+          w,h=stop.size
+
+          # Only the two reel circles are allowed to change inside the cassette layer.
+          allowed=[[False]*w for _ in range(h)]
+          for r in geometry:
+              cx=r['x']+r['w']/2
+              cy=r['y']+r['h']/2
+              radius=min(r['w'],r['h'])*.53
+              rr=radius*radius
+              xmin=max(0,int(cx-radius-2)); xmax=min(w,int(cx+radius+3))
+              ymin=max(0,int(cy-radius-2)); ymax=min(h,int(cy+radius+3))
+              for y in range(ymin,ymax):
+                  dy=(y+.5)-cy
+                  for x in range(xmin,xmax):
+                      dx=(x+.5)-cx
+                      if dx*dx+dy*dy <= rr:
+                          allowed[y][x]=True
+
+          outside=0
+          inside=0
+          for y in range(h):
+              for x in range(w):
+                  if max(px[x,y]) > 8:
+                      if allowed[y][x]: inside+=1
+                      else: outside+=1
+          print('changed pixels inside reels:',inside)
+          print('changed pixels outside reels:',outside)
+          assert inside>1200, inside
+          assert outside<120, outside
+          print('OK: the cassette/support stays fixed; only both reel mechanisms move')
+          PY
+      - uses: actions/upload-artifact@v4
+        with:
+          name: reel-mechanism-render
+          path: test-artifacts/reel-*.png
