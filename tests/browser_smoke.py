@@ -109,6 +109,58 @@ with tempfile.TemporaryDirectory() as td:
         assert chrome['libraryBackground']=='none',chrome
         assert chrome['legacyDeckImage']=='none' and chrome['legacyDoorImage']=='none',chrome
 
+        # Desktop HTML is pinned to the artwork coordinate system, not the retired grid.
+        geometry=page.evaluate('''() => {
+          const deck=document.querySelector('.cassetteDeck').getBoundingClientRect();
+          const crate=document.querySelector('.beatCratePanel').getBoundingClientRect();
+          const box=(selector,parent) => {
+            const r=document.querySelector(selector).getBoundingClientRect();
+            return {
+              x:(r.left-parent.left)/parent.width,
+              y:(r.top-parent.top)/parent.height,
+              w:r.width/parent.width,
+              h:r.height/parent.height
+            };
+          };
+          return {
+            deckRatio:deck.width/deck.height,
+            readout:box('.deckReadout',deck),
+            mechanism:box('.cassetteMechanismCrop',deck),
+            counter:box('.tapeCounterModule',deck),
+            prev:box('#prevBeat',deck),
+            play:box('#playBeat',deck),
+            stop:box('#stopBeat',deck),
+            next:box('#nextBeat',deck),
+            auto:box('#autoLooperToggle',deck),
+            folder:box('#importFolderBtn',deck),
+            beat:box('#importBeatsBtn',deck),
+            crateRatio:crate.width/crate.height,
+            library:box('.library',crate)
+          };
+        }''')
+        def near(value,target,tol=.012):
+            return abs(value-target) <= tol
+        assert near(geometry['deckRatio'],1358/529,.02),geometry
+        assert near(geometry['readout']['x'],.1679) and near(geometry['readout']['y'],.1550),geometry['readout']
+        assert near(geometry['mechanism']['x'],.3100) and near(geometry['mechanism']['y'],.2476),geometry['mechanism']
+        assert near(geometry['mechanism']['w'],.3697) and near(geometry['mechanism']['h'],.4461),geometry['mechanism']
+        assert near(geometry['counter']['x'],.1405) and near(geometry['counter']['y'],.4310),geometry['counter']
+        expected_buttons={
+            'prev':(.2305,.7278,.1008,.1626),
+            'play':(.3424,.7278,.1010,.1626),
+            'stop':(.4536,.7278,.1010,.1626),
+            'next':(.5648,.7278,.1010,.1626),
+            'auto':(.6760,.7278,.1100,.1626),
+            'folder':(.7342,.3554,.1082,.1360),
+            'beat':(.7342,.5180,.1082,.1360),
+        }
+        for name,(x,y,w,h) in expected_buttons.items():
+            actual=geometry[name]
+            assert near(actual['x'],x,.015) and near(actual['y'],y,.015),(name,actual)
+            assert near(actual['w'],w,.018) and near(actual['h'],h,.018),(name,actual)
+        assert near(geometry['crateRatio'],1358/320,.03),geometry
+        assert near(geometry['library']['x'],.0235) and near(geometry['library']['y'],.331,.018),geometry['library']
+
         # Real LOOPER import -> load -> PLAY/STOP.
         page.set_input_files('#beatFiles',str(beat))
         page.wait_for_function("document.getElementById('deckTrack').textContent === 'test-beat.wav'",timeout=10000)
@@ -199,4 +251,4 @@ with tempfile.TemporaryDirectory() as td:
         context.close()
         browser.close()
 
-print('OK: browser startup, single-layer faceplates, cassette reels, tape counter, real imports, transport, shortcuts, five-state AUTO SPEED and filename-XSS regression')
+print('OK: browser startup, faceplate geometry, cassette reels, tape counter, real imports, transport, shortcuts, five-state AUTO SPEED and filename-XSS regression')
