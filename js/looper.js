@@ -236,41 +236,6 @@ let beatDirectoryHandle=null;
 let beatDirectoryRows=[];
 let trackLoadSequence=0;
 let deckTransportSequence=0;
-const DEFAULT_BEATS=[
-  {
-    id:"bundled:stack-piano-horns-85",
-    name:"Stack Piano + Horns • 85 BPM • A♯m",
-    label:"Stack Piano + Horns",
-    url:"./assets/beats/stack-piano-horns-85-asharp-minor.wav",
-    duration:5.393265,
-    bpm:85,
-    key:"A♯m",
-    created:1786647106000,
-    source:"bundled"
-  },
-  {
-    id:"bundled:violin-piano-92",
-    name:"Violin + Piano • 92 BPM • B♭m",
-    label:"Violin + Piano",
-    url:"./assets/beats/violin-piano-92-bflat-minor.wav",
-    duration:5.217392,
-    bpm:92,
-    key:"B♭m",
-    created:1786629195000,
-    source:"bundled"
-  },
-  {
-    id:"bundled:stack-violin-piano-89",
-    name:"Stack Violin + Piano • 89 BPM • Cm",
-    label:"Stack Violin + Piano",
-    url:"./assets/beats/stack-violin-piano-89-c-minor.wav",
-    duration:5.333333,
-    bpm:89,
-    key:"Cm",
-    created:1786637686000,
-    source:"bundled"
-  }
-];
 
 
 function beatFolderSupported(){
@@ -525,9 +490,6 @@ function isFolderBeat(row){
   return row.source==="beat-folder"||row.source==="beat-folder-cache";
 }
 
-function isBundledBeat(row){
-  return row.source==="bundled";
-}
 
 function relativeTrackIndex(rows,currentId,delta){
   if(!rows.length)return -1;
@@ -549,20 +511,17 @@ function createBeatSpine(row){
   b.textContent=row.label||shortName(row.name);
   const sm=document.createElement("small");
   const folderSource=isFolderBeat(row);
-  const bundledSource=isBundledBeat(row);
-  sm.textContent=bundledSource
-    ? `${row.duration.toFixed(1)} s • INCLUDED • ${row.bpm} BPM • ${row.key}`
-    : folderSource
+  sm.textContent=folderSource
     ? `${row.duration?row.duration.toFixed(1):"?"} s • LOCAL LIBRARY`
     : `${row.duration?row.duration.toFixed(1):"?"} s • USER IMPORT`;
   meta.append(b,sm);
 
   let right;
-  if(folderSource||bundledSource){
+  if(folderSource){
     right=document.createElement("span");
-    right.className="trackSource"+(bundledSource?" bundled":"");
-    right.textContent=bundledSource?"IN":"LIB";
-    right.title=bundledSource?"Beat inclus dans l'application":"Beat protégé de la bibliothèque locale";
+    right.className="trackSource";
+    right.textContent="LIB";
+    right.title="Beat protégé de la bibliothèque locale";
   }else{
     right=document.createElement("button");
     right.className="btn danger";
@@ -609,7 +568,6 @@ function mergeLibraryRows(dbRows){
   ]);
 
   return [
-    ...DEFAULT_BEATS,
     ...beatDirectoryRows,
     ...cachedOnly,
     ...normalRows.filter(row=>!folderNames.has(row.name.toLowerCase()))
@@ -621,8 +579,6 @@ function visibleLibraryRows(rows,query,order){
   return rows
     .filter(row=>!normalizedQuery||row.name.toLowerCase().includes(normalizedQuery))
     .sort((a,b)=>{
-      const bundledFirst=Number(isBundledBeat(b))-Number(isBundledBeat(a));
-      if(bundledFirst)return bundledFirst;
       if(order==="recent")return (b.created||0)-(a.created||0);
       return a.name.localeCompare(b.name);
     });
@@ -682,17 +638,9 @@ async function refreshLibrary(rescanDirectory=true){
 async function decodeTrackAudio(row){
   if(!row)throw new Error("Beat introuvable");
   await ensureAudio();
-  let bytes;
-  if(row.blob){
-    assertLocalFileSize(row.blob,MAX_BEAT_FILE_BYTES,"beat");
-    bytes=await row.blob.arrayBuffer();
-  }else if(row.url){
-    const response=await fetch(row.url,{cache:"force-cache"});
-    if(!response.ok)throw new Error(`Beat inclus indisponible (${response.status})`);
-    bytes=await response.arrayBuffer();
-  }else{
-    throw new Error("Source audio introuvable");
-  }
+  if(!row.blob)throw new Error("Source audio introuvable");
+  assertLocalFileSize(row.blob,MAX_BEAT_FILE_BYTES,"beat");
+  const bytes=await row.blob.arrayBuffer();
   return await ctx.decodeAudioData(bytes);
 }
 

@@ -95,10 +95,11 @@ with sync_playwright() as p:
             next:document.querySelector('.asset-page-next')?.getBoundingClientRect().width||0
           };
         }''')
-        assert rack['columns'] >= 3 and rack['slots'] >= 12 and rack['tracks'] >= 3, rack
+        assert rack['columns'] >= 3 and rack['slots'] >= 12, rack
         assert rack['visibleSlots'] >= 9, rack
         assert rack['visibleTracks'] == min(rack['tracks'],9), rack
-        assert rack['metaOpacity'] > .9 and rack['metaColor'] not in ('rgba(0, 0, 0, 0)','transparent'), rack
+        if rack['tracks']:
+            assert rack['metaOpacity'] > .9 and rack['metaColor'] not in ('rgba(0, 0, 0, 0)','transparent'), rack
         assert rack['page'] == '1 / 1' and rack['prev'] > 8 and rack['next'] > 8, rack
 
         search=page.evaluate('''() => {
