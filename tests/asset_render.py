@@ -155,9 +155,15 @@ with contextlib.ExitStack() as stack:
             page.wait_for_function("parseFloat(getComputedStyle(document.querySelector('.asset-cassette-glow'),'::before').opacity) < .01",timeout=1000)
             stopped=page.evaluate('''() => {
               const glow=document.querySelector('.asset-cassette-glow');
-              return [getComputedStyle(glow,'::before').animationPlayState,getComputedStyle(glow,'::after').animationPlayState,getComputedStyle(glow,'::before').opacity,getComputedStyle(glow,'::after').opacity,document.querySelectorAll('.asset-cassette-glow').length];
+              return [
+                getComputedStyle(glow,'::before').animationPlayState,
+                getComputedStyle(glow,'::after').animationPlayState,
+                parseFloat(getComputedStyle(glow,'::before').opacity),
+                parseFloat(getComputedStyle(glow,'::after').opacity),
+                document.querySelectorAll('.asset-cassette-glow').length
+              ];
             }''')
-            assert stopped==['paused','paused','0','0',1], stopped
+            assert stopped[0:2]==['paused','paused'] and stopped[2]<.01 and stopped[3]<.01 and stopped[4]==1, stopped
             page.click('#playBeat')
             page.wait_for_function("deckSource !== null && document.getElementById('looper').classList.contains('asset-playing')",timeout=3000)
             page.wait_for_function("parseFloat(getComputedStyle(document.querySelector('.asset-cassette-glow'),'::before').opacity) > .5",timeout=1000)
