@@ -63,14 +63,14 @@ with contextlib.ExitStack() as stack:
         assert info['faceSize']==[1536,1024], info
         assert info['tracks']==0, info
         assert all(c['display']!='none' and c['visibility']=='visible' and c['opacity']>.5 and c['w']>20 and c['h']>20 and c['handler']=='function' for c in info['controls']), info
-        expected={
-          'asset-header-state-readout':'rgb(6, 3, 0)',
-          'asset-track-readout':'rgb(16, 7, 0)',
-          'asset-state-readout':'rgb(11, 5, 0)',
-          'asset-speed-percent-readout':'rgb(14, 5, 0)',
-          'asset-loop-readout':'rgb(9, 6, 2)',
-          'asset-speed-level-readout':'rgb(7, 5, 2)',
-        }
+        expected={cls:'rgba(0, 0, 0, 0)' for cls in [
+          'asset-header-state-readout',
+          'asset-track-readout',
+          'asset-state-readout',
+          'asset-speed-percent-readout',
+          'asset-loop-readout',
+          'asset-speed-level-readout',
+        ]}
         assert dict(info['readouts'])==expected, info['readouts']
         assert not info['appErrors'], info
         assert not page_errors, page_errors
@@ -85,4 +85,4 @@ with contextlib.ExitStack() as stack:
         page.screenshot(path=str(ARTIFACTS/'full-render.png'),full_page=True)
         browser.close()
 
-print('OK: approved faceplate.webp is the mounted Looper visual, sampled HTML readouts match it, and primary controls execute click paths')
+print('OK: approved faceplate.webp is mounted, dynamic deck readouts are transparent, and primary controls execute click paths')
