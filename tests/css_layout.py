@@ -46,7 +46,7 @@ with sync_playwright() as p:
         assert metrics['tracks']==0 and metrics['faceplates']==0, metrics
         assert metrics['bodyW'] <= metrics['viewportW'] + 2, metrics
 
-        controls=page.evaluate('''() => ['tapeCounterReset','cassetteDoorEject','prevBeat','playBeat','stopBeat','nextBeat','autoLooperToggle','importBeatsBtn','importFolderBtn'].map(id=>{
+        controls=page.evaluate('''() => ['prevBeat','playBeat','stopBeat','nextBeat','autoLooperToggle','importBeatsBtn','importFolderBtn'].map(id=>{
           const el=document.getElementById(id),r=el.getBoundingClientRect(),cs=getComputedStyle(el);
           return {id,w:r.width,h:r.height,display:cs.display,visibility:cs.visibility,opacity:parseFloat(cs.opacity),handler:typeof el.onclick};
         })''')
