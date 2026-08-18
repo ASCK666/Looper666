@@ -22,7 +22,11 @@ window.addEventListener("unhandledrejection",event=>{
 const looperAssetCss=document.createElement("link");
 looperAssetCss.rel="stylesheet";
 looperAssetCss.href="./assets/looper-ui/overlay.css";
-looperAssetCss.onerror=()=>window.__SP.report("LOOPER CSS",new Error("Looper overlay stylesheet unavailable"));
+looperAssetCss.onerror=()=>{
+  if(location.protocol!=="about:" && location.protocol!=="data:"){
+    window.__SP.report("LOOPER CSS",new Error("Looper overlay stylesheet unavailable"));
+  }
+};
 document.head.appendChild(looperAssetCss);
 
 const LOOPER_ASSET_PARTS=[
@@ -128,6 +132,10 @@ async function loadLooperAsset(){
   looper.classList.add("asset-ui");
   installLooperAssetReadouts(looper);
   installAssetLibraryPager(looper);
+
+  // Browser tests render index.html into about:blank without a base URL. The
+  // geometry/readout layer is still testable there, but relative asset fetches are not.
+  if(location.protocol==="about:" || location.protocol==="data:")return;
 
   try{
     const parts=await Promise.all(LOOPER_ASSET_PARTS.map(async url=>{
