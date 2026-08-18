@@ -269,7 +269,7 @@
 #looper.asset-ui .asset-page-prev{left:36%}
 #looper.asset-ui .asset-page-next{left:54.1%}
 
-/* Positioning container for exact reel crops taken from faceplate.webp.
+/* Positioning container for exact reel crops taken directly from faceplate.webp.
    The cassette body/support remains frozen; only those two circular crops rotate. */
 #looper.asset-ui .asset-cassette-glow {
   position:absolute;z-index:3;left:30.5%;top:10.7%;width:38.7%;height:27.6%;
@@ -291,6 +291,9 @@
   pointer-events:none;
   opacity:0;
   border-radius:50%;
+  background-image:url("./faceplate.webp");
+  background-size:1635.43% 1090.29%;
+  background-repeat:no-repeat;
   transform-origin:50% 50%;
   animation-name:asset-cassette-reel-spin;
   animation-timing-function:linear;
@@ -301,12 +304,12 @@
 }
 #looper.asset-ui .asset-cassette-glow::before{
   left:22.3%;
-  background:url("./cassette-reel-overlay.svg") center/contain no-repeat;
+  background-position:41.67858% 21.71707%;
   animation-duration:var(--asset-supply-reel-cycle)
 }
 #looper.asset-ui .asset-cassette-glow::after{
   left:63.6%;
-  background:url("./cassette-reel-overlay-right.svg") center/contain no-repeat;
+  background-position:58.70263% 21.71707%;
   animation-duration:var(--asset-takeup-reel-cycle)
 }
 #looper.asset-ui.asset-playing .asset-cassette-glow::before,
