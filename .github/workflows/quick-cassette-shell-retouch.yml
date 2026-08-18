@@ -1,9 +1,9 @@
 name: Quick cassette shell retouch
 
 on:
-  push:
+  pull_request:
     branches:
-      - fix/cassette-shell-label-retouch
+      - feat/cassette-reel-animation
 
 jobs:
   retouch:
@@ -50,7 +50,6 @@ jobs:
           dark=(roi<138).astype(np.uint8)*255
           dark=cv2.dilate(dark,np.ones((3,3),np.uint8),iterations=1)
           text_mask[150:193,665:895]=dark
-          # Hard-limit the operation to the predeclared label region.
           text_mask[~label_allowed]=0
           inpainted=cv2.inpaint(cv2.cvtColor(before,cv2.COLOR_RGB2BGR),text_mask,7,cv2.INPAINT_TELEA)
           working=cv2.cvtColor(inpainted,cv2.COLOR_BGR2RGB).astype(np.float32)
@@ -74,7 +73,7 @@ jobs:
           working=working*(1-haze[...,None]*0.35)+sharp*(haze[...,None]*0.35)
 
           # 3) Restore visual continuity of the wound tape around both reels using
-          #    only deterministic tonal treatment of the existing faceplate pixels.
+          #    deterministic tonal treatment of the existing faceplate pixels.
           tape_total=np.zeros((h,w),dtype=np.float32)
           for cx,cy in ((648.0,249.0),(893.5,249.0)):
               r=np.sqrt((xx-cx)**2+(yy-cy)**2)
@@ -101,7 +100,6 @@ jobs:
           outside=changed & ~allowed
           assert int(outside.sum())==0, int(outside.sum())
 
-          # Native-resolution visual diagnostics.
           crop=(470,120,1070,395)
           Image.fromarray(before,'RGB').crop(crop).save(out/'cassette-before.png')
           Image.fromarray(decoded,'RGB').crop(crop).save(out/'cassette-after.png')
