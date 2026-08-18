@@ -44,6 +44,7 @@ with contextlib.ExitStack() as stack:
           const looper=document.getElementById('looper');
           const face=document.querySelector('.looper-faceplate');
           const glow=document.querySelector('.asset-cassette-glow');
+          const layer=getComputedStyle(glow);
           const leftReel=getComputedStyle(glow,'::before');
           const rightReel=getComputedStyle(glow,'::after');
           const ids=['prevBeat','playBeat','stopBeat','nextBeat','autoLooperToggle','importFolderBtn','importBeatsBtn'];
@@ -59,6 +60,7 @@ with contextlib.ExitStack() as stack:
             reelCount:document.querySelectorAll('.asset-cassette-glow').length,
             reelAsset:[leftReel.backgroundImage,rightReel.backgroundImage],
             reelStopped:[leftReel.animationPlayState,rightReel.animationPlayState,leftReel.opacity,rightReel.opacity],
+            cassetteLayer:[layer.backgroundColor,layer.backgroundImage,layer.boxShadow,layer.filter,layer.mixBlendMode,layer.opacity],
             appErrors:window.__SP?.errors||[]
           };
         }''')
@@ -81,6 +83,7 @@ with contextlib.ExitStack() as stack:
         assert info['reelCount']==1, info
         assert all('cassette-reel-overlay.svg' in value for value in info['reelAsset']), info['reelAsset']
         assert info['reelStopped']==['paused','paused','0','0'], info['reelStopped']
+        assert info['cassetteLayer']==['rgba(0, 0, 0, 0)','none','none','none','normal','1'], info['cassetteLayer']
         assert not info['appErrors'], info
         assert not page_errors, page_errors
         assert not failed, failed
@@ -122,6 +125,11 @@ with contextlib.ExitStack() as stack:
         assert playing[0:2]==['running','running'], playing
         assert all(float(v)>.5 for v in playing[2:4]), playing
         assert all(value!='none' for value in playing[6:8]), playing
+        cassette_layer_playing=page.evaluate('''() => {
+          const cs=getComputedStyle(document.querySelector('.asset-cassette-glow'));
+          return [cs.backgroundColor,cs.backgroundImage,cs.boxShadow,cs.filter,cs.mixBlendMode,cs.opacity];
+        }''')
+        assert cassette_layer_playing==info['cassetteLayer'], (info['cassetteLayer'],cassette_layer_playing)
         page.locator('#looper').screenshot(path=str(ARTIFACTS/'looper-reels-playing.png'))
         page.wait_for_timeout(320)
         moved=page.evaluate('''() => {
@@ -166,4 +174,4 @@ with contextlib.ExitStack() as stack:
         assert not context_errors,context_errors
         browser.close()
 
-print('OK: faceplate stays fixed, deck readouts stay transparent, and reel overlays visibly rotate with PLAY/STOP, speed and responsive alignment')
+print('OK: faceplate and cassette body stay fixed; only reel mechanisms visibly rotate with PLAY/STOP, speed and responsive alignment')
