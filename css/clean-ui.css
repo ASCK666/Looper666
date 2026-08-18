@@ -807,3 +807,61 @@
     grid-column: 1 / -1 !important;
   }
 }
+
+/* Generated hardware-only assets. They live behind the controls; the existing
+   cassette mechanism, door and reel animation stay as live DOM above them. */
+#looper.active .cassetteDeck:is(.cassetteDeck),
+#looper.active .beatCratePanel:is(.beatCratePanel) {
+  position: relative;
+  isolation: isolate;
+}
+
+#looper.active .cassetteDeck:is(.cassetteDeck)::after,
+#looper.active .beatCratePanel:is(.beatCratePanel)::before {
+  content: "";
+  position: absolute;
+  z-index: 0;
+  inset: 0;
+  pointer-events: none;
+  background-position: center;
+  background-repeat: no-repeat;
+  background-size: 100% 100%;
+}
+
+#looper.active .cassetteDeck:is(.cassetteDeck)::after {
+  background-image: url("../assets/looper-deck-faceplate-retro.svg");
+  opacity: .78;
+}
+
+#looper.active .beatCratePanel:is(.beatCratePanel)::before {
+  background-image: url("../assets/looper-beat-crate-retro.svg");
+  opacity: .68;
+}
+
+#looper.active .cassetteDeck:is(.cassetteDeck) > *,
+#looper.active .beatCratePanel:is(.beatCratePanel) > * {
+  position: relative;
+  z-index: 1;
+}
+
+#looper.active .cassetteDeck .deckReadout {
+  background: rgb(9 6 3 / .84) !important;
+}
+
+#looper.active .cassetteDeck .tapeCounterModule {
+  background: linear-gradient(180deg,rgb(21 18 15 / .90),rgb(9 8 6 / .90) 70%,rgb(5 4 3 / .92)) !important;
+}
+
+#looper.active .cassetteDeck .cassetteMechanismCrop {
+  z-index: 2;
+  background: #080706 !important;
+}
+
+#looper.active .cassetteDeck .deckLoadKey,
+#looper.active .cassetteDeck .deckHotspot {
+  background: linear-gradient(180deg,rgb(33 29 25 / .93),rgb(17 16 14 / .94) 60%,rgb(9 8 6 / .96)) !important;
+}
+
+#looper.active .beatCratePanel .library {
+  background: linear-gradient(180deg,rgb(10 9 8 / .84),rgb(5 4 3 / .90)) !important;
+}
