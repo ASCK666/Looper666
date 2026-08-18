@@ -244,12 +244,12 @@
 #looper.asset-ui .asset-loop-readout{left:76.62%;top:15.02%;width:2.72%;height:4.08%;justify-content:center;padding:0;font-size:clamp(10px,1.85vw,30px);background:transparent}
 #looper.asset-ui .asset-speed-level-readout{left:77.62%;top:27.08%;width:4.18%;height:4.18%;justify-content:center;padding:0;font-size:clamp(10px,1.85vw,30px);background:transparent}
 #looper.asset-ui .asset-cassette-label-readout {
-  left:43.95%;top:14.35%;width:13.30%;height:4.25%;
+  left:43.95%;top:15.15%;width:13.30%;height:3.45%;
   justify-content:center;
   padding:0 .35%;
   color:#17100b;
-  background-image:radial-gradient(circle at 12% 31%,rgba(255,255,255,.10) 0 .45px,transparent .7px),radial-gradient(circle at 66% 71%,rgba(74,50,32,.07) 0 .55px,transparent .8px),linear-gradient(90deg,#d1ae8b 0%,#b89c86 48%,#c3a389 70%,#e1b489 100%);
-  background-size:12px 10px,17px 14px,100% 100%;
+  background-image:radial-gradient(circle at 12% 31%,rgba(255,255,255,.10) 0 .45px,transparent .7px),radial-gradient(circle at 66% 71%,rgba(74,50,32,.07) 0 .55px,transparent .8px),linear-gradient(90deg,rgba(91,50,25,.055) 0%,rgba(255,201,120,.045) 100%),linear-gradient(180deg,#f9dcae 0%,#e6b98b 16%,#e2b78c 40%,#dbb48e 65%,#d4b08f 86%,#c5a285 100%);
+  background-size:12px 10px,17px 14px,100% 100%,100% 100%;
   border-radius:0;
   box-shadow:none;
   text-shadow:none;
