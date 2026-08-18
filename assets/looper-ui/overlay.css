@@ -4,6 +4,8 @@
 #looper.asset-ui {
   --asset-amber:#e2ad5f;
   --asset-glow:0;
+  --asset-supply-reel-cycle:2.910s;
+  --asset-takeup-reel-cycle:1.460s;
   position:relative!important;
   width:100%!important;
   aspect-ratio:1536/1024!important;
@@ -14,6 +16,12 @@
   background:#070605!important;
   box-shadow:0 16px 38px rgba(0,0,0,.38)!important;
 }
+
+#looper.asset-ui[data-speed-level="1"]{--asset-supply-reel-cycle:2.881s;--asset-takeup-reel-cycle:1.446s}
+#looper.asset-ui[data-speed-level="2"]{--asset-supply-reel-cycle:2.853s;--asset-takeup-reel-cycle:1.431s}
+#looper.asset-ui[data-speed-level="3"]{--asset-supply-reel-cycle:2.825s;--asset-takeup-reel-cycle:1.417s}
+#looper.asset-ui[data-speed-level="4"]{--asset-supply-reel-cycle:2.798s;--asset-takeup-reel-cycle:1.404s}
+#looper.asset-ui[data-speed-level="5"]{--asset-supply-reel-cycle:2.771s;--asset-takeup-reel-cycle:1.390s}
 
 #looper.asset-ui>.layout{display:none!important}
 
@@ -268,9 +276,32 @@
   box-shadow:inset 0 0 22px rgba(226,129,36,.11),0 0 14px rgba(226,129,36,.06);
   mix-blend-mode:screen;transition:opacity .15s ease,filter .15s ease,box-shadow .15s ease;
 }
+#looper.asset-ui .asset-cassette-glow::before,
+#looper.asset-ui .asset-cassette-glow::after {
+  content:"";
+  position:absolute;
+  top:32.7%;
+  width:15.8%;
+  aspect-ratio:1;
+  pointer-events:none;
+  opacity:0;
+  background:url("./cassette-reel-overlay.svg") center/contain no-repeat;
+  transform-origin:50% 50%;
+  animation-name:asset-cassette-reel-spin;
+  animation-timing-function:linear;
+  animation-iteration-count:infinite;
+  animation-play-state:paused;
+  transition:opacity .08s linear;
+}
+#looper.asset-ui .asset-cassette-glow::before{left:22.3%;animation-duration:var(--asset-supply-reel-cycle)}
+#looper.asset-ui .asset-cassette-glow::after{left:63.6%;animation-duration:var(--asset-takeup-reel-cycle)}
+#looper.asset-ui.asset-playing .asset-cassette-glow::before,
+#looper.asset-ui.asset-playing .asset-cassette-glow::after{opacity:.78;animation-play-state:running}
 #looper.asset-ui.asset-playing .asset-cassette-glow{opacity:1;filter:brightness(1.22);box-shadow:inset 0 0 29px rgba(255,156,36,.17),0 0 18px rgba(255,156,36,.10)}
 #looper.asset-ui .asset-speed-glow{position:absolute;z-index:3;left:75.2%;top:22.3%;width:10.7%;height:12%;pointer-events:none;opacity:var(--asset-glow);background:radial-gradient(ellipse at 50% 54%,rgba(255,168,43,.34),transparent 66%);filter:blur(2px);mix-blend-mode:screen;transition:opacity .12s ease,filter .12s ease}
 #looper.asset-ui .asset-speed-button-glow{position:absolute;z-index:3;left:65.45%;top:46.05%;width:9.4%;height:8.7%;pointer-events:none;opacity:var(--asset-glow);border-radius:4px;box-shadow:inset 0 0 12px rgba(255,165,46,.34),0 0 12px rgba(255,165,46,.24);transition:opacity .12s ease,box-shadow .12s ease}
+
+@keyframes asset-cassette-reel-spin{to{transform:rotate(1turn)}}
 
 @media(max-width:760px){
   #looper.asset-ui{width:100%!important}
