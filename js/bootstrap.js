@@ -30,7 +30,8 @@ function installLooperAlignmentFixes(){
 #looper.asset-ui #library .cassetteRackSlot.asset-slot-empty::before{content:"";position:absolute;z-index:3;inset:4% 1.3%;background:#080705;box-shadow:inset 0 0 0 1px rgba(226,173,95,.035);pointer-events:none}
 #looper.asset-ui #library .track{position:relative!important;z-index:4!important}
 #looper.asset-ui #library .trackMeta{left:31%!important;top:7%!important;width:65%!important;height:86%!important;background:#080705!important;padding:0 2%!important;z-index:5!important}
-#looper.asset-ui #library .trackSource,#looper.asset-ui #library .track>.btn{display:none!important}
+#looper.asset-ui #library .trackSource{display:none!important}
+#looper.asset-ui #library .track>.btn{position:absolute!important;right:1%!important;top:18%!important;width:8%!important;height:64%!important;z-index:7!important;opacity:.001!important;color:transparent!important;background:transparent!important;border:0!important;box-shadow:none!important}
 #looper.asset-ui .asset-cassette-label-readout{left:38.55%!important;top:13.05%!important;width:26.65%!important;height:5.45%!important;background:#dbc7a5!important;color:#21150c!important;box-shadow:none!important;border-radius:2px!important;font-size:clamp(7px,1.02vw,17px)!important}
 #looper.asset-ui .asset-header-state-readout{left:5.2%!important;top:12.15%!important;width:18.9%!important;height:4.25%!important;background:#090705!important;font-size:clamp(6px,.82vw,13px)!important;padding-left:.2%!important}
 #looper.asset-ui .asset-track-readout{left:5.2%!important;top:17.35%!important;width:18.9%!important;height:4.2%!important;background:#090705!important;font-size:clamp(7px,1.12vw,18px)!important;padding-left:.2%!important}
