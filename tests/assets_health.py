@@ -10,8 +10,8 @@ EXPECTED_VISUALS = {
     "cassette-mechanism-pixel-v84.png",
     "cassette-reel-pixel-v81.png",
     "deck-black-ui-texture.png",
-    "looper-deck-faceplate-retro.svg",
-    "looper-beat-crate-retro.svg",
+    "looper-deck-faceplate-retro.webp",
+    "looper-beat-crate-retro.webp",
 }
 
 actual_visuals = {
