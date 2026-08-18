@@ -1,5 +1,5 @@
 "use strict";
-window.__SP={version:"98-tight-readouts-crate-truth",ready:false,errors:[]};
+window.__SP={version:"99-calibrated-readouts-crate-truth",ready:false,errors:[]};
 window.__SP.report=(scope,error)=>{
   const message=error?.message||String(error||"Unknown error");
   const item={scope,message,time:new Date().toISOString()};
@@ -33,19 +33,19 @@ function installLooperAlignmentFixes(){
 #looper.asset-ui #library .trackSource{display:none!important}
 #looper.asset-ui #library .track>.btn{position:absolute!important;right:1%!important;top:18%!important;width:8%!important;height:64%!important;z-index:7!important;opacity:.001!important;color:transparent!important;background:transparent!important;border:0!important;box-shadow:none!important}
 
-/* Only cover the baked glyphs, never the complete display windows. */
-#looper.asset-ui .asset-header-state-readout{left:5.22%!important;top:13.35%!important;width:5.65%!important;height:2.25%!important;padding:0 .12%!important;background:linear-gradient(90deg,#090705 88%,rgba(9,7,5,.2))!important;font-size:clamp(6px,.82vw,13px)!important;align-items:center!important}
-#looper.asset-ui .asset-track-readout{left:5.20%!important;top:18.15%!important;width:17.05%!important;height:3.05%!important;padding:0 .15%!important;background:linear-gradient(90deg,#090705 94%,rgba(9,7,5,.15))!important;font-size:clamp(7px,1.12vw,18px)!important;align-items:center!important}
-#looper.asset-ui .asset-state-readout{left:5.20%!important;top:29.15%!important;width:8.25%!important;height:2.85%!important;padding:0 .12%!important;background:linear-gradient(90deg,#090705 92%,rgba(9,7,5,.12))!important;font-size:clamp(7px,1.1vw,18px)!important;align-items:center!important}
-#looper.asset-ui .asset-speed-percent-readout{left:19.95%!important;top:29.15%!important;width:3.95%!important;height:2.85%!important;padding:0 .2%!important;background:#090705!important;font-size:clamp(7px,1.05vw,17px)!important;justify-content:flex-end!important;align-items:center!important}
+/* Calibrated masks: cover the baked changing glyphs, not the surrounding hardware. */
+#looper.asset-ui .asset-header-state-readout{left:5.15%!important;top:13.75%!important;width:7.15%!important;height:2.65%!important;padding:0 .12%!important;background:#090705!important;font-size:clamp(6px,.82vw,13px)!important;align-items:center!important}
+#looper.asset-ui .asset-track-readout{left:5.15%!important;top:17.75%!important;width:18.55%!important;height:3.65%!important;padding:0 .15%!important;background:#090705!important;font-size:clamp(7px,1.12vw,18px)!important;align-items:center!important}
+#looper.asset-ui .asset-state-readout{left:5.15%!important;top:28.40%!important;width:10.75%!important;height:3.45%!important;padding:0 .12%!important;background:#090705!important;font-size:clamp(7px,1.1vw,18px)!important;align-items:center!important}
+#looper.asset-ui .asset-speed-percent-readout{left:18.45%!important;top:28.40%!important;width:5.65%!important;height:3.45%!important;padding:0 .25%!important;background:#090705!important;font-size:clamp(7px,1.05vw,17px)!important;justify-content:flex-end!important;align-items:center!important}
 
-/* Keep the artwork's “/ 8” and only replace the changing loop digit. */
-#looper.asset-ui .asset-loop-readout{left:76.10%!important;top:15.48%!important;width:2.05%!important;height:3.75%!important;padding:0!important;background:#090705!important;justify-content:center!important;align-items:center!important;font-size:clamp(10px,1.85vw,30px)!important}
-/* SPEED LEVEL only replaces the baked +2 glyphs. */
-#looper.asset-ui .asset-speed-level-readout{left:77.05%!important;top:27.65%!important;width:3.95%!important;height:4.55%!important;padding:0!important;background:#090705!important;justify-content:center!important;align-items:center!important;font-size:clamp(10px,1.85vw,30px)!important}
+/* The faceplate already prints “/ 8”; replace only the live loop digit. */
+#looper.asset-ui .asset-loop-readout{left:75.05%!important;top:14.75%!important;width:2.85%!important;height:4.55%!important;padding:0!important;background:#090705!important;justify-content:center!important;align-items:center!important;font-size:clamp(10px,1.85vw,30px)!important}
+/* Replace the complete baked +2 glyph group, including its upper pixels. */
+#looper.asset-ui .asset-speed-level-readout{left:76.45%!important;top:26.65%!important;width:4.75%!important;height:5.75%!important;padding:0!important;background:#090705!important;justify-content:center!important;align-items:center!important;font-size:clamp(10px,1.85vw,30px)!important}
 
-/* Preserve the original paper strip and mask only its baked title. */
-#looper.asset-ui .asset-cassette-label-readout{left:43.45%!important;top:14.05%!important;width:15.05%!important;height:3.25%!important;padding:0 .55%!important;color:#24170d!important;background:linear-gradient(180deg,#e3d3b8 0%,#dcc6a5 55%,#d7bf9d 100%)!important;background-image:radial-gradient(circle at 17% 32%,rgba(255,255,255,.18) 0 .5px,transparent .7px),radial-gradient(circle at 63% 68%,rgba(93,69,42,.08) 0 .6px,transparent .8px),linear-gradient(180deg,#e3d3b8,#d8c09d)!important;background-size:13px 11px,17px 15px,100% 100%!important;border-radius:1px!important;box-shadow:0 0 3px rgba(64,38,15,.12),inset 0 1px rgba(255,255,255,.2)!important;text-shadow:none!important;font:italic 600 clamp(7px,1.12vw,18px)/1 Georgia,serif!important;justify-content:center!important;align-items:center!important}
+/* Preserve the original paper label edges; only the printed title area is replaced. */
+#looper.asset-ui .asset-cassette-label-readout{left:42.65%!important;top:13.55%!important;width:16.85%!important;height:4.55%!important;padding:0 .55%!important;color:#24170d!important;background-image:radial-gradient(circle at 11% 27%,rgba(255,255,255,.20) 0 .55px,transparent .8px),radial-gradient(circle at 61% 73%,rgba(94,68,42,.09) 0 .6px,transparent .85px),linear-gradient(180deg,#e4d3b8 0%,#dec8a8 48%,#d8c09d 100%)!important;background-size:12px 10px,17px 14px,100% 100%!important;border-radius:1px!important;box-shadow:inset 0 1px rgba(255,255,255,.15)!important;text-shadow:none!important;font:italic 600 clamp(7px,1.1vw,18px)/1 Georgia,serif!important;justify-content:center!important;align-items:center!important}
 
 #looper.asset-ui #librarySearch{left:23.0%!important;top:60.55%!important;width:14.95%!important;height:3.55%!important;background:#090705!important;border-color:rgba(226,173,95,.42)!important}
 #looper.asset-ui #libraryOrder{left:42.9%!important;top:60.55%!important;width:10.75%!important;height:3.55%!important;background:#090705!important;border-color:rgba(226,173,95,.42)!important}
