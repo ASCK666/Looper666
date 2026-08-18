@@ -1,5 +1,5 @@
 "use strict";
-window.__SP={version:"103-clean-overlay-stack",ready:false,errors:[]};
+window.__SP={version:"104-flat-looper-runtime",ready:false,errors:[]};
 window.__SP.report=(scope,error)=>{
   const message=error?.message||String(error||"Unknown error");
   const item={scope,message,time:new Date().toISOString()};
@@ -11,6 +11,22 @@ window.addEventListener("error",event=>window.__SP.report("RUNTIME",event.error|
 window.addEventListener("unhandledrejection",event=>window.__SP.report("PROMISE",event.reason));
 
 const LOOPER_FACEPLATE_URL="./assets/looper-ui/faceplate.webp";
+const LOOPER_DIRECT_CONTROL_IDS=[
+  "librarySearch","libraryOrder","library",
+  "prevBeat","playBeat","stopBeat","nextBeat","autoLooperToggle",
+  "importFolderBtn","importBeatsBtn","tapeCounterReset",
+  "beatFiles","beatFolder",
+  "cassetteBeatName","deckTransportState","deckSpeedReadout","deckAutoReadout"
+];
+
+function mountLooperRuntimeControls(looper){
+  if(looper.dataset.runtimeMounted==="1")return;
+  for(const id of LOOPER_DIRECT_CONTROL_IDS){
+    const el=document.getElementById(id);
+    if(el)looper.appendChild(el);
+  }
+  looper.dataset.runtimeMounted="1";
+}
 
 function ensureLooperFaceplate(looper){
   let image=looper.querySelector(".looper-faceplate");
@@ -159,9 +175,7 @@ function installCrateTruthTransport(){
     const rows=currentCrateRows();
     if(!rows.length)return;
     const currentId=typeof currentTrack!=="undefined"?currentTrack?.id:null;
-    const idx=typeof relativeTrackIndex==="function"
-      ? relativeTrackIndex(rows,currentId,delta)
-      : 0;
+    const idx=typeof relativeTrackIndex==="function"?relativeTrackIndex(rows,currentId,delta):0;
     await switchTrack(rows[idx]);
   };
   void ensureCurrentTrackInCrate();
@@ -171,6 +185,7 @@ function loadLooperAsset(){
   const looper=document.getElementById("looper");
   if(!looper)return;
   looper.classList.add("asset-ui");
+  mountLooperRuntimeControls(looper);
   ensureLooperFaceplate(looper);
   installLooperAssetReadouts(looper);
   installAssetLibraryPager(looper);
