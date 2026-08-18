@@ -38,40 +38,51 @@ with contextlib.ExitStack() as stack:
         page.on('requestfailed',lambda req: failed.append(f'{req.url}: {req.failure}'))
         page.goto(f'http://127.0.0.1:{port}/index.html',wait_until='networkidle',timeout=30000)
         page.wait_for_function("window.__SP?.ready === true",timeout=10000)
+        page.wait_for_function("document.querySelector('.looper-faceplate')?.naturalWidth === 1536",timeout=10000)
 
         info=page.evaluate('''() => {
           const looper=document.getElementById('looper');
-          const r=looper.getBoundingClientRect();
+          const face=document.querySelector('.looper-faceplate');
           const ids=['prevBeat','playBeat','stopBeat','nextBeat','autoLooperToggle','importFolderBtn','importBeatsBtn'];
+          const readouts=['asset-header-state-readout','asset-track-readout','asset-state-readout','asset-speed-percent-readout','asset-loop-readout','asset-speed-level-readout'];
           return {
-            looper:{width:r.width,height:r.height,display:getComputedStyle(looper).display},
+            looper:looper.getBoundingClientRect().toJSON(),
             faceplates:document.querySelectorAll('.looper-faceplate').length,
+            faceSrc:face?.getAttribute('src')||'',
+            faceSize:[face?.naturalWidth||0,face?.naturalHeight||0],
             tracks:document.querySelectorAll('#library .track').length,
-            emptyText:document.querySelector('#library .libraryEmptyMessage')?.textContent||'',
-            controls:ids.map(id=>{
-              const el=document.getElementById(id),b=el.getBoundingClientRect(),cs=getComputedStyle(el);
-              return {id,w:b.width,h:b.height,display:cs.display,visibility:cs.visibility,opacity:parseFloat(cs.opacity),handler:typeof el.onclick};
-            }),
+            controls:ids.map(id=>{const el=document.getElementById(id),b=el.getBoundingClientRect(),cs=getComputedStyle(el);return {id,w:b.width,h:b.height,display:cs.display,visibility:cs.visibility,opacity:parseFloat(cs.opacity),handler:typeof el.onclick};}),
+            readouts:readouts.map(cls=>{const el=document.querySelector('.'+cls),cs=getComputedStyle(el);return [cls,cs.backgroundColor];}),
             appErrors:window.__SP?.errors||[]
           };
         }''')
 
-        assert info['looper']['display']!='none' and info['looper']['width']>600 and info['looper']['height']>300, info
-        assert info['faceplates']==0, info
+        assert info['looper']['width']>600 and info['looper']['height']>350, info
+        assert info['faceplates']==1, info
+        assert info['faceSrc']=='./assets/looper-ui/faceplate.webp', info
+        assert info['faceSize']==[1536,1024], info
         assert info['tracks']==0, info
-        assert 'Aucun résultat' in info['emptyText'], info
         assert all(c['display']!='none' and c['visibility']=='visible' and c['opacity']>.5 and c['w']>20 and c['h']>20 and c['handler']=='function' for c in info['controls']), info
+        expected={
+          'asset-header-state-readout':'rgb(6, 3, 0)',
+          'asset-track-readout':'rgb(16, 7, 0)',
+          'asset-state-readout':'rgb(11, 5, 0)',
+          'asset-speed-percent-readout':'rgb(14, 5, 0)',
+          'asset-loop-readout':'rgb(9, 6, 2)',
+          'asset-speed-level-readout':'rgb(7, 5, 2)',
+        }
+        assert dict(info['readouts'])==expected, info['readouts']
+        assert not info['appErrors'], info
+        assert not page_errors, page_errors
+        assert not failed, failed
 
         page.click('#tapeCounterReset')
         page.click('#stopBeat')
         with page.expect_file_chooser(timeout=3000):
             page.click('#importBeatsBtn')
-        assert not info['appErrors'], info
-        assert not page_errors, page_errors
-        assert not failed, failed
 
         page.locator('#looper').screenshot(path=str(ARTIFACTS/'looper-render.png'))
         page.screenshot(path=str(ARTIFACTS/'full-render.png'),full_page=True)
         browser.close()
 
-print('OK: real Looper DOM is visible, empty crate is truthful, and primary controls execute click paths over HTTP')
+print('OK: approved faceplate.webp is the mounted Looper visual, sampled HTML readouts match it, and primary controls execute click paths')
