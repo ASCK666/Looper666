@@ -1,0 +1,30 @@
+name: Materialize Looper faceplate
+
+on:
+  push:
+    branches:
+      - fix/asset-ui-static-faceplate
+
+permissions:
+  contents: write
+
+jobs:
+  materialize:
+    if: ${{ !contains(github.event.head_commit.message, '[faceplate-materialized]') }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Build static WebP from approved payload
+        run: |
+          cat assets/looper-ui/part00 assets/looper-ui/part01 assets/looper-ui/part02 assets/looper-ui/part03 assets/looper-ui/part04 | tr -d '\r\n' | base64 -d > assets/looper-ui/faceplate.webp
+          test -s assets/looper-ui/faceplate.webp
+          file assets/looper-ui/faceplate.webp
+      - name: Commit static faceplate
+        run: |
+          git config user.name github-actions[bot]
+          git config user.email 41898282+github-actions[bot]@users.noreply.github.com
+          git add assets/looper-ui/faceplate.webp
+          git commit -m "Materialize approved Looper faceplate [faceplate-materialized]"
+          git push origin HEAD:fix/asset-ui-static-faceplate
