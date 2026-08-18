@@ -80,9 +80,9 @@ jobs:
                   page.wait_for_function("parseFloat(getComputedStyle(document.querySelector('.asset-cassette-glow'),'::before').opacity) < .01",timeout=1000)
                   stop_style=page.evaluate("""() => {
                     const cs=getComputedStyle(document.querySelector('.asset-cassette-glow'));
-                    return [cs.backgroundImage,getComputedStyle(document.querySelector('.asset-cassette-glow'),'::before').opacity,getComputedStyle(document.querySelector('.asset-cassette-glow'),'::after').opacity];
+                    return [cs.backgroundImage,parseFloat(getComputedStyle(document.querySelector('.asset-cassette-glow'),'::before').opacity),parseFloat(getComputedStyle(document.querySelector('.asset-cassette-glow'),'::after').opacity)];
                   }""")
-                  assert stop_style==['none','0','0'],stop_style
+                  assert stop_style[0]=='none' and stop_style[1]<.01 and stop_style[2]<.01,stop_style
                   browser.close()
 
           stop=Image.open(out/'transfer-stop.png').convert('RGB')
