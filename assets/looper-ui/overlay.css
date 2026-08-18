@@ -35,8 +35,8 @@
   background:linear-gradient(180deg,rgba(255,190,88,.012),transparent 38%);
 }
 
-/* Source-only state nodes and file inputs are not visual UI. */
-#looper.asset-ui :is(#beatFiles,#beatFolder,#cassetteBeatName,#deckTransportState,#deckSpeedReadout,#deckAutoReadout){display:none!important}
+/* Source-only state nodes and retired hardware are not visual UI. */
+#looper.asset-ui :is(#beatFiles,#beatFolder,#cassetteBeatName,#deckTransportState,#deckSpeedReadout,#deckAutoReadout,.cassetteMechanismCrop,.deckReadout){display:none!important}
 
 /* Transparent interaction hotspots. */
 #looper.asset-ui :is(#prevBeat,#playBeat,#stopBeat,#nextBeat,#autoLooperToggle,#importFolderBtn,#importBeatsBtn,#tapeCounterReset) {
