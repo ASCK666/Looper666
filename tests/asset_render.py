@@ -59,6 +59,7 @@ with contextlib.ExitStack() as stack:
             readouts:readouts.map(cls=>{const el=document.querySelector('.'+cls),cs=getComputedStyle(el);return [cls,cs.backgroundColor];}),
             reelCount:document.querySelectorAll('.asset-cassette-glow').length,
             reelAsset:[leftReel.backgroundImage,rightReel.backgroundImage],
+            reelCrop:[leftReel.backgroundSize,rightReel.backgroundSize,leftReel.backgroundPosition,rightReel.backgroundPosition],
             reelStopped:[leftReel.animationPlayState,rightReel.animationPlayState,leftReel.opacity,rightReel.opacity],
             cassetteLayer:[layer.backgroundColor,layer.backgroundImage,layer.boxShadow,layer.filter,layer.mixBlendMode,layer.opacity],
             appErrors:window.__SP?.errors||[]
@@ -81,8 +82,9 @@ with contextlib.ExitStack() as stack:
         ]}
         assert dict(info['readouts'])==expected, info['readouts']
         assert info['reelCount']==1, info
-        assert 'cassette-reel-overlay.svg' in info['reelAsset'][0], info['reelAsset']
-        assert 'cassette-reel-overlay-right.svg' in info['reelAsset'][1], info['reelAsset']
+        assert all('faceplate.webp' in value for value in info['reelAsset']), info['reelAsset']
+        assert info['reelCrop'][0]==info['reelCrop'][1], info['reelCrop']
+        assert info['reelCrop'][2]!=info['reelCrop'][3], info['reelCrop']
         assert info['reelStopped']==['paused','paused','0','0'], info['reelStopped']
         assert info['cassetteLayer']==['rgba(0, 0, 0, 0)','none','none','none','normal','1'], info['cassetteLayer']
         assert not info['appErrors'], info
@@ -175,4 +177,4 @@ with contextlib.ExitStack() as stack:
         assert not context_errors,context_errors
         browser.close()
 
-print('OK: faceplate and cassette body stay fixed; exact faceplate-derived reel mechanisms visibly rotate with PLAY/STOP, speed and responsive alignment')
+print('OK: faceplate and cassette body stay fixed; exact faceplate reel crops visibly rotate with PLAY/STOP, speed and responsive alignment')
