@@ -20,6 +20,7 @@ steps=[
   ['tests/punch_master.py'],
   ['tests/http_smoke.py'],
   ['tests/browser_smoke.py'],
+  ['tests/asset_render.py'],
 ]
 for args in steps:
     path=ROOT/args[0]
