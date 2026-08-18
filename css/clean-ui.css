@@ -225,7 +225,7 @@
 #chopper .sampleKnobInput {
   position: absolute !important;
   inset: 0 !important;
-  z-index: 2;
+  z-index: 2 !important;
   width: 100% !important;
   height: 100% !important;
   min-height: 0 !important;
@@ -536,5 +536,271 @@
     min-height: 28px !important;
     padding: 2px !important;
     font-size: 8px !important;
+  }
+}
+
+/* Retro Looper faceplate migration: keep the real controls and cassette asset,
+   but seat the live HTML inside the hardware and light the button gaps. */
+#looper .layout {
+  grid-template-columns: minmax(0, 1fr) !important;
+}
+
+#looper .looperMainPanel {
+  padding: 12px !important;
+  border-color: #28231f !important;
+  background:
+    linear-gradient(180deg,rgba(255,104,0,.025),transparent 18%),
+    linear-gradient(180deg,#12100e,#080706 72%,#050403),
+    var(--deck-texture) !important;
+  background-size: auto,auto,256px 256px !important;
+  box-shadow: inset 0 1px #4c4037,inset 0 -3px #020202,0 10px 24px rgba(0,0,0,.34) !important;
+}
+
+#looper .cassetteDeck {
+  --retro-orange: #ff6800;
+  --retro-orange-hot: #ff8a24;
+  width: min(100%, 1240px) !important;
+  padding: 14px !important;
+  border-color: #302820 !important;
+  background:
+    linear-gradient(180deg,rgba(255,104,0,.018),transparent 13%),
+    linear-gradient(180deg,#171411,#090806 74%,#050403),
+    var(--deck-texture) !important;
+  box-shadow: inset 0 1px #4b4036,inset 0 -4px #020202,4px 4px 0 #020202,0 18px 32px rgba(0,0,0,.42) !important;
+}
+
+#looper .deckReadout {
+  border-color: #33251a !important;
+  background: #090603 !important;
+  box-shadow: inset 2px 2px #020100,inset -1px -1px #3a2412,0 0 12px rgba(255,104,0,.035) !important;
+}
+
+#looper .deckReadout > div {
+  border-color: #2a1b0f !important;
+}
+
+#looper .deckReadout small {
+  color: #a87045 !important;
+}
+
+#looper .deckReadout strong,
+#looper .deckReadoutAuto em {
+  color: var(--retro-orange) !important;
+  text-shadow: 0 0 5px rgba(255,104,0,.30) !important;
+}
+
+#looper .deckHardwareGrid {
+  grid-template-columns: 154px minmax(380px,1fr) 154px !important;
+  gap: 12px !important;
+}
+
+#looper .deckMechanismColumn {
+  gap: 13px !important;
+}
+
+#looper .cassetteMechanismCrop {
+  border-color: #2d261f !important;
+  box-shadow: inset 0 0 0 2px #020202,0 0 0 1px #42352b,0 12px 22px rgba(0,0,0,.38) !important;
+}
+
+#looper .deckTransport {
+  gap: 12px !important;
+}
+
+#looper :is(.deckSideKey,.deckCounterKey,.deckLoadKey,.deckHotspot) {
+  --slot-alpha: .14;
+  --slot-radius: 5px;
+  --key-light: var(--retro-orange);
+  isolation: isolate;
+  overflow: visible;
+  border-color: #3a3028 !important;
+  background: linear-gradient(180deg,#211d19,#11100e 60%,#090806) !important;
+  box-shadow: inset 0 1px #453a31,inset 0 -4px #030302,0 3px 0 #010101 !important;
+  color: #d5b995 !important;
+  text-shadow: 0 0 4px rgba(255,104,0,.10) !important;
+}
+
+#looper :is(.deckSideKey,.deckCounterKey,.deckLoadKey,.deckHotspot)::before {
+  content: "";
+  position: absolute;
+  z-index: -1;
+  inset: -4px;
+  border: 1px solid rgb(255 104 0 / .34);
+  border-radius: 3px;
+  background: #050302;
+  box-shadow:
+    0 0 2px rgb(255 104 0 / .58),
+    0 0 var(--slot-radius) rgb(255 104 0 / var(--slot-alpha)),
+    inset 0 0 4px rgb(255 104 0 / calc(var(--slot-alpha) * .7));
+  pointer-events: none;
+  transition: border-color .12s ease,box-shadow .12s ease,filter .12s ease;
+}
+
+#looper :is(.deckSideKey,.deckCounterKey,.deckLoadKey,.deckHotspot):hover {
+  --slot-alpha: .30;
+  --slot-radius: 8px;
+  border-color: #59402b !important;
+  color: #f0c28f !important;
+}
+
+#looper :is(.deckSideKey,.deckCounterKey,.deckLoadKey,.deckHotspot):active::before {
+  filter: brightness(1.25);
+}
+
+#looper .deckHotspot {
+  min-height: 78px !important;
+}
+
+#looper .deckHotspot > span {
+  color: #9b8068 !important;
+}
+
+#looper .deckHotspot > strong,
+#looper .deckLoadKey strong {
+  color: #d8b995 !important;
+}
+
+#looper.active #playBeat {
+  animation: none !important;
+}
+
+#looper .cassetteDeck.playing #playBeat {
+  --slot-alpha: .76;
+  --slot-radius: 13px;
+  border-color: #6d3a16 !important;
+  background: linear-gradient(180deg,#25170d,#130b06 60%,#080402) !important;
+}
+
+#looper .cassetteDeck.playing #playBeat::before {
+  border-color: rgb(255 126 20 / .92);
+  box-shadow: 0 0 2px rgb(255 132 28 / .98),0 0 13px rgb(255 104 0 / .76),inset 0 0 6px rgb(255 104 0 / .44);
+}
+
+#looper .cassetteDeck.playing #playBeat > span,
+#looper .cassetteDeck.playing #playBeat > strong {
+  color: var(--retro-orange-hot) !important;
+  text-shadow: 0 0 8px rgba(255,104,0,.38) !important;
+}
+
+#looper #autoLooperToggle {
+  --slot-alpha: .08;
+  --slot-radius: 4px;
+}
+
+#looper #autoLooperToggle[data-auto-step="1"] {
+  --slot-alpha: .30;
+  --slot-radius: 7px;
+}
+
+#looper #autoLooperToggle[data-auto-step="2"] {
+  --slot-alpha: .46;
+  --slot-radius: 9px;
+}
+
+#looper #autoLooperToggle[data-auto-step="3"] {
+  --slot-alpha: .64;
+  --slot-radius: 11px;
+}
+
+#looper #autoLooperToggle[data-auto-step="4"] {
+  --slot-alpha: .88;
+  --slot-radius: 15px;
+}
+
+#looper #autoLooperToggle[data-auto-step="1"]::before,
+#looper #autoLooperToggle[data-auto-step="2"]::before,
+#looper #autoLooperToggle[data-auto-step="3"]::before,
+#looper #autoLooperToggle[data-auto-step="4"]::before {
+  border-color: rgb(255 112 8 / .72);
+}
+
+#looper #autoLooperToggle[data-auto-step="4"]::before {
+  border-color: rgb(255 138 38 / .96);
+  box-shadow: 0 0 2px rgb(255 142 44 / 1),0 0 15px rgb(255 104 0 / .88),inset 0 0 7px rgb(255 104 0 / .50);
+}
+
+#looper #autoLooperToggle[data-auto-step="1"] > span,
+#looper #autoLooperToggle[data-auto-step="2"] > span,
+#looper #autoLooperToggle[data-auto-step="3"] > span,
+#looper #autoLooperToggle[data-auto-step="4"] > span {
+  color: var(--retro-orange) !important;
+  text-shadow: 0 0 7px rgba(255,104,0,.34) !important;
+}
+
+#looper .looperImportDock {
+  gap: 12px !important;
+}
+
+#looper .deckLoadKey {
+  min-height: 82px !important;
+}
+
+#looper .deckKeyLamp {
+  border-color: #5a2c0d !important;
+  background: var(--retro-orange) !important;
+  box-shadow: 0 0 7px rgba(255,104,0,.42) !important;
+}
+
+#looper .tapeCounterModule {
+  border-color: #2d261f !important;
+  background: linear-gradient(180deg,#15120f,#090806 70%,#050403) !important;
+  box-shadow: inset 0 1px #44382f,inset 0 -3px #020202,0 6px 12px rgba(0,0,0,.32) !important;
+}
+
+#looper .tapeCounterWindow {
+  border-color: #302015 !important;
+  box-shadow: inset 3px 3px 8px #000,inset -1px -1px #3b2513,0 0 8px rgba(255,104,0,.06) !important;
+}
+
+#looper .counterWheel {
+  border-color: #583317 !important;
+  color: var(--retro-orange-hot) !important;
+  text-shadow: 0 0 6px rgba(255,104,0,.34) !important;
+}
+
+#looper .beatCratePanel {
+  padding: 12px !important;
+  border-color: #2b2520 !important;
+  background: linear-gradient(180deg,#12100e,#080706 76%,#050403) !important;
+}
+
+#looper .library {
+  border-color: #2c251f !important;
+  background: linear-gradient(180deg,#0a0908,#050403) !important;
+  box-shadow: inset 4px 4px 9px #000,inset -2px -2px #241d17,0 5px 0 #020202 !important;
+}
+
+#looper .track.active {
+  border-color: #8b4314 !important;
+  box-shadow: inset 3px 0 var(--retro-orange),inset 0 1px rgba(255,255,255,.08),inset 0 -2px #020202,0 2px 0 #020202,0 0 9px rgba(255,104,0,.16) !important;
+}
+
+@media (max-width: 900px) {
+  #looper .deckHardwareGrid {
+    grid-template-columns: 126px minmax(300px,1fr) 126px !important;
+    gap: 9px !important;
+  }
+
+  #looper .deckTransport {
+    gap: 8px !important;
+  }
+}
+
+@media (max-width: 680px) {
+  #looper .cassetteDeck {
+    padding: 8px !important;
+  }
+
+  #looper .deckHardwareGrid {
+    grid-template-columns: minmax(126px,1fr) minmax(0,2fr) !important;
+    grid-template-areas: "mechanism mechanism" "counter imports" !important;
+  }
+
+  #looper .deckTransport {
+    grid-template-columns: repeat(4,minmax(0,1fr)) !important;
+  }
+
+  #looper .deckAutoHotspot {
+    grid-column: 1 / -1 !important;
   }
 }
