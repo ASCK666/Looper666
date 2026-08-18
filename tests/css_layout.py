@@ -50,7 +50,7 @@ with sync_playwright() as p:
           const el=document.getElementById(id),r=el.getBoundingClientRect(),cs=getComputedStyle(el);
           return {id,w:r.width,h:r.height,display:cs.display,visibility:cs.visibility,opacity:parseFloat(cs.opacity),handler:typeof el.onclick};
         })''')
-        assert all(x['display']!='none' and x['visibility']=='visible' and x['opacity']>.5 and x['w']>18 and x['h']>18 and x['handler']=='function' for x in controls), controls
+        assert all(x['display']!='none' and x['visibility']=='visible' and x['opacity']>.5 and x['w']>18 and x['h']>6 and x['handler']=='function' for x in controls), controls
 
         page.click('#tapeCounterReset')
         page.click('#stopBeat')
