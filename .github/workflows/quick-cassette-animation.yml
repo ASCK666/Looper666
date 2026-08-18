@@ -1,0 +1,28 @@
+name: Quick cassette animation
+
+on:
+  pull_request:
+    branches:
+      - fix/html-transparent-readouts
+
+jobs:
+  render:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install focused browser dependency
+        run: |
+          python -m pip install --disable-pip-version-check playwright
+          python -m playwright install chromium
+      - name: Run cassette animation contract
+        run: python tests/asset_render.py
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: cassette-animation-render
+          path: test-artifacts/*.png
+          if-no-files-found: ignore
