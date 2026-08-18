@@ -48,17 +48,23 @@ with sync_playwright() as p:
           machine:document.querySelector('.machine').getBoundingClientRect().toJSON(),
           looper:document.getElementById('looper').getBoundingClientRect().toJSON(),
           library:document.getElementById('library').getBoundingClientRect().toJSON(),
+          header:document.querySelector('.asset-header-state-readout').getBoundingClientRect().toJSON(),
           track:document.querySelector('.asset-track-readout').getBoundingClientRect().toJSON(),
           state:document.querySelector('.asset-state-readout').getBoundingClientRect().toJSON(),
           loops:document.querySelector('.asset-loop-readout').getBoundingClientRect().toJSON(),
-          speed:document.querySelector('.asset-speed-level-readout').getBoundingClientRect().toJSON()
+          speed:document.querySelector('.asset-speed-level-readout').getBoundingClientRect().toJSON(),
+          cassette:document.querySelector('.asset-cassette-label-readout').getBoundingClientRect().toJSON()
         })''')
         assert metrics['machine']['width'] > 300, metrics
         assert metrics['looper']['width'] > 300 and metrics['looper']['height'] > 200, metrics
         assert abs(metrics['looper']['width']/metrics['looper']['height'] - 1.5) < .03, metrics
         assert metrics['library']['width'] > 200 and metrics['library']['height'] > 70, metrics
         assert metrics['track']['width'] > 40 and metrics['state']['width'] > 30, metrics
-        assert metrics['loops']['width'] > 20 and metrics['speed']['width'] > 20, metrics
+        # Dynamic readouts should mask only baked glyphs, not become large black panels.
+        assert 10 < metrics['loops']['width'] < metrics['looper']['width']*.04, metrics
+        assert 18 < metrics['speed']['width'] < metrics['looper']['width']*.06, metrics
+        assert metrics['header']['width'] < metrics['looper']['width']*.08, metrics
+        assert metrics['cassette']['width'] < metrics['looper']['width']*.18, metrics
         assert metrics['bodyW'] <= metrics['viewportW'] + 2, metrics
 
         inside=page.evaluate('''() => {
@@ -150,4 +156,4 @@ with sync_playwright() as p:
         page.close()
     browser.close()
 
-print('OK: CSS layout — approved Looper faceplate, truthful rack overlays, manual speed selector, Chopper and Practice overlay')
+print('OK: CSS layout — tight Looper glyph masks, truthful rack overlays, manual speed selector, Chopper and Practice overlay')
