@@ -577,6 +577,7 @@
 #looper.active :is(.deckLoadKey,.deckHotspot,.deckCounterKey,.deckSideKey) {
   --slot-alpha: .08;
   --slot-radius: 4px;
+  flex: 1 1 0;
   min-width: 0 !important;
   min-height: 0 !important;
   margin: 0 !important;
@@ -803,8 +804,8 @@
     top: 35.54% !important;
     width: 10.82% !important;
     height: 29.87% !important;
-    display: grid !important;
-    grid-template-rows: repeat(2,minmax(0,1fr)) !important;
+    display: flex !important;
+    flex-direction: column-reverse !important;
     gap: 8.9% !important;
     margin: 0 !important;
     padding: 0 !important;
