@@ -79,6 +79,14 @@ with tempfile.TemporaryDirectory() as td:
         })''')
         assert all(v=='function' for v in handlers.values()), handlers
 
+        # Generated faceplate assets sit behind live HTML instead of replacing it.
+        faceplates=page.evaluate('''() => ({
+          deck:getComputedStyle(document.querySelector('.cassetteDeck'),'::after').backgroundImage,
+          crate:getComputedStyle(document.querySelector('.beatCratePanel'),'::before').backgroundImage
+        })''')
+        assert 'looper-deck-faceplate-retro.svg' in faceplates['deck'],faceplates
+        assert 'looper-beat-crate-retro.svg' in faceplates['crate'],faceplates
+
         # Real LOOPER import -> load -> PLAY/STOP.
         page.set_input_files('#beatFiles',str(beat))
         page.wait_for_function("document.getElementById('deckTrack').textContent === 'test-beat.wav'",timeout=10000)
@@ -90,6 +98,14 @@ with tempfile.TemporaryDirectory() as td:
         page.wait_for_function('deckSource !== null')
         assert page.locator('#deckTransportState').inner_text() == 'PLAYING'
         assert page.locator('.cassetteDeck.playing').count() == 1
+        reel_animation=page.evaluate('''() => ({
+          left:getComputedStyle(document.querySelector('.cassetteReelLeft')).animationName,
+          right:getComputedStyle(document.querySelector('.cassetteReelRight')).animationName,
+          leftOpacity:parseFloat(getComputedStyle(document.querySelector('.cassetteReelLeft')).opacity),
+          rightOpacity:parseFloat(getComputedStyle(document.querySelector('.cassetteReelRight')).opacity)
+        })''')
+        assert reel_animation['left']=='frontDeckSpin' and reel_animation['right']=='frontDeckSpin',reel_animation
+        assert reel_animation['leftOpacity']>.9 and reel_animation['rightOpacity']>.9,reel_animation
         page.wait_for_timeout(1250)
         running_counter=page.locator('#tapeCounter').get_attribute('aria-label')
         assert running_counter != 'Compteur de bande 0000', running_counter
@@ -160,4 +176,4 @@ with tempfile.TemporaryDirectory() as td:
         context.close()
         browser.close()
 
-print('OK: browser startup, tape counter, real imports, transport, shortcuts, five-state AUTO SPEED and filename-XSS regression')
+print('OK: browser startup, faceplates, cassette reels, tape counter, real imports, transport, shortcuts, five-state AUTO SPEED and filename-XSS regression')
