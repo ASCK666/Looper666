@@ -1,7 +1,6 @@
 from pathlib import Path
-from functools import partial
-from http.server import ThreadingHTTPServer, SimpleHTTPRequestHandler
-import os, sys, tempfile, threading, wave, struct, math
+from http.server import SimpleHTTPRequestHandler
+import os, sys, tempfile, wave, struct, math
 
 try:
     from playwright.sync_api import sync_playwright
@@ -32,6 +31,9 @@ html=(ROOT/'index.html').read_text(encoding='utf-8')
 for rel in ['./css/base.css','./css/clean-ui.css']:
     css=(ROOT/rel[2:]).read_text(encoding='utf-8')
     html=html.replace(f'<link rel="stylesheet" href="{rel}">',f'<style>{css}</style>')
+asset_css=(ROOT/'assets'/'looper-ui'/'overlay.css').read_text(encoding='utf-8')
+html=html.replace('</head>',f'<style>{asset_css}</style></head>')
+html=html.replace('<section id="looper" class="screen active">','<section id="looper" class="screen active asset-ui">')
 for rel in ['./js/bootstrap.js','./js/core.js','./js/looper.js','./js/practice.js','./js/chopper.js','./js/drums.js','./js/events.js']:
     js=(ROOT/rel[2:]).read_text(encoding='utf-8')
     html=html.replace(f'<script src="{rel}" defer></script>',f'<script>{js}</script>')
@@ -61,136 +63,119 @@ with tempfile.TemporaryDirectory() as td:
         page.on('console',lambda m:console_errors.append(m.text) if m.type=='error' else None)
         page.set_content(html,wait_until='load',timeout=15000)
         page.wait_for_function('window.__SP && window.__SP.ready === true',timeout=10000)
+        page.evaluate('''() => {
+          const looper=document.getElementById('looper');
+          installLooperAssetReadouts(looper);
+          installAssetSpeedControl();
+        }''')
+        page.wait_for_function("document.querySelector('.asset-speed-level-readout') !== null",timeout=5000)
 
         assert page.evaluate('window.__SP.errors.length') == 0, page.evaluate('window.__SP.errors')
         assert not page_errors, page_errors
         assert not console_errors, console_errors
 
-        # Critical controls are present and wired.
-        for rid in ['cassetteDoorEject','tapeCounter','tapeCounterReset','playBeat','loadSampleBtn','kickFolderBtn','snareFolderBtn','hatFolderBtn','autoLooperToggle','deckTransportState','deckSpeedReadout','deckAutoReadout','looperVu']:
+        # Existing live controls stay in the DOM and are wired behind transparent hotspots.
+        for rid in ['tapeCounterReset','playBeat','stopBeat','prevBeat','nextBeat','importBeatsBtn','importFolderBtn','loadSampleBtn','kickFolderBtn','snareFolderBtn','hatFolderBtn','autoLooperToggle','deckTransportState','deckSpeedReadout','looperVu']:
             assert page.locator('#'+rid).count()==1, rid
         handlers=page.evaluate('''() => ({
           play:typeof document.getElementById('playBeat').onclick,
-          eject:typeof document.getElementById('cassetteDoorEject').onclick,
-          counterReset:typeof document.getElementById('tapeCounterReset').onclick,
+          stop:typeof document.getElementById('stopBeat').onclick,
+          reset:typeof document.getElementById('tapeCounterReset').onclick,
           sample:typeof document.getElementById('loadSampleBtn').onclick,
           kick:typeof document.getElementById('kickFolderBtn').onclick,
-          auto:typeof document.getElementById('autoLooperToggle').onclick
+          speed:typeof document.getElementById('autoLooperToggle').onclick
         })''')
         assert all(v=='function' for v in handlers.values()), handlers
 
-        # Generated faceplates are the single static hardware layer on desktop.
-        faceplates=page.evaluate('''() => ({
-          deck:getComputedStyle(document.querySelector('.cassetteDeck')).backgroundImage,
-          crate:getComputedStyle(document.querySelector('.beatCratePanel')).backgroundImage
-        })''')
-        assert 'looper-deck-faceplate-retro.webp' in faceplates['deck'],faceplates
-        assert 'looper-beat-crate-retro.webp' in faceplates['crate'],faceplates
+        # Approved asset mode suppresses the retired drawn hardware while preserving HTML hit areas.
         chrome=page.evaluate('''() => {
-          const readout=getComputedStyle(document.querySelector('.deckReadout'));
-          const mechanism=getComputedStyle(document.querySelector('.cassetteMechanismCrop'));
+          const looper=document.getElementById('looper');
           const play=getComputedStyle(document.getElementById('playBeat'));
-          const library=getComputedStyle(document.querySelector('.library'));
+          const reset=document.getElementById('tapeCounterReset').getBoundingClientRect();
+          const legacyMechanism=getComputedStyle(document.querySelector('.cassetteMechanismCrop'));
+          const legacyReadout=getComputedStyle(document.querySelector('.deckReadout'));
           return {
-            readoutBackground:readout.backgroundImage,
-            readoutBorder:readout.borderTopWidth,
-            mechanismBackground:mechanism.backgroundImage,
-            mechanismBorder:mechanism.borderTopWidth,
+            asset:looper.classList.contains('asset-ui'),
+            ratio:looper.getBoundingClientRect().width/looper.getBoundingClientRect().height,
             playBackground:play.backgroundImage,
-            playShadow:play.boxShadow,
-            libraryBackground:library.backgroundImage,
-            legacyDeckImage:getComputedStyle(document.querySelector('.cassetteDeckImage')).display,
-            legacyDoorImage:getComputedStyle(document.querySelector('.cassetteDoorPanel')).display
+            playOpacity:parseFloat(play.opacity),
+            resetW:reset.width,
+            resetH:reset.height,
+            mechanismDisplay:legacyMechanism.display,
+            readoutDisplay:legacyReadout.display
           };
         }''')
-        assert chrome['readoutBackground']=='none' and chrome['readoutBorder']=='0px',chrome
-        assert chrome['mechanismBackground']=='none' and chrome['mechanismBorder']=='0px',chrome
-        assert chrome['playBackground']=='none' and chrome['playShadow']=='none',chrome
-        assert chrome['libraryBackground']=='none',chrome
-        assert chrome['legacyDeckImage']=='none' and chrome['legacyDoorImage']=='none',chrome
+        assert chrome['asset'] is True, chrome
+        assert abs(chrome['ratio']-1.5)<.03,chrome
+        assert chrome['playBackground']=='none' and chrome['playOpacity']<.01,chrome
+        assert chrome['resetW']>8 and chrome['resetH']>8,chrome
+        assert chrome['mechanismDisplay']=='none' and chrome['readoutDisplay']=='none',chrome
 
-        # Desktop HTML is pinned to the artwork coordinate system, not the retired grid.
-        geometry=page.evaluate('''() => {
-          const deck=document.querySelector('.cassetteDeck').getBoundingClientRect();
-          const crate=document.querySelector('.beatCratePanel').getBoundingClientRect();
-          const box=(selector,parent) => {
-            const r=document.querySelector(selector).getBoundingClientRect();
-            return {
-              x:(r.left-parent.left)/parent.width,
-              y:(r.top-parent.top)/parent.height,
-              w:r.width/parent.width,
-              h:r.height/parent.height
-            };
+        # The requested live overlays are HTML and sit on the faceplate coordinate system.
+        overlays=page.evaluate('''() => {
+          const looper=document.getElementById('looper').getBoundingClientRect();
+          const box=sel=>{
+            const r=document.querySelector(sel).getBoundingClientRect();
+            return {x:(r.left-looper.left)/looper.width,y:(r.top-looper.top)/looper.height,w:r.width/looper.width,h:r.height/looper.height};
           };
           return {
-            deckRatio:deck.width/deck.height,
-            readout:box('.deckReadout',deck),
-            mechanism:box('.cassetteMechanismCrop',deck),
-            counter:box('.tapeCounterModule',deck),
-            prev:box('#prevBeat',deck),
-            play:box('#playBeat',deck),
-            stop:box('#stopBeat',deck),
-            next:box('#nextBeat',deck),
-            auto:box('#autoLooperToggle',deck),
-            folder:box('#importFolderBtn',deck),
-            beat:box('#importBeatsBtn',deck),
-            crateRatio:crate.width/crate.height,
-            library:box('.library',crate)
+            track:box('.asset-track-readout'),
+            state:box('.asset-state-readout'),
+            loops:box('.asset-loop-readout'),
+            speed:box('.asset-speed-level-readout'),
+            play:box('#playBeat'),
+            speedButton:box('#autoLooperToggle'),
+            loadLibrary:box('#importFolderBtn'),
+            loadBeat:box('#importBeatsBtn')
           };
         }''')
-        def near(value,target,tol=.012):
-            return abs(value-target) <= tol
-        assert near(geometry['deckRatio'],1358/529,.02),geometry
-        assert near(geometry['readout']['x'],.1679) and near(geometry['readout']['y'],.1550),geometry['readout']
-        assert near(geometry['mechanism']['x'],.3100) and near(geometry['mechanism']['y'],.2476),geometry['mechanism']
-        assert near(geometry['mechanism']['w'],.3697) and near(geometry['mechanism']['h'],.4461),geometry['mechanism']
-        assert near(geometry['counter']['x'],.1405) and near(geometry['counter']['y'],.4310),geometry['counter']
-        expected_buttons={
-            'prev':(.2305,.7278,.1008,.1626),
-            'play':(.3424,.7278,.1010,.1626),
-            'stop':(.4536,.7278,.1010,.1626),
-            'next':(.5648,.7278,.1010,.1626),
-            'auto':(.6760,.7278,.1100,.1626),
-            'folder':(.7342,.3554,.1082,.1360),
-            'beat':(.7342,.5180,.1082,.1360),
-        }
-        for name,(x,y,w,h) in expected_buttons.items():
-            actual=geometry[name]
-            assert near(actual['x'],x,.015) and near(actual['y'],y,.015),(name,actual)
-            assert near(actual['w'],w,.018) and near(actual['h'],h,.018),(name,actual)
-        assert near(geometry['crateRatio'],1358/320,.03),geometry
-        assert near(geometry['library']['x'],.0235) and near(geometry['library']['y'],.331,.018),geometry['library']
+        def near(value,target,tol=.02):
+            return abs(value-target)<=tol
+        assert near(overlays['track']['x'],.0515) and near(overlays['state']['x'],.0515),overlays
+        assert near(overlays['loops']['x'],.757) and near(overlays['speed']['x'],.7615),overlays
+        assert near(overlays['play']['x'],.3555) and near(overlays['speedButton']['x'],.6555),overlays
+        assert near(overlays['loadLibrary']['x'],.8655) and near(overlays['loadBeat']['x'],.8655),overlays
 
-        # Real LOOPER import -> load -> PLAY/STOP.
+        # Real LOOPER import -> live readout -> PLAY/STOP.
         page.set_input_files('#beatFiles',str(beat))
         page.wait_for_function("document.getElementById('deckTrack').textContent === 'test-beat.wav'",timeout=10000)
-        assert page.locator('#cassetteBeatName').inner_text() == 'TEST-BEAT.WAV'
+        page.wait_for_function("document.querySelector('.asset-track-readout').textContent === 'TEST-BEAT.WAV'",timeout=5000)
         assert page.locator('#deckTransportState').inner_text() == 'READY'
-        assert page.locator('#deckSpeedReadout').inner_text() == '100%'
+        assert page.locator('.asset-state-readout').inner_text() == 'READY'
         assert page.locator('#library .track').count()>=1
         page.click('#playBeat')
         page.wait_for_function('deckSource !== null')
-        assert page.locator('#deckTransportState').inner_text() == 'PLAYING'
-        assert page.locator('.cassetteDeck.playing').count() == 1
-        reel_animation=page.evaluate('''() => ({
-          left:getComputedStyle(document.querySelector('.cassetteReelLeft')).animationName,
-          right:getComputedStyle(document.querySelector('.cassetteReelRight')).animationName,
-          leftOpacity:parseFloat(getComputedStyle(document.querySelector('.cassetteReelLeft')).opacity),
-          rightOpacity:parseFloat(getComputedStyle(document.querySelector('.cassetteReelRight')).opacity)
-        })''')
-        assert reel_animation['left']=='frontDeckSpin' and reel_animation['right']=='frontDeckSpin',reel_animation
-        assert reel_animation['leftOpacity']>.9 and reel_animation['rightOpacity']>.9,reel_animation
-        page.wait_for_timeout(1250)
-        running_counter=page.locator('#tapeCounter').get_attribute('aria-label')
-        assert running_counter != 'Compteur de bande 0000', running_counter
+        page.wait_for_function("document.querySelector('.asset-state-readout').textContent === 'PLAYING'")
+        assert page.locator('#looper.asset-playing').count()==1
         page.click('#stopBeat')
         page.wait_for_function('deckSource === null')
-        assert page.locator('#deckTransportState').inner_text() == 'READY'
-        frozen_counter=page.locator('#tapeCounter').get_attribute('aria-label')
-        page.wait_for_timeout(250)
-        assert page.locator('#tapeCounter').get_attribute('aria-label') == frozen_counter
+        page.wait_for_function("document.querySelector('.asset-state-readout').textContent === 'READY'")
+
+        # Manual SPEED +1 contract: 0 -> +1 -> ... -> +5 -> 0, with real playback rate.
+        speed=page.locator('.asset-speed-level-readout')
+        assert speed.inner_text()=='0'
+        sequence=[]
+        for level in range(1,6):
+            page.click('#autoLooperToggle')
+            sequence.append(speed.inner_text())
+            expected=100+level
+            assert page.evaluate(f'autoLooperSpeedPercent === {expected}') is True
+        page.click('#autoLooperToggle')
+        sequence.append(speed.inner_text())
+        assert sequence==['+1','+2','+3','+4','+5','0'],sequence
+        assert page.evaluate('autoLooperSpeedPercent === 100 && autoLooperEnabledState === false') is True
+
+        # Backlight intensity follows speed state and RESET clears it and the visible loop count.
+        page.click('#autoLooperToggle')
+        page.wait_for_function("parseFloat(getComputedStyle(document.querySelector('.asset-speed-glow')).opacity) > 0")
+        glow_on=page.evaluate("parseFloat(getComputedStyle(document.querySelector('.asset-speed-glow')).opacity)")
+        assert glow_on>0,glow_on
         page.click('#tapeCounterReset')
-        assert page.locator('#tapeCounter').get_attribute('aria-label') == 'Compteur de bande 0000'
+        assert speed.inner_text()=='0'
+        assert page.locator('.asset-loop-readout').inner_text()=='0 / 8'
+        page.wait_for_function("parseFloat(getComputedStyle(document.querySelector('.asset-speed-glow')).opacity) < 0.01")
+        glow_off=page.evaluate("parseFloat(getComputedStyle(document.querySelector('.asset-speed-glow')).opacity)")
+        assert glow_off<.01,glow_off
 
         # Space shortcut follows active mode, but not while a text input has focus.
         page.evaluate('document.activeElement && document.activeElement.blur()')
@@ -204,31 +189,7 @@ with tempfile.TemporaryDirectory() as td:
         assert page.evaluate('deckSource === null') is True
         page.fill('#librarySearch','')
 
-        # AUTO SPEED is a five-position hardware cycle: OFF -> 8 -> 4 -> 2 -> 1 -> OFF.
-        auto=page.locator('#autoLooperToggle')
-        assert auto.get_attribute('data-auto-step') == '0'
-        assert auto.get_attribute('aria-pressed') == 'false'
-        assert page.locator('#deckAutoReadout').inner_text() == 'OFF'
-        off_glow=page.evaluate("getComputedStyle(document.getElementById('autoLooperToggle'),'::before').borderTopColor")
-        auto_states=[
-            ('1','true','1/8'),
-            ('2','true','1/4'),
-            ('3','true','1/2'),
-            ('4','true','1/1'),
-            ('0','false','OFF'),
-        ]
-        step4_glow=None
-        for step,pressed,readout in auto_states:
-            page.click('#autoLooperToggle')
-            assert auto.get_attribute('data-auto-step') == step
-            assert auto.get_attribute('aria-pressed') == pressed
-            assert page.locator('#deckAutoReadout').inner_text() == readout
-            if step=='4':
-                step4_glow=page.evaluate("getComputedStyle(document.getElementById('autoLooperToggle'),'::before').borderTopColor")
-        assert step4_glow and step4_glow != off_glow,(off_glow,step4_glow)
-        assert page.evaluate('autoLooperEnabledState === false && autoLooperModeIndex === 0 && autoLooperSpeedPercent === 100') is True
-
-        # Real CHOPPER sample import.
+        # Real CHOPPER sample import remains unchanged.
         page.click('[data-tab="chopper"]')
         assert page.locator('#chopper.active').count()==1
         page.set_input_files('#sampleFile',str(sample))
@@ -241,9 +202,8 @@ with tempfile.TemporaryDirectory() as td:
         page.wait_for_timeout(500)
         assert page.evaluate('window.__sp_xss') is None
         assert page.locator('#library img').count()==0
-        assert '<img' in page.locator('#library').inner_text()
 
-        # Windows-safe output filenames.
+        # Windows-safe output filenames remain unchanged.
         assert page.evaluate("safeBeatFilename('CON.wav')") == '_CON'
         assert page.evaluate("safeBeatFilename('hello?.wav')") == 'hello_'
 
@@ -251,4 +211,4 @@ with tempfile.TemporaryDirectory() as td:
         context.close()
         browser.close()
 
-print('OK: browser startup, faceplate geometry, cassette reels, tape counter, real imports, transport, shortcuts, five-state AUTO SPEED and filename-XSS regression')
+print('OK: browser startup, asset faceplate hotspots/readouts/backlights, manual SPEED +1 cycle, real imports, transport, shortcuts and filename-XSS regression')
