@@ -117,11 +117,18 @@ with contextlib.ExitStack() as stack:
           const glow=document.querySelector('.asset-cassette-glow');
           const left=getComputedStyle(glow,'::before');
           const right=getComputedStyle(glow,'::after');
-          return [left.animationPlayState,right.animationPlayState,left.opacity,right.opacity,left.animationDuration,right.animationDuration];
+          return [left.animationPlayState,right.animationPlayState,left.opacity,right.opacity,left.animationDuration,right.animationDuration,left.transform,right.transform];
         }''')
         assert playing[0:2]==['running','running'], playing
         assert all(float(v)>.5 for v in playing[2:4]), playing
+        assert all(value!='none' for value in playing[6:8]), playing
         page.locator('#looper').screenshot(path=str(ARTIFACTS/'looper-reels-playing.png'))
+        page.wait_for_timeout(320)
+        moved=page.evaluate('''() => {
+          const glow=document.querySelector('.asset-cassette-glow');
+          return [getComputedStyle(glow,'::before').transform,getComputedStyle(glow,'::after').transform];
+        }''')
+        assert moved!=playing[6:8], (playing[6:8],moved)
 
         page.click('#autoLooperToggle')
         page.wait_for_function("document.getElementById('looper').dataset.speedLevel === '1'",timeout=3000)
@@ -159,4 +166,4 @@ with contextlib.ExitStack() as stack:
         assert not context_errors,context_errors
         browser.close()
 
-print('OK: faceplate stays fixed, deck readouts stay transparent, and reel overlays follow PLAY/STOP, speed and responsive alignment')
+print('OK: faceplate stays fixed, deck readouts stay transparent, and reel overlays visibly rotate with PLAY/STOP, speed and responsive alignment')
