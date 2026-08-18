@@ -79,13 +79,35 @@ with tempfile.TemporaryDirectory() as td:
         })''')
         assert all(v=='function' for v in handlers.values()), handlers
 
-        # Generated faceplate assets sit behind live HTML instead of replacing it.
+        # Generated faceplates are the single static hardware layer on desktop.
         faceplates=page.evaluate('''() => ({
           deck:getComputedStyle(document.querySelector('.cassetteDeck')).backgroundImage,
           crate:getComputedStyle(document.querySelector('.beatCratePanel')).backgroundImage
         })''')
         assert 'looper-deck-faceplate-retro.webp' in faceplates['deck'],faceplates
         assert 'looper-beat-crate-retro.webp' in faceplates['crate'],faceplates
+        chrome=page.evaluate('''() => {
+          const readout=getComputedStyle(document.querySelector('.deckReadout'));
+          const mechanism=getComputedStyle(document.querySelector('.cassetteMechanismCrop'));
+          const play=getComputedStyle(document.getElementById('playBeat'));
+          const library=getComputedStyle(document.querySelector('.library'));
+          return {
+            readoutBackground:readout.backgroundImage,
+            readoutBorder:readout.borderTopWidth,
+            mechanismBackground:mechanism.backgroundImage,
+            mechanismBorder:mechanism.borderTopWidth,
+            playBackground:play.backgroundImage,
+            playShadow:play.boxShadow,
+            libraryBackground:library.backgroundImage,
+            legacyDeckImage:getComputedStyle(document.querySelector('.cassetteDeckImage')).display,
+            legacyDoorImage:getComputedStyle(document.querySelector('.cassetteDoorPanel')).display
+          };
+        }''')
+        assert chrome['readoutBackground']=='none' and chrome['readoutBorder']=='0px',chrome
+        assert chrome['mechanismBackground']=='none' and chrome['mechanismBorder']=='0px',chrome
+        assert chrome['playBackground']=='none' and chrome['playShadow']=='none',chrome
+        assert chrome['libraryBackground']=='none',chrome
+        assert chrome['legacyDeckImage']=='none' and chrome['legacyDoorImage']=='none',chrome
 
         # Real LOOPER import -> load -> PLAY/STOP.
         page.set_input_files('#beatFiles',str(beat))
@@ -177,4 +199,4 @@ with tempfile.TemporaryDirectory() as td:
         context.close()
         browser.close()
 
-print('OK: browser startup, faceplates, cassette reels, tape counter, real imports, transport, shortcuts, five-state AUTO SPEED and filename-XSS regression')
+print('OK: browser startup, single-layer faceplates, cassette reels, tape counter, real imports, transport, shortcuts, five-state AUTO SPEED and filename-XSS regression')
