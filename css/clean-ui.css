@@ -564,7 +564,7 @@
   box-shadow: none !important;
 }
 
-#looper.active :is(.cassetteDeckImage,.cassetteDoorPanel,.cassetteDoorCavity,.cassetteDoorGlass,.cassetteDoorLip) {
+#looper.active :is(.cassetteDeckImage,.cassetteDoorPanel,.cassetteDoorCavity,.cassetteDoorGlass,.cassetteDoorLip,.cassetteDeckHint,.tapeCounterLabel,.deckReadoutAuto em) {
   display: none !important;
 }
 
@@ -628,8 +628,7 @@
   --slot-radius: 13px;
 }
 
-#looper.active .cassetteDeck.playing #playBeat::before,
-#looper.active #autoLooperToggle[data-auto-step="4"]::before {
+#looper.active :is(.cassetteDeck.playing #playBeat,#autoLooperToggle[data-auto-step="4"])::before {
   border-color: rgb(255 132 28 / .92);
   box-shadow: 0 0 14px rgb(255 104 0 / .78);
 }
@@ -640,12 +639,6 @@
 #looper.active #autoLooperToggle[data-auto-step="4"] { --slot-alpha: .88; --slot-radius: 15px; }
 #looper.active #autoLooperToggle:not([data-auto-step="0"])::before { border-color: rgb(255 112 8 / .72); }
 
-#looper.active .deckKeyLamp {
-  border-color: #5a2c0d !important;
-  background: var(--retro-orange) !important;
-  box-shadow: 0 0 7px rgb(255 104 0 / .42) !important;
-}
-
 #looper.active .counterWheel {
   border: 0 !important;
   background: transparent !important;
@@ -654,18 +647,9 @@
   text-shadow: 0 0 6px rgb(255 104 0 / .34) !important;
 }
 
-#looper.active .trackMeta b {
-  color: #e7c58f !important;
-  text-shadow: 0 0 4px rgb(255 104 0 / .12) !important;
-}
-
-#looper.active .trackMeta small {
-  color: #9f8467 !important;
-}
-
-#looper.active .track.active {
-  background: rgb(255 104 0 / .045) !important;
-  box-shadow: inset 3px 0 var(--retro-orange) !important;
+#looper.active .trackMeta :is(b,small) {
+  color: #d6b78b !important;
+  text-shadow: 0 0 4px rgb(255 104 0 / .10) !important;
 }
 
 @media (min-width:761px) {
@@ -725,16 +709,7 @@
     text-shadow: 0 0 5px rgb(255 104 0 / .30) !important;
   }
 
-  #looper.active .deckReadoutAuto {
-    padding-right: 4% !important;
-  }
-
-  #looper.active .deckReadoutAuto em {
-    display: none !important;
-  }
-
-  #looper.active .deckHardwareGrid,
-  #looper.active .deckMechanismColumn {
+  #looper.active :is(.deckHardwareGrid,.deckMechanismColumn) {
     display: contents !important;
   }
 
@@ -749,8 +724,7 @@
     overflow: hidden !important;
   }
 
-  #looper.active .cassetteDeckStage,
-  #looper.active .cassetteDoorAssembly {
+  #looper.active :is(.cassetteDeckStage,.cassetteDoorAssembly) {
     position: absolute !important;
     inset: 0 !important;
     width: 100% !important;
@@ -768,7 +742,6 @@
 
   #looper.active .cassetteReelLeft { left: 30.0% !important; }
   #looper.active .cassetteReelRight { left: 68.7% !important; }
-  #looper.active .cassetteDeckHint { display: none !important; }
 
   #looper.active .tapeCounterModule {
     position: absolute !important;
@@ -781,8 +754,6 @@
     padding: 0 !important;
   }
 
-  #looper.active .tapeCounterLabel { display: none !important; }
-
   #looper.active .tapeCounterWindow {
     position: absolute !important;
     inset: 0 !important;
@@ -791,13 +762,6 @@
     align-items: center !important;
     gap: 1% !important;
     padding: 12% 8% !important;
-  }
-
-  #looper.active .counterWheel {
-    display: flex !important;
-    align-items: center !important;
-    justify-content: center !important;
-    font-size: clamp(10px,1.35vw,22px) !important;
   }
 
   #looper.active :is(#tapeCounterReset,#cassetteDoorEject) {
@@ -832,11 +796,6 @@
     padding: 0 !important;
   }
 
-  #looper.active .deckTransport .deckHotspot {
-    width: 100% !important;
-    height: 100% !important;
-  }
-
   #looper.active .looperImportDock {
     position: absolute !important;
     z-index: 5;
@@ -844,17 +803,11 @@
     top: 35.54% !important;
     width: 10.82% !important;
     height: 29.87% !important;
-    display: flex !important;
-    flex-direction: column-reverse !important;
+    display: grid !important;
+    grid-template-rows: repeat(2,minmax(0,1fr)) !important;
     gap: 8.9% !important;
     margin: 0 !important;
     padding: 0 !important;
-  }
-
-  #looper.active .looperImportDock .deckLoadKey {
-    flex: 1 1 0 !important;
-    width: 100% !important;
-    height: auto !important;
   }
 
   #looper.active .beatCratePanel {
@@ -865,14 +818,6 @@
     padding: 0 !important;
     overflow: hidden !important;
     background: url("../assets/looper-beat-crate-retro.webp") center / 100% 100% no-repeat !important;
-  }
-
-  #looper.active .beatCratePanel .stableTitle {
-    position: absolute !important;
-    z-index: 4;
-    left: 3.6% !important;
-    top: 5.4% !important;
-    margin: 0 !important;
   }
 
   #looper.active .beatCrateControls {
@@ -887,15 +832,8 @@
     margin: 0 !important;
   }
 
-  #looper.active .beatCrateControls > div:first-child {
-    left: 8.75% !important;
-    width: 25.05% !important;
-  }
-
-  #looper.active .beatCrateControls > div:last-child {
-    left: 78.42% !important;
-    width: 18.18% !important;
-  }
+  #looper.active .beatCrateControls > div:first-child { left: 8.75% !important; width: 25.05% !important; }
+  #looper.active .beatCrateControls > div:last-child { left: 78.42% !important; width: 18.18% !important; }
 
   #looper.active .beatCrateControls label {
     position: absolute !important;
