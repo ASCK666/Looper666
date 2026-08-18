@@ -3,7 +3,7 @@
 
 #looper.asset-ui {
   --asset-amber: #e2ad5f;
-  --asset-glow: .12;
+  --asset-glow: 0;
   position: relative !important;
   width: 100% !important;
   aspect-ratio: 1536 / 1024 !important;
@@ -38,11 +38,12 @@
 #looper.asset-ui .deckMechanismColumn,
 #looper.asset-ui .deckTransport,
 #looper.asset-ui .looperImportDock,
-#looper.asset-ui .beatCrateControls {
+#looper.asset-ui .beatCrateControls,
+#looper.asset-ui .tapeCounterModule {
   display: contents !important;
 }
 
-#looper.asset-ui :is(.title,.looperFrameHeader,.deckReadout,.tapeCounterModule,.cassetteMechanismCrop,.cassetteDeckHint,.beatImportStatus) {
+#looper.asset-ui :is(.title,.looperFrameHeader,.deckReadout,.tapeCounterLabel,.tapeCounterWindow,.cassetteMechanismCrop,.cassetteDeckHint,.beatImportStatus) {
   display: none !important;
 }
 
@@ -228,7 +229,7 @@
   z-index: 3;
   left: 75.2%; top: 22.3%; width: 10.7%; height: 12.0%;
   pointer-events: none;
-  opacity: calc(.04 + var(--asset-glow));
+  opacity: var(--asset-glow);
   background: radial-gradient(ellipse at 50% 54%,rgba(255,168,43,.34),transparent 66%);
   filter: blur(2px);
   mix-blend-mode: screen;
@@ -240,7 +241,7 @@
   z-index: 3;
   left: 65.45%; top: 46.05%; width: 9.4%; height: 8.7%;
   pointer-events: none;
-  opacity: calc(.04 + var(--asset-glow));
+  opacity: var(--asset-glow);
   border-radius: 4px;
   box-shadow: inset 0 0 12px rgba(255,165,46,.34),0 0 12px rgba(255,165,46,.24);
   transition: opacity .12s ease,box-shadow .12s ease;
