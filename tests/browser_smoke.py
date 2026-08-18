@@ -165,14 +165,15 @@ with tempfile.TemporaryDirectory() as td:
         assert sequence==['+1','+2','+3','+4','+5','0'],sequence
         assert page.evaluate('autoLooperSpeedPercent === 100 && autoLooperEnabledState === false') is True
 
-        # Backlight intensity follows speed state and RESET clears it and the visible loop count.
+        # Backlight intensity follows speed state and RESET clears it and the visible loop digit.
         page.click('#autoLooperToggle')
         page.wait_for_function("parseFloat(getComputedStyle(document.querySelector('.asset-speed-glow')).opacity) > 0")
         glow_on=page.evaluate("parseFloat(getComputedStyle(document.querySelector('.asset-speed-glow')).opacity)")
         assert glow_on>0,glow_on
         page.click('#tapeCounterReset')
         assert speed.inner_text()=='0'
-        assert page.locator('.asset-loop-readout').inner_text()=='0 / 8'
+        # The faceplate already prints “/ 8”; HTML only owns the changing digit.
+        assert page.locator('.asset-loop-readout').inner_text()=='0'
         page.wait_for_function("parseFloat(getComputedStyle(document.querySelector('.asset-speed-glow')).opacity) < 0.01")
         glow_off=page.evaluate("parseFloat(getComputedStyle(document.querySelector('.asset-speed-glow')).opacity)")
         assert glow_off<.01,glow_off
@@ -211,4 +212,4 @@ with tempfile.TemporaryDirectory() as td:
         context.close()
         browser.close()
 
-print('OK: browser startup, asset faceplate hotspots/readouts/backlights, manual SPEED +1 cycle, real imports, transport, shortcuts and filename-XSS regression')
+print('OK: browser startup, tight faceplate glyph overlays, manual SPEED +1 cycle, real imports, crate-bound transport, shortcuts and filename-XSS regression')
