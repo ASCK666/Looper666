@@ -1,0 +1,58 @@
+name: Finish bundled beat cleanup
+
+on:
+  push:
+    branches:
+      - cleanup/remove-obsolete-bundled-beats
+
+permissions:
+  contents: write
+
+jobs:
+  cleanup-tests:
+    if: ${{ !contains(github.event.head_commit.message, 'Finish bundled beat cleanup') }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: cleanup/remove-obsolete-bundled-beats
+          fetch-depth: 0
+      - name: Update tests for an empty real crate
+        shell: python
+        run: |
+          from pathlib import Path
+
+          unit=Path('tests/core_unit.js')
+          text=unit.read_text(encoding='utf-8')
+          text=text.replace("isFolderBeat({source:'bundled'})", "isFolderBeat({source:'user-import'})")
+          unit.write_text(text,encoding='utf-8')
+
+          render=Path('tests/asset_render.py')
+          text=render.read_text(encoding='utf-8')
+          assert "assert info['tracks']>=3, info" in text
+          text=text.replace("assert info['tracks']>=3, info", "assert info['tracks']==0, info")
+          render.write_text(text,encoding='utf-8')
+
+          layout=Path('tests/css_layout.py')
+          text=layout.read_text(encoding='utf-8')
+          old="assert rack['columns'] >= 3 and rack['slots'] >= 12 and rack['tracks'] >= 3, rack"
+          assert old in text
+          text=text.replace(old,"assert rack['columns'] >= 3 and rack['slots'] >= 12, rack",1)
+          old="assert rack['metaOpacity'] > .9 and rack['metaColor'] not in ('rgba(0, 0, 0, 0)','transparent'), rack"
+          assert old in text
+          text=text.replace(old,"if rack['tracks']:\n            assert rack['metaOpacity'] > .9 and rack['metaColor'] not in ('rgba(0, 0, 0, 0)','transparent'), rack",1)
+          layout.write_text(text,encoding='utf-8')
+
+          Path('.github/workflows/finish-bundled-beat-cleanup.yml').unlink()
+      - name: Check removed vocabulary
+        run: |
+          ! grep -R "DEFAULT_BEATS\|source:'bundled'\|source:\"bundled\"\|INCLUDED BEATS\|bundled beats" js tests index.html
+          node --check js/looper.js
+          node tests/core_unit.js
+      - name: Commit cleanup tests
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A
+          git commit -m "Finish bundled beat cleanup"
+          git push origin HEAD:cleanup/remove-obsolete-bundled-beats
