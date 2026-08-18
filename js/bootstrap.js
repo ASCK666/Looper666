@@ -1,5 +1,5 @@
 "use strict";
-window.__SP={version:"104-flat-looper-runtime",ready:false,errors:[]};
+window.__SP={version:"105-flat-looper-runtime",ready:false,errors:[]};
 window.__SP.report=(scope,error)=>{
   const message=error?.message||String(error||"Unknown error");
   const item={scope,message,time:new Date().toISOString()};
@@ -18,6 +18,10 @@ const LOOPER_DIRECT_CONTROL_IDS=[
   "beatFiles","beatFolder",
   "cassetteBeatName","deckTransportState","deckSpeedReadout","deckAutoReadout"
 ];
+
+function looperOverlayReady(looper){
+  return getComputedStyle(looper).getPropertyValue("--asset-amber").trim()!=="";
+}
 
 function mountLooperRuntimeControls(looper){
   if(looper.dataset.runtimeMounted==="1")return;
@@ -183,7 +187,7 @@ function installCrateTruthTransport(){
 
 function loadLooperAsset(){
   const looper=document.getElementById("looper");
-  if(!looper)return;
+  if(!looper||!looperOverlayReady(looper))return;
   looper.classList.add("asset-ui");
   mountLooperRuntimeControls(looper);
   ensureLooperFaceplate(looper);
@@ -195,7 +199,7 @@ function installAssetSpeedControl(){
   const looper=document.getElementById("looper");
   const button=document.getElementById("autoLooperToggle");
   const resetButton=document.getElementById("tapeCounterReset");
-  if(!looper||!button||!looper.__assetReadouts)return;
+  if(!looper||!looperOverlayReady(looper)||!button||!looper.__assetReadouts)return;
   const readouts=looper.__assetReadouts;
   let speedLevel=0;
   let loopBaseUnits=typeof tapeCounterUnits==="number"?tapeCounterUnits:0;
@@ -253,7 +257,7 @@ function installAssetSpeedControl(){
 loadLooperAsset();
 window.addEventListener("load",()=>{
   installAssetSpeedControl();
-  installCrateTruthTransport();
+  if(looperOverlayReady(document.getElementById("looper")))installCrateTruthTransport();
 },{once:true});
 
 document.querySelectorAll("[data-range-knob]").forEach(knob=>{
