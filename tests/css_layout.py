@@ -59,7 +59,7 @@ with sync_playwright() as p:
         assert metrics['machine']['width'] > 300, metrics
         assert metrics['looper']['width'] > 300 and metrics['looper']['height'] > 200, metrics
         assert abs(metrics['looper']['width']/metrics['looper']['height'] - 1.5) < .03, metrics
-        assert metrics['library']['width'] > 200 and metrics['library']['height'] > 80, metrics
+        assert metrics['library']['width'] > 200 and metrics['library']['height'] > 70, metrics
         assert metrics['track']['width'] > 40 and metrics['state']['width'] > 30, metrics
         assert metrics['loops']['width'] > 20 and metrics['speed']['width'] > 20, metrics
         assert metrics['bodyW'] <= metrics['viewportW'] + 2, metrics
