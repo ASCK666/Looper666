@@ -4,8 +4,7 @@
 #looper.asset-ui {
   --asset-amber:#e2ad5f;
   --asset-glow:0;
-  --asset-supply-reel-cycle:2.910s;
-  --asset-takeup-reel-cycle:1.460s;
+  --asset-tape-cycle:32s;
   position:relative!important;
   width:100%!important;
   aspect-ratio:1536/1024!important;
@@ -17,11 +16,11 @@
   box-shadow:0 16px 38px rgba(0,0,0,.38)!important;
 }
 
-#looper.asset-ui[data-speed-level="1"]{--asset-supply-reel-cycle:2.881s;--asset-takeup-reel-cycle:1.446s}
-#looper.asset-ui[data-speed-level="2"]{--asset-supply-reel-cycle:2.853s;--asset-takeup-reel-cycle:1.431s}
-#looper.asset-ui[data-speed-level="3"]{--asset-supply-reel-cycle:2.825s;--asset-takeup-reel-cycle:1.417s}
-#looper.asset-ui[data-speed-level="4"]{--asset-supply-reel-cycle:2.798s;--asset-takeup-reel-cycle:1.404s}
-#looper.asset-ui[data-speed-level="5"]{--asset-supply-reel-cycle:2.771s;--asset-takeup-reel-cycle:1.390s}
+#looper.asset-ui[data-speed-level="1"]{--asset-tape-cycle:31.683s}
+#looper.asset-ui[data-speed-level="2"]{--asset-tape-cycle:31.373s}
+#looper.asset-ui[data-speed-level="3"]{--asset-tape-cycle:31.068s}
+#looper.asset-ui[data-speed-level="4"]{--asset-tape-cycle:30.769s}
+#looper.asset-ui[data-speed-level="5"]{--asset-tape-cycle:30.476s}
 
 #looper.asset-ui>.layout{display:none!important}
 
@@ -269,8 +268,8 @@
 #looper.asset-ui .asset-page-prev{left:36%}
 #looper.asset-ui .asset-page-next{left:54.1%}
 
-/* This element is now only a positioning container for the two reel mechanisms.
-   Cassette body/support lighting stays frozen in faceplate.webp. */
+/* The cassette body/support stays frozen. During PLAY this transparent container
+   only covers the two baked reel circles and simulates tape moving between them. */
 #looper.asset-ui .asset-cassette-glow {
   position:absolute;z-index:3;left:30.5%;top:10.7%;width:38.7%;height:27.6%;
   pointer-events:none;
@@ -280,6 +279,15 @@
   box-shadow:none;
   filter:none;
   mix-blend-mode:normal;
+}
+#looper.asset-ui.asset-playing .asset-cassette-glow {
+  background-image:
+    repeating-radial-gradient(circle,#2b1b10 0 1.4px,#171009 1.4px 3.2px),
+    repeating-radial-gradient(circle,#2b1b10 0 1.4px,#171009 1.4px 3.2px),
+    radial-gradient(circle,#17110d 0 58%,#0b0806 76%,#050403 100%),
+    radial-gradient(circle,#17110d 0 58%,#0b0806 76%,#050403 100%);
+  background-repeat:no-repeat;
+  animation:asset-cassette-tape-transfer var(--asset-tape-cycle) linear infinite;
 }
 #looper.asset-ui .asset-cassette-glow::before,
 #looper.asset-ui .asset-cassette-glow::after {
@@ -293,21 +301,62 @@
   border-radius:50%;
   background:url("./cassette-reel-overlay.svg") center/contain no-repeat;
   transform-origin:50% 50%;
-  animation-name:asset-cassette-reel-spin;
+  animation-duration:var(--asset-tape-cycle);
   animation-timing-function:linear;
   animation-iteration-count:infinite;
   animation-play-state:paused;
   transition:opacity .05s linear;
   will-change:transform;
 }
-#looper.asset-ui .asset-cassette-glow::before{left:22.3%;animation-duration:var(--asset-supply-reel-cycle)}
-#looper.asset-ui .asset-cassette-glow::after{left:63.6%;animation-duration:var(--asset-takeup-reel-cycle)}
+#looper.asset-ui .asset-cassette-glow::before{left:22.3%;animation-name:asset-cassette-supply-spin}
+#looper.asset-ui .asset-cassette-glow::after{left:63.6%;animation-name:asset-cassette-takeup-spin}
 #looper.asset-ui.asset-playing .asset-cassette-glow::before,
 #looper.asset-ui.asset-playing .asset-cassette-glow::after{opacity:1;animation-play-state:running}
 #looper.asset-ui .asset-speed-glow{position:absolute;z-index:3;left:75.2%;top:22.3%;width:10.7%;height:12%;pointer-events:none;opacity:var(--asset-glow);background:radial-gradient(ellipse at 50% 54%,rgba(255,168,43,.34),transparent 66%);filter:blur(2px);mix-blend-mode:screen;transition:opacity .12s ease,filter .12s ease}
 #looper.asset-ui .asset-speed-button-glow{position:absolute;z-index:3;left:65.45%;top:46.05%;width:9.4%;height:8.7%;pointer-events:none;opacity:var(--asset-glow);border-radius:4px;box-shadow:inset 0 0 12px rgba(255,165,46,.34),0 0 12px rgba(255,165,46,.24);transition:opacity .12s ease,box-shadow .12s ease}
 
-@keyframes asset-cassette-reel-spin{to{transform:rotate(1turn)}}
+/* Constant tape speed means angular reel speed rises as a reel empties and
+   falls as it fills. The two keyframes stay forward-only while trading inertia. */
+@keyframes asset-cassette-supply-spin{
+  0%{transform:rotate(0turn)}
+  12.5%{transform:rotate(1.5turn)}
+  25%{transform:rotate(3.5turn)}
+  37.5%{transform:rotate(6.25turn)}
+  50%{transform:rotate(10turn)}
+  62.5%{transform:rotate(13.75turn)}
+  75%{transform:rotate(16.5turn)}
+  87.5%{transform:rotate(18.5turn)}
+  100%{transform:rotate(20turn)}
+}
+@keyframes asset-cassette-takeup-spin{
+  0%{transform:rotate(0turn)}
+  12.5%{transform:rotate(3.75turn)}
+  25%{transform:rotate(6.5turn)}
+  37.5%{transform:rotate(8.5turn)}
+  50%{transform:rotate(10turn)}
+  62.5%{transform:rotate(11.5turn)}
+  75%{transform:rotate(13.5turn)}
+  87.5%{transform:rotate(16.25turn)}
+  100%{transform:rotate(20turn)}
+}
+
+/* Tape pack radius transfers left -> right -> left while the outer mechanism
+   remains the same size. Background positions compensate for the changing size
+   so both packs stay locked to the physical reel centres. */
+@keyframes asset-cassette-tape-transfer{
+  0%,100%{
+    background-size:12.8% 26.9%,7.5% 15.8%,15.8% 33.2%,15.8% 33.2%;
+    background-position:27.3% 49.0%,73.2% 49.2%,26.5% 49.0%,75.5% 49.0%;
+  }
+  25%,75%{
+    background-size:10.6% 22.3%,10.6% 22.3%,15.8% 33.2%,15.8% 33.2%;
+    background-position:27.9% 49.1%,74.1% 49.1%,26.5% 49.0%,75.5% 49.0%;
+  }
+  50%{
+    background-size:7.5% 15.8%,12.8% 26.9%,15.8% 33.2%,15.8% 33.2%;
+    background-position:28.6% 49.2%,74.7% 49.0%,26.5% 49.0%,75.5% 49.0%;
+  }
+}
 
 @media(max-width:760px){
   #looper.asset-ui{width:100%!important}
