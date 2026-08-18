@@ -84,8 +84,8 @@ with tempfile.TemporaryDirectory() as td:
           deck:getComputedStyle(document.querySelector('.cassetteDeck')).backgroundImage,
           crate:getComputedStyle(document.querySelector('.beatCratePanel')).backgroundImage
         })''')
-        assert 'looper-deck-faceplate-retro.svg' in faceplates['deck'],faceplates
-        assert 'looper-beat-crate-retro.svg' in faceplates['crate'],faceplates
+        assert 'looper-deck-faceplate-retro.webp' in faceplates['deck'],faceplates
+        assert 'looper-beat-crate-retro.webp' in faceplates['crate'],faceplates
 
         # Real LOOPER import -> load -> PLAY/STOP.
         page.set_input_files('#beatFiles',str(beat))
