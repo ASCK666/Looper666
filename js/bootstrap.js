@@ -29,6 +29,7 @@ function ensureLooperFaceplate(looper){
   image.setAttribute("aria-hidden","true");
   image.draggable=false;
   image.decoding="sync";
+  image.style.cssText="position:absolute;inset:0;width:100%;height:100%;object-fit:fill;display:block;z-index:0;pointer-events:none";
   image.onload=()=>{
     looper.classList.add("asset-ready");
     looper.classList.remove("asset-load-error");
