@@ -15,12 +15,28 @@ const RACK_SLOTS_PER_COLUMN=4;
 const AUTO_LOOP_BATCH=8;
 const AUTO_SPEED_INCREMENT_PERCENT=1;
 const AUTO_SPEED_MAX_PERCENT=200;
+const AUTO_SPEED_MODES=[
+  {label:"OFF",loops:0,readout:"OFF"},
+  {label:`+${AUTO_SPEED_INCREMENT_PERCENT}% / ${AUTO_LOOP_BATCH} LOOPS`,loops:AUTO_LOOP_BATCH,readout:`1/${AUTO_LOOP_BATCH}`},
+  {label:`+${AUTO_SPEED_INCREMENT_PERCENT}% / 4 LOOPS`,loops:4,readout:"1/4"},
+  {label:`+${AUTO_SPEED_INCREMENT_PERCENT}% / 2 LOOPS`,loops:2,readout:"1/2"},
+  {label:`+${AUTO_SPEED_INCREMENT_PERCENT}% / LOOP`,loops:1,readout:"1/1"}
+];
+let autoLooperModeIndex=0;
 const AUTO_PROGRESS_INTERVAL_MS=200;
 const TAPE_COUNTER_INTERVAL_MS=100;
 const STANDARD_TAPE_SPEED_CM_PER_SECOND=4.75;
 const TAPE_COUNTER_CM_PER_UNIT=4.75;
 const SUPPLY_REEL_CYCLE_SECONDS=2.91;
 const TAKEUP_REEL_CYCLE_SECONDS=1.46;
+
+function autoLooperMode(){
+  return AUTO_SPEED_MODES[autoLooperModeIndex]||AUTO_SPEED_MODES[0];
+}
+
+function autoLooperLoopBatch(){
+  return autoLooperMode().loops||AUTO_LOOP_BATCH;
+}
 
 // Keep the cassette view beside the Looper state it renders. This function is
 // deliberately presentation-only: transport changes remain in playDeck(),
@@ -47,7 +63,7 @@ function refreshCassetteUI(){
   action.textContent=loaded ? "REPLACE" : "LOAD";
   if(transportState)transportState.textContent=!loaded ? "EMPTY" : playing ? "PLAYING" : "READY";
   if(speedReadout)speedReadout.textContent=`${autoLooperSpeedPercent}%`;
-  if(autoReadout)autoReadout.textContent=autoLooperEnabledState ? "ON" : "OFF";
+  if(autoReadout)autoReadout.textContent=autoLooperMode().readout;
   door.setAttribute("aria-label",loaded
     ? "Éjecter la cassette et choisir un autre beat"
     : "Ouvrir la porte cassette et charger un beat"
@@ -779,7 +795,11 @@ function refreshAutoLooperCompact(){
   const deck=$("looperDropzoneBtn");
   const speed=$("deckSpeedReadout");
   const auto=$("deckAutoReadout");
+  const cadence=document.querySelector(".deckReadoutAuto em");
   if(!btn || !status) return;
+
+  const mode=autoLooperMode();
+  const batch=autoLooperLoopBatch();
 
   // Compact cassette tape moves at 4.75 cm/s. Keep the visual reels tied to
   // the actual deck playback rate instead of using a decorative fixed spin.
@@ -789,13 +809,17 @@ function refreshAutoLooperCompact(){
     deck.style.setProperty("--takeup-reel-cycle",`${(TAKEUP_REEL_CYCLE_SECONDS/rate).toFixed(3)}s`);
   }
 
+  btn.dataset.autoStep=String(autoLooperModeIndex);
   btn.classList.toggle("active",autoLooperEnabledState);
   btn.setAttribute("aria-pressed",autoLooperEnabledState ? "true" : "false");
+  btn.setAttribute("aria-label",`Accélération automatique ${mode.label}`);
+  btn.title=`AUTO ${mode.label}`;
   if(speed)speed.textContent=`${autoLooperSpeedPercent}%`;
-  if(auto)auto.textContent=autoLooperEnabledState ? "ON" : "OFF";
+  if(auto)auto.textContent=mode.readout;
+  if(cadence)cadence.textContent=mode.label;
 
   status.textContent=autoLooperEnabledState
-    ? `ON • ${autoLooperLoopCount}/${AUTO_LOOP_BATCH} LOOPS`
+    ? `${mode.label} • ${autoLooperLoopCount}/${batch}`
     : `OFF • +${AUTO_SPEED_INCREMENT_PERCENT}% / ${AUTO_LOOP_BATCH} LOOPS`;
 }
 
@@ -833,6 +857,7 @@ function applyAutoLooperIncrement(){
 function startAutoLooperProgress(){
   if(autoLooperTimer) clearInterval(autoLooperTimer);
   resetAutoLooperProgress();
+  const batch=autoLooperLoopBatch();
 
   autoLooperTimer=setInterval(()=>{
     if(!deckSource || !deckBuffer || !ctx) return;
@@ -847,7 +872,7 @@ function startAutoLooperProgress(){
       autoLooperSourceSeconds-=dur;
       autoLooperLoopCount++;
 
-      if(autoLooperLoopCount>=AUTO_LOOP_BATCH){
+      if(autoLooperLoopCount>=batch){
         autoLooperLoopCount=0;
         if(autoLooperEnabledState){
           applyAutoLooperIncrement();
@@ -860,15 +885,16 @@ function startAutoLooperProgress(){
 }
 
 function toggleAutoLooper(){
-  autoLooperEnabledState=!autoLooperEnabledState;
+  autoLooperModeIndex=(autoLooperModeIndex+1)%AUTO_SPEED_MODES.length;
+  autoLooperEnabledState=autoLooperModeIndex!==0;
 
   if(autoLooperEnabledState){
     if(deckSource)startAutoLooperProgress();
     else resetAutoLooperProgress();
   }else{
-    stopAutoLooperProgress();
     autoLooperSpeedPercent=100;
     if(deckSource)deckSource.playbackRate.value=1;
+    stopAutoLooperProgress();
   }
 
   refreshAutoLooperCompact();

@@ -79,6 +79,14 @@ with tempfile.TemporaryDirectory() as td:
         })''')
         assert all(v=='function' for v in handlers.values()), handlers
 
+        # Generated faceplate assets sit behind live HTML instead of replacing it.
+        faceplates=page.evaluate('''() => ({
+          deck:getComputedStyle(document.querySelector('.cassetteDeck')).backgroundImage,
+          crate:getComputedStyle(document.querySelector('.beatCratePanel')).backgroundImage
+        })''')
+        assert 'looper-deck-faceplate-retro.svg' in faceplates['deck'],faceplates
+        assert 'looper-beat-crate-retro.svg' in faceplates['crate'],faceplates
+
         # Real LOOPER import -> load -> PLAY/STOP.
         page.set_input_files('#beatFiles',str(beat))
         page.wait_for_function("document.getElementById('deckTrack').textContent === 'test-beat.wav'",timeout=10000)
@@ -90,6 +98,14 @@ with tempfile.TemporaryDirectory() as td:
         page.wait_for_function('deckSource !== null')
         assert page.locator('#deckTransportState').inner_text() == 'PLAYING'
         assert page.locator('.cassetteDeck.playing').count() == 1
+        reel_animation=page.evaluate('''() => ({
+          left:getComputedStyle(document.querySelector('.cassetteReelLeft')).animationName,
+          right:getComputedStyle(document.querySelector('.cassetteReelRight')).animationName,
+          leftOpacity:parseFloat(getComputedStyle(document.querySelector('.cassetteReelLeft')).opacity),
+          rightOpacity:parseFloat(getComputedStyle(document.querySelector('.cassetteReelRight')).opacity)
+        })''')
+        assert reel_animation['left']=='frontDeckSpin' and reel_animation['right']=='frontDeckSpin',reel_animation
+        assert reel_animation['leftOpacity']>.9 and reel_animation['rightOpacity']>.9,reel_animation
         page.wait_for_timeout(1250)
         running_counter=page.locator('#tapeCounter').get_attribute('aria-label')
         assert running_counter != 'Compteur de bande 0000', running_counter
@@ -102,26 +118,41 @@ with tempfile.TemporaryDirectory() as td:
         page.click('#tapeCounterReset')
         assert page.locator('#tapeCounter').get_attribute('aria-label') == 'Compteur de bande 0000'
 
-        # Space shortcut follows active mode, but not while an interactive control has focus.
+        # Space shortcut follows active mode, but not while a text input has focus.
         page.evaluate('document.activeElement && document.activeElement.blur()')
         page.keyboard.press('Space')
         page.wait_for_function('deckSource !== null')
         page.keyboard.press('Space')
         page.wait_for_function('deckSource === null')
-        page.focus('#autoLooperToggle')
+        page.focus('#librarySearch')
         page.keyboard.press('Space')
         page.wait_for_timeout(120)
         assert page.evaluate('deckSource === null') is True
+        page.fill('#librarySearch','')
 
-        # AUTO toggle still works.
-        if page.locator('#autoLooperToggle').get_attribute('aria-pressed')!='false':
-            page.click('#autoLooperToggle')
-        page.click('#autoLooperToggle')
-        assert page.locator('#autoLooperToggle').get_attribute('aria-pressed')=='true'
-        assert page.locator('#deckAutoReadout').inner_text() == 'ON'
-        page.click('#autoLooperToggle')
-        assert page.locator('#autoLooperToggle').get_attribute('aria-pressed')=='false'
+        # AUTO SPEED is a five-position hardware cycle: OFF -> 8 -> 4 -> 2 -> 1 -> OFF.
+        auto=page.locator('#autoLooperToggle')
+        assert auto.get_attribute('data-auto-step') == '0'
+        assert auto.get_attribute('aria-pressed') == 'false'
         assert page.locator('#deckAutoReadout').inner_text() == 'OFF'
+        off_glow=page.evaluate("getComputedStyle(document.getElementById('autoLooperToggle'),'::before').borderTopColor")
+        auto_states=[
+            ('1','true','1/8'),
+            ('2','true','1/4'),
+            ('3','true','1/2'),
+            ('4','true','1/1'),
+            ('0','false','OFF'),
+        ]
+        step4_glow=None
+        for step,pressed,readout in auto_states:
+            page.click('#autoLooperToggle')
+            assert auto.get_attribute('data-auto-step') == step
+            assert auto.get_attribute('aria-pressed') == pressed
+            assert page.locator('#deckAutoReadout').inner_text() == readout
+            if step=='4':
+                step4_glow=page.evaluate("getComputedStyle(document.getElementById('autoLooperToggle'),'::before').borderTopColor")
+        assert step4_glow and step4_glow != off_glow,(off_glow,step4_glow)
+        assert page.evaluate('autoLooperEnabledState === false && autoLooperModeIndex === 0 && autoLooperSpeedPercent === 100') is True
 
         # Real CHOPPER sample import.
         page.click('[data-tab="chopper"]')
@@ -146,4 +177,4 @@ with tempfile.TemporaryDirectory() as td:
         context.close()
         browser.close()
 
-print('OK: browser startup, tape counter, real imports, transport, shortcuts, AUTO and filename-XSS regression')
+print('OK: browser startup, faceplates, cassette reels, tape counter, real imports, transport, shortcuts, five-state AUTO SPEED and filename-XSS regression')
