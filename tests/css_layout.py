@@ -16,6 +16,7 @@ html=re.sub(r'src="assets/[^"]+"','src=""',html)
 for rel in ['./js/bootstrap.js','./js/core.js','./js/looper.js','./js/practice.js','./js/chopper.js','./js/drums.js','./js/events.js']:
     js=(ROOT/rel[2:]).read_text(encoding='utf-8')
     html=html.replace(f'<script src="{rel}" defer></script>',f'<script>{js}</script>')
+    html=html.replace(f'<script src="{rel}"></script>',f'<script>{js}</script>')
 
 chromium='/usr/bin/chromium'
 with sync_playwright() as p:
