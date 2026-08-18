@@ -1,5 +1,5 @@
 "use strict";
-window.__SP={version:"95-asset-ui-fix",ready:false,errors:[]};
+window.__SP={version:"96-visible-faceplate",ready:false,errors:[]};
 window.__SP.report=(scope,error)=>{
   const message=error?.message||String(error||"Unknown error");
   const item={scope,message,time:new Date().toISOString()};
@@ -16,6 +16,34 @@ window.addEventListener("error",event=>{
 window.addEventListener("unhandledrejection",event=>{
   window.__SP.report("PROMISE",event.reason);
 });
+
+const LOOPER_FACEPLATE_URL="./assets/looper-ui/faceplate.webp";
+
+function ensureLooperFaceplate(looper){
+  let image=looper.querySelector(".looper-faceplate");
+  if(image)return image;
+  image=document.createElement("img");
+  image.className="looper-faceplate";
+  image.src=LOOPER_FACEPLATE_URL;
+  image.alt="";
+  image.setAttribute("aria-hidden","true");
+  image.draggable=false;
+  image.decoding="sync";
+  image.onload=()=>{
+    looper.classList.add("asset-ready");
+    looper.classList.remove("asset-load-error");
+  };
+  image.onerror=()=>{
+    looper.classList.remove("asset-ready");
+    looper.classList.add("asset-load-error");
+    if(location.protocol!=="about:" && location.protocol!=="data:"){
+      window.__SP.report("LOOPER ASSET",new Error("Approved Looper faceplate failed to load"));
+    }
+  };
+  looper.prepend(image);
+  if(image.complete && image.naturalWidth>0)image.onload();
+  return image;
+}
 
 // The approved Looper artwork is the visual surface. CSS/HTML only provide
 // hit areas, live readouts, dynamic library labels and lighting.
@@ -108,6 +136,7 @@ function loadLooperAsset(){
   const looper=document.getElementById("looper");
   if(!looper)return;
   looper.classList.add("asset-ui");
+  ensureLooperFaceplate(looper);
   installLooperAssetReadouts(looper);
   installAssetLibraryPager(looper);
 }
@@ -155,8 +184,6 @@ function installAssetSpeedControl(){
     paintSpeed();
   };
 
-  // Replace the retired AUTO action at its native onclick owner instead of
-  // intercepting events with capture/stopImmediatePropagation.
   button.onclick=event=>{
     event.stopPropagation();
     applySpeedLevel((speedLevel+1)%6);
@@ -175,7 +202,6 @@ function installAssetSpeedControl(){
   const trackName=document.getElementById("cassetteBeatName");
   if(trackName){
     new MutationObserver(()=>{
-      // Loading a different beat resets the manual speed and its loop baseline.
       loopBaseUnits=typeof tapeCounterUnits==="number"?tapeCounterUnits:0;
       if(autoLooperSpeedPercent===100 && speedLevel!==0)applySpeedLevel(0);
       paintLoops();
@@ -189,8 +215,6 @@ function installAssetSpeedControl(){
 
 loadLooperAsset();
 window.addEventListener("load",()=>{
-  // events.js owns the native controls by this point; replace only SPEED and
-  // augment RESET once, with no retry loop.
   installAssetSpeedControl();
 },{once:true});
 
@@ -217,8 +241,6 @@ document.querySelectorAll("[data-range-knob]").forEach(knob=>{
   sync();
 });
 
-// Development mode: always retire stale service workers/caches before they can
-// hide a freshly deployed GitHub Pages build behind old JavaScript.
 if("serviceWorker" in navigator){
   navigator.serviceWorker.getRegistrations()
     .then(registrations=>Promise.all(registrations.map(registration=>registration.unregister())))
