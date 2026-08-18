@@ -53,7 +53,6 @@ jobs:
                   glow=page.locator('.asset-cassette-glow')
                   glow.screenshot(path=str(out/'exact-stop.png'))
 
-                  # Freeze the real transport-triggered animation at angle zero.
                   page.add_style_tag(content="""
                     #looper.asset-ui.asset-playing .asset-cassette-glow::before,
                     #looper.asset-ui.asset-playing .asset-cassette-glow::after {
@@ -67,10 +66,12 @@ jobs:
                   page.wait_for_timeout(250)
                   assets=page.evaluate("""() => {
                     const g=document.querySelector('.asset-cassette-glow');
-                    return [getComputedStyle(g,'::before').backgroundImage,getComputedStyle(g,'::after').backgroundImage];
+                    const l=getComputedStyle(g,'::before');
+                    const r=getComputedStyle(g,'::after');
+                    return [l.backgroundImage,r.backgroundImage,l.backgroundSize,r.backgroundSize,l.backgroundPosition,r.backgroundPosition];
                   }""")
-                  assert 'cassette-reel-overlay.svg' in assets[0],assets
-                  assert 'cassette-reel-overlay-right.svg' in assets[1],assets
+                  assert 'faceplate.webp' in assets[0] and 'faceplate.webp' in assets[1],assets
+                  print('direct crop styles:',assets)
                   glow.screenshot(path=str(out/'exact-zero.png'))
 
                   stop=Image.open(out/'exact-stop.png').convert('RGB')
@@ -80,10 +81,8 @@ jobs:
                   mean=sum(stat.mean)/3
                   changed=sum(1 for px in d.getdata() if max(px)>12)
                   print('angle-zero diff mean:',mean,'changed pixels:',changed)
-                  # A tiny rasterisation delta is acceptable; a redrawn mechanism is not.
                   assert mean < 3.0,(mean,changed)
 
-                  # Unfreeze and verify real visible rotation remains confined to both reels.
                   page.locator('style').last.evaluate('(el)=>el.remove()')
                   page.wait_for_timeout(180)
                   glow.screenshot(path=str(out/'exact-play-a.png'))
@@ -114,7 +113,7 @@ jobs:
           bbox=diff.getbbox()
           print('motion diff bbox:',bbox)
           assert bbox is not None
-          print('OK: exact faceplate reel crops rotate; cassette body remains baked/static')
+          print('OK: direct faceplate reel crops rotate; cassette body remains baked/static')
           PY
       - uses: actions/upload-artifact@v4
         if: always()
