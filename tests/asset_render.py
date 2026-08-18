@@ -112,6 +112,7 @@ with contextlib.ExitStack() as stack:
         }''')
         page.click('#playBeat')
         page.wait_for_function("deckSource !== null && document.getElementById('looper').classList.contains('asset-playing')",timeout=5000)
+        page.wait_for_function("parseFloat(getComputedStyle(document.querySelector('.asset-cassette-glow'),'::before').opacity) > .5",timeout=1000)
         playing=page.evaluate('''() => {
           const glow=document.querySelector('.asset-cassette-glow');
           const left=getComputedStyle(glow,'::before');
@@ -133,6 +134,7 @@ with contextlib.ExitStack() as stack:
         for _ in range(2):
             page.click('#stopBeat')
             page.wait_for_function("deckSource === null && !document.getElementById('looper').classList.contains('asset-playing')",timeout=3000)
+            page.wait_for_function("parseFloat(getComputedStyle(document.querySelector('.asset-cassette-glow'),'::before').opacity) < .01",timeout=1000)
             stopped=page.evaluate('''() => {
               const glow=document.querySelector('.asset-cassette-glow');
               return [getComputedStyle(glow,'::before').animationPlayState,getComputedStyle(glow,'::after').animationPlayState,getComputedStyle(glow,'::before').opacity,getComputedStyle(glow,'::after').opacity,document.querySelectorAll('.asset-cassette-glow').length];
@@ -140,9 +142,11 @@ with contextlib.ExitStack() as stack:
             assert stopped==['paused','paused','0','0',1], stopped
             page.click('#playBeat')
             page.wait_for_function("deckSource !== null && document.getElementById('looper').classList.contains('asset-playing')",timeout=3000)
+            page.wait_for_function("parseFloat(getComputedStyle(document.querySelector('.asset-cassette-glow'),'::before').opacity) > .5",timeout=1000)
 
         page.click('#stopBeat')
         page.wait_for_function("deckSource === null && !document.getElementById('looper').classList.contains('asset-playing')",timeout=3000)
+        page.wait_for_function("parseFloat(getComputedStyle(document.querySelector('.asset-cassette-glow'),'::before').opacity) < .01",timeout=1000)
         page.click('#tapeCounterReset')
         with page.expect_file_chooser(timeout=3000):
             page.click('#importBeatsBtn')
