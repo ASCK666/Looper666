@@ -223,8 +223,8 @@
 #looper.asset-ui #library .track.active .trackMeta b{color:#ffd07a!important;text-shadow:0 0 7px rgba(226,173,95,.32)}
 #looper.asset-ui #library .libraryEmptyMessage{display:none!important}
 
-/* Dynamic HTML readouts. Backgrounds are sampled from their exact locations in
-   faceplate.webp rather than using one generic black rectangle. */
+/* Dynamic HTML readouts are transparent. Only the baked glyphs from
+   faceplate.webp are locally masked so the original digital frames stay visible. */
 #looper.asset-ui .asset-readout {
   position:absolute;
   z-index:9;
@@ -234,22 +234,27 @@
   overflow:hidden;
   white-space:nowrap;
   color:#e4aa48;
+  background-color:transparent;
+  background-repeat:no-repeat;
   font-family:ui-monospace,SFMono-Regular,Consolas,monospace;
   text-shadow:0 0 7px rgba(226,173,95,.34);
 }
-#looper.asset-ui .asset-header-state-readout{left:5.15%;top:13.72%;width:7.5%;height:3.30%;padding:0 .12%;font-size:clamp(6px,.82vw,13px);letter-spacing:.04em;background:#060300}
-#looper.asset-ui .asset-track-readout{left:5.15%;top:17.70%;width:18.55%;height:3.75%;padding:0 .15%;font-size:clamp(7px,1.12vw,18px);letter-spacing:.03em;background:#100700}
-#looper.asset-ui .asset-state-readout{left:5.15%;top:28.35%;width:10.9%;height:3.75%;padding:0 .12%;font-size:clamp(7px,1.1vw,18px);letter-spacing:.04em;background:#0b0500}
-#looper.asset-ui .asset-speed-percent-readout{left:18.38%;top:28.35%;width:5.9%;height:3.75%;justify-content:flex-end;padding:0 .25%;font-size:clamp(7px,1.05vw,17px);background:#0e0500}
-#looper.asset-ui .asset-loop-readout{left:76.62%;top:15.02%;width:2.72%;height:4.08%;justify-content:center;padding:0;font-size:clamp(10px,1.85vw,30px);background:#090602}
-#looper.asset-ui .asset-speed-level-readout{left:77.62%;top:27.08%;width:4.18%;height:4.18%;justify-content:center;padding:0;font-size:clamp(10px,1.85vw,30px);background:#070502}
+#looper.asset-ui .asset-header-state-readout{left:5.15%;top:13.72%;width:7.5%;height:3.30%;padding:0 .12%;font-size:clamp(6px,.82vw,13px);letter-spacing:.04em;background-image:linear-gradient(#090400,#090400);background-position:2% 43%;background-size:76% 56%}
+#looper.asset-ui .asset-track-readout{left:5.15%;top:17.70%;width:18.55%;height:3.75%;padding:0 .15%;font-size:clamp(7px,1.12vw,18px);letter-spacing:.03em;background-image:linear-gradient(180deg,#120700,#0c0500);background-position:1% 8%;background-size:90% 74%}
+#looper.asset-ui .asset-state-readout{left:5.15%;top:28.35%;width:10.9%;height:3.75%;padding:0 .12%;font-size:clamp(7px,1.1vw,18px);letter-spacing:.04em;background-image:linear-gradient(#0b0400,#0b0400);background-position:1% 8%;background-size:96% 76%}
+#looper.asset-ui .asset-speed-percent-readout{left:18.38%;top:28.35%;width:5.9%;height:3.75%;justify-content:flex-end;padding:0 .25%;font-size:clamp(7px,1.05vw,17px);background-image:linear-gradient(#0d0500,#0d0500);background-position:5% 8%;background-size:92% 74%}
+#looper.asset-ui .asset-loop-readout{left:76.62%;top:15.02%;width:2.72%;height:4.08%;justify-content:center;padding:0;font-size:clamp(10px,1.85vw,30px);background-image:linear-gradient(#040403,#040403);background-position:8% 10%;background-size:55% 76%}
+#looper.asset-ui .asset-speed-level-readout{left:77.62%;top:27.08%;width:4.18%;height:4.18%;justify-content:center;padding:0;font-size:clamp(10px,1.85vw,30px);background-image:linear-gradient(#060402,#060402);background-position:3% 10%;background-size:94% 78%}
 #looper.asset-ui .asset-cassette-label-readout {
-  left:43.95%;top:14.35%;width:13.30%;height:4.25%;
+  left:43.95%;top:15.20%;width:13.30%;height:3.35%;
   justify-content:center;
   padding:0 .35%;
-  color:#24170d;
-  background-image:radial-gradient(circle at 12% 31%,rgba(255,255,255,.18) 0 .45px,transparent .7px),radial-gradient(circle at 66% 71%,rgba(94,68,42,.08) 0 .55px,transparent .8px),linear-gradient(180deg,#e5d4b9 0%,#dec8a7 50%,#d9c19f 100%);
-  background-size:12px 10px,17px 14px,100% 100%;
+  color:#17120d;
+  background-color:transparent;
+  background-image:linear-gradient(90deg,#c0a085 0%,#b59b86 25%,#b69c86 50%,#bd9f88 75%,#cfa988 100%);
+  background-position:3% 10%;
+  background-size:86% 76%;
+  background-repeat:no-repeat;
   border-radius:0;
   box-shadow:none;
   text-shadow:none;
