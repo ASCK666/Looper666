@@ -1,0 +1,115 @@
+name: Quick blur-only cassette retouch
+
+on:
+  pull_request:
+    branches:
+      - feat/cassette-reel-animation
+
+permissions:
+  contents: write
+
+jobs:
+  retouch:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: fix/cassette-shell-label-retouch
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install image dependencies
+        run: python -m pip install --disable-pip-version-check pillow numpy opencv-python-headless
+      - name: Build blur-only candidate
+        id: retouch
+        run: |
+          current=$(git hash-object assets/looper-ui/faceplate.webp)
+          if [ "$current" != "25a24589726f5346856b79b9314cdaa380a9e7c0" ]; then
+            echo "Faceplate no longer matches approved label-retouch input; skipping."
+            echo "built=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          echo "built=true" >> "$GITHUB_OUTPUT"
+          python - <<'PY'
+          from pathlib import Path
+          from PIL import Image
+          import cv2
+          import numpy as np
+          import json
+
+          root=Path.cwd()
+          src=root/'assets/looper-ui/faceplate.webp'
+          out=root/'test-artifacts'
+          out.mkdir(exist_ok=True)
+          before=np.array(Image.open(src).convert('RGB'))
+          assert before.shape==(1024,1536,3), before.shape
+          h,w=before.shape[:2]
+          yy,xx=np.mgrid[:h,:w]
+
+          # Blur-only scope: central milky plastic patch between the two reels.
+          # The white label ends above y=198 and the printed cassette legend starts
+          # below this region. Reel centers are explicitly protected.
+          cx,cy=772.5,250.0
+          rx,ry=110.0,68.0
+          d=(np.abs(xx-cx)/rx)**4 + (np.abs(yy-cy)/ry)**4
+          influence=np.clip(1.28-d,0,1)**1.3
+          influence *= ((yy>=198)&(yy<=308))
+          for rcx,rcy in ((648.0,249.0),(893.5,249.0)):
+              r=np.sqrt((xx-rcx)**2+(yy-rcy)**2)
+              influence *= np.clip((r-72.0)/12.0,0,1)
+          allowed=influence>0
+
+          work=before.astype(np.float32)
+          luminance=.2126*work[:,:,0]+.7152*work[:,:,1]+.0722*work[:,:,2]
+          desired=46.0+5.0*np.clip((yy-200.0)/108.0,0,1)
+          excess=np.maximum(luminance-desired,0)
+          reduction=excess*0.88*influence
+          scale=np.maximum(luminance-reduction,1)/np.maximum(luminance,1)
+          target=work*scale[...,None]
+
+          base=np.clip(target,0,255).astype(np.uint8)
+          blur=cv2.GaussianBlur(base,(0,0),0.9)
+          sharp=np.clip(base.astype(np.float32)*1.22-blur.astype(np.float32)*0.22,0,255)
+          candidate=work*(1-influence[...,None]*0.98)+sharp*(influence[...,None]*0.98)
+          candidate=np.clip(np.rint(candidate),0,255).astype(np.uint8)
+
+          # Hard safety boundary: label, reels, tape, screws and every unrelated
+          # faceplate pixel are copied back unchanged.
+          candidate[~allowed]=before[~allowed]
+          candidate_path=out/'faceplate-blur-only.webp'
+          Image.fromarray(candidate,'RGB').save(candidate_path,'WEBP',lossless=True,quality=100,method=6)
+          decoded=np.array(Image.open(candidate_path).convert('RGB'))
+          assert decoded.shape==before.shape
+          changed=np.any(decoded!=before,axis=2)
+          outside=changed & ~allowed
+          assert int(outside.sum())==0, int(outside.sum())
+
+          crop=(470,120,1070,395)
+          Image.fromarray(before,'RGB').crop(crop).save(out/'blur-before.png')
+          Image.fromarray(decoded,'RGB').crop(crop).save(out/'blur-after.png')
+          Image.fromarray((allowed.astype(np.uint8)*255),'L').crop(crop).save(out/'blur-allowed-mask.png')
+          stats={
+            'geometry':[w,h],
+            'changed_pixels':int(changed.sum()),
+            'outside_allowed_pixels':int(outside.sum()),
+            'allowed_pixels':int(allowed.sum()),
+            'input_blob':'25a24589726f5346856b79b9314cdaa380a9e7c0',
+          }
+          (out/'blur-stats.json').write_text(json.dumps(stats,indent=2))
+          print(json.dumps(stats,indent=2))
+          PY
+      - name: Integrate validated blur-only faceplate
+        if: steps.retouch.outputs.built == 'true'
+        run: |
+          cp test-artifacts/faceplate-blur-only.webp assets/looper-ui/faceplate.webp
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add assets/looper-ui/faceplate.webp
+          git commit -m "fix: remove central cassette shell haze"
+          git push origin HEAD:fix/cassette-shell-label-retouch
+      - uses: actions/upload-artifact@v4
+        if: steps.retouch.outputs.built == 'true'
+        with:
+          name: cassette-blur-only-retouch
+          path: test-artifacts/*
