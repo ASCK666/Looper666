@@ -556,8 +556,7 @@
   box-shadow: none !important;
 }
 
-#looper.active .looperMainPanel::before,
-#looper.active .beatCratePanel::before {
+#looper.active :is(.looperMainPanel,.beatCratePanel)::before {
   display: none !important;
 }
 
@@ -583,8 +582,7 @@
   color: #a87045 !important;
 }
 
-#looper.active .deckReadout strong,
-#looper.active .deckReadoutAuto em {
+#looper.active :is(.deckReadout strong,.deckReadoutAuto em) {
   color: var(--retro-orange) !important;
   text-shadow: 0 0 5px rgb(255 104 0 / .30) !important;
 }
@@ -598,9 +596,7 @@
   gap: 12px !important;
 }
 
-#looper.active .deckMechanismColumn,
-#looper.active .looperImportDock,
-#looper.active .deckTransport {
+#looper.active :is(.deckMechanismColumn,.looperImportDock,.deckTransport) {
   gap: 12px !important;
 }
 
@@ -657,8 +653,7 @@
   color: #9b8068 !important;
 }
 
-#looper.active .deckHotspot > strong,
-#looper.active .deckLoadKey strong {
+#looper.active :is(.deckHotspot > strong,.deckLoadKey strong) {
   color: #d8b995 !important;
 }
 
@@ -679,8 +674,7 @@
   box-shadow: 0 0 13px rgb(255 104 0 / .76);
 }
 
-#looper.active .cassetteDeck.playing #playBeat > span,
-#looper.active .cassetteDeck.playing #playBeat > strong {
+#looper.active .cassetteDeck.playing #playBeat > :is(span,strong) {
   color: var(--retro-orange-hot) !important;
   text-shadow: 0 0 8px rgb(255 104 0 / .38) !important;
 }
@@ -695,10 +689,7 @@
 #looper.active #autoLooperToggle[data-auto-step="3"] { --slot-alpha: .64; --slot-radius: 11px; }
 #looper.active #autoLooperToggle[data-auto-step="4"] { --slot-alpha: .88; --slot-radius: 15px; }
 
-#looper.active #autoLooperToggle[data-auto-step="1"]::before,
-#looper.active #autoLooperToggle[data-auto-step="2"]::before,
-#looper.active #autoLooperToggle[data-auto-step="3"]::before,
-#looper.active #autoLooperToggle[data-auto-step="4"]::before {
+#looper.active #autoLooperToggle:not([data-auto-step="0"])::before {
   border-color: rgb(255 112 8 / .72);
 }
 
@@ -707,10 +698,7 @@
   box-shadow: 0 0 15px rgb(255 104 0 / .88);
 }
 
-#looper.active #autoLooperToggle[data-auto-step="1"] > span,
-#looper.active #autoLooperToggle[data-auto-step="2"] > span,
-#looper.active #autoLooperToggle[data-auto-step="3"] > span,
-#looper.active #autoLooperToggle[data-auto-step="4"] > span {
+#looper.active #autoLooperToggle:not([data-auto-step="0"]) > span {
   color: var(--retro-orange) !important;
   text-shadow: 0 0 7px rgb(255 104 0 / .34) !important;
 }
@@ -740,21 +728,15 @@
   box-shadow: none !important;
 }
 
-#looper.active .beatCratePanel .stableTitle,
-#looper.active .beatCrateControls :is(input,select),
-#looper.active .library,
-#looper.active .cassetteRackColumn,
-#looper.active .cassetteRackSlot {
+#looper.active :is(.beatCratePanel .stableTitle,.beatCrateControls input,.beatCrateControls select,.library,.cassetteRackColumn,.cassetteRackSlot) {
   border-color: transparent !important;
   background: transparent !important;
   box-shadow: none !important;
 }
 
-#looper.active .cassetteRackColumn::after,
-#looper.active .cassetteRackSlot:empty::before,
-#looper.active .track::before,
-#looper.active .track::after,
-#looper.active .trackMeta::after {
+#looper.active :is(.cassetteRackColumn,.trackMeta)::after,
+#looper.active :is(.cassetteRackSlot:empty,.track)::before,
+#looper.active .track::after {
   display: none !important;
 }
 
@@ -807,8 +789,7 @@
 }
 
 @media (max-width: 760px) {
-  #looper.active .cassetteDeck,
-  #looper.active .beatCratePanel {
+  #looper.active :is(.cassetteDeck,.beatCratePanel) {
     background: #0b0907 !important;
   }
 
