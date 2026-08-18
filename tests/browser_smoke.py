@@ -118,16 +118,17 @@ with tempfile.TemporaryDirectory() as td:
         page.click('#tapeCounterReset')
         assert page.locator('#tapeCounter').get_attribute('aria-label') == 'Compteur de bande 0000'
 
-        # Space shortcut follows active mode, but not while an interactive control has focus.
+        # Space shortcut follows active mode, but not while a text input has focus.
         page.evaluate('document.activeElement && document.activeElement.blur()')
         page.keyboard.press('Space')
         page.wait_for_function('deckSource !== null')
         page.keyboard.press('Space')
         page.wait_for_function('deckSource === null')
-        page.focus('#autoLooperToggle')
+        page.focus('#librarySearch')
         page.keyboard.press('Space')
         page.wait_for_timeout(120)
         assert page.evaluate('deckSource === null') is True
+        page.fill('#librarySearch','')
 
         # AUTO SPEED is a five-position hardware cycle: OFF -> 8 -> 4 -> 2 -> 1 -> OFF.
         auto=page.locator('#autoLooperToggle')
