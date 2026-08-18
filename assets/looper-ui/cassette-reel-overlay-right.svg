@@ -1,9 +1,0 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="846.538752 201.986048 93.920256 93.920256" aria-hidden="true">
-  <defs>
-    <clipPath id="reel-clip" clipPathUnits="userSpaceOnUse">
-      <circle cx="893.498880" cy="248.946176" r="46.960128"/>
-    </clipPath>
-  </defs>
-  <!-- Exact pixels from the approved faceplate; no redrawn mechanism. -->
-  <image href="./faceplate.webp" x="0" y="0" width="1536" height="1024" clip-path="url(#reel-clip)"/>
-</svg>
