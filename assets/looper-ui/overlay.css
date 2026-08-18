@@ -12,16 +12,13 @@
   overflow: hidden !important;
   border: 0 !important;
   background-color: #070605 !important;
-  background-image: var(--looper-asset-url) !important;
+  background-image: url("./faceplate.webp") !important;
   background-size: 100% 100% !important;
   background-position: center !important;
   background-repeat: no-repeat !important;
   box-shadow: 0 16px 38px rgba(0,0,0,.38) !important;
 }
 
-#looper.asset-ui.asset-load-error {
-  background-image: none !important;
-}
 
 #looper.asset-ui::before {
   content: "";
