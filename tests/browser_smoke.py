@@ -63,6 +63,11 @@ with tempfile.TemporaryDirectory() as td:
         page.on('console',lambda m:console_errors.append(m.text) if m.type=='error' else None)
         page.set_content(html,wait_until='load',timeout=15000)
         page.wait_for_function('window.__SP && window.__SP.ready === true',timeout=10000)
+        page.evaluate('''() => {
+          const looper=document.getElementById('looper');
+          installLooperAssetReadouts(looper);
+          installAssetSpeedControl();
+        }''')
         page.wait_for_function("document.querySelector('.asset-speed-level-readout') !== null",timeout=5000)
 
         assert page.evaluate('window.__SP.errors.length') == 0, page.evaluate('window.__SP.errors')
