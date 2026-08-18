@@ -81,8 +81,8 @@ with tempfile.TemporaryDirectory() as td:
 
         # Generated faceplate assets sit behind live HTML instead of replacing it.
         faceplates=page.evaluate('''() => ({
-          deck:getComputedStyle(document.querySelector('.cassetteDeck'),'::after').backgroundImage,
-          crate:getComputedStyle(document.querySelector('.beatCratePanel'),'::before').backgroundImage
+          deck:getComputedStyle(document.querySelector('.cassetteDeck')).backgroundImage,
+          crate:getComputedStyle(document.querySelector('.beatCratePanel')).backgroundImage
         })''')
         assert 'looper-deck-faceplate-retro.svg' in faceplates['deck'],faceplates
         assert 'looper-beat-crate-retro.svg' in faceplates['crate'],faceplates
