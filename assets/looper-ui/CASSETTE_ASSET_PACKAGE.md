@@ -17,7 +17,7 @@ All files live under `assets/looper-ui/`:
 ## Current package geometry
 
 - cavity: full 1536x1024 transparent PNG, visible alpha confined to cassette area `x=497..1050`, `y=137..386`;
-- tape path: full 1536x1024 transparent PNG, visible alpha confined to `x=551..991`, `y=287..379`; it contains the two static baseline-derived tape strands, which diverge outward from the reels and remain behind the rotating reels and shell;
+- tape path: full 1536x1024 transparent PNG, visible alpha confined to `x=558..989`, `y=243..305`; it contains the two static tape strands extracted directly from the approved baseline faceplate pixels and remains behind the rotating reels and shell;
 - left reel: 154x154 PNG, mounted around global center `(648,249)`;
 - right reel: 154x154 PNG, mounted around global center `(894,251)`;
 - shell: full 1536x1024 transparent PNG with continuous transparent/translucent cassette body, two localized spindle apertures and static blank label material. The current shell has a narrowly bounded local transparency correction along the two tape-strand corridors so the physical tape remains visible through the plastic without any duplicate tape layer above the shell;
@@ -26,7 +26,7 @@ All files live under `assets/looper-ui/`:
 
 ## Tape-path and speed calibration
 
-The two tape strands are static mechanism geometry. They do not rotate with the reels. Their current geometry is derived from the approved baseline faceplate: the left strand leaves the left wound-tape area toward the lower-left, the right strand leaves the right wound-tape area toward the lower-right, and both disappear before/under the exact foreground support.
+The two tape strands are static mechanism geometry. They do not rotate with the reels. Their RGB pixels are copied directly from the approved `faceplate.webp` baseline through narrow feathered masks, without repainting or recoloring. The left strand follows the original outward lower-left route, the right strand follows the original outward lower-right route, and both stop at the same lower separator region as the baseline.
 
 The tape strands remain physically below the cassette shell at runtime. Visibility through the shell is provided by the shell artwork's local translucency; no tape copy is rendered above the shell.
 
@@ -55,7 +55,7 @@ The runtime must stay dormant until all seven binary assets exist at the exact p
 SHA-256 values used by the runtime integrity gate:
 
 - `cassette-cavity.png`: `b5e897e4be61695fa5e5c6ab628f9322b5c06e7a16b2f33bcfbdb97412e1517f`
-- `cassette-tape-path.png`: `a076404f06eb0a61197e9e06699c6c7aaf4d96697d49b7a7fb7769b5d0eeda36`
+- `cassette-tape-path.png`: `42b4c1eedfbd60a6de40aab6e651bbafffd9d7f62a8f3c0f5f0b1e9e67dc320d`
 - `cassette-reel-left.png`: `b1daef2f88a9d8e79c97b89ebcc7cb974703a4d240436928013e83786ab1c03e`
 - `cassette-reel-right.png`: `6043c1b1c5a8bd5aba8386595c58cc251fcabd3b54646ca71b517ced16602daa`
 - `cassette-shell.png`: `006ab4bfc5a9684caf7f3ab32cfa8d0b72097ff8ea3e2d3c1b2d7bbb02b983ba`
