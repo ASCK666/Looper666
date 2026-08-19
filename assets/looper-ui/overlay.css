@@ -10,3 +10,16 @@
 #library:not(:has(.track)) .cassetteRackSlot {
   display: none !important;
 }
+
+/* Canonical Looper deck for this branch. */
+#looper.active .cassetteDeck {
+  aspect-ratio: 1536 / 1024 !important;
+  background: url("./deck.png") center / 100% 100% no-repeat !important;
+}
+
+/* Do not render the legacy cassette raster layers over the canonical deck. */
+#looper.active .cassetteDeckImage,
+#looper.active .cassetteDoorPanel,
+#looper.active .cassetteReel {
+  display: none !important;
+}
