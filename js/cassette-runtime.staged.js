@@ -169,6 +169,7 @@ window.CassetteLayerRuntimeStaged=(()=>{
       makeImg("cassette-runtime-reel cassette-runtime-reel-left",url(names.leftReel)),
       makeImg("cassette-runtime-reel cassette-runtime-reel-right",url(names.rightReel)),
       makeImg("cassette-runtime-full-layer cassette-runtime-shell",url(names.shell)),
+      makeImg("cassette-runtime-full-layer cassette-runtime-tape-transmission",url(names.tapePath)),
       makeLayer("cassette-runtime-backlight"),
       makeImg("cassette-runtime-full-layer cassette-runtime-support",url(names.support)),
       makeImg("cassette-runtime-full-layer cassette-runtime-glass",url(names.glass))
