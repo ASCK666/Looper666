@@ -1,6 +1,6 @@
 # Looper faceplate editing convention
 
-`assets/looper-ui/faceplate.webp` is the single visual source of truth for the Looper.
+`assets/looper-ui/faceplate.webp` is the single visual source of truth for the Looper until an explicitly approved layered-asset migration changes ownership for a specific component.
 
 ## Rules
 
@@ -41,6 +41,18 @@
 9. **Do not merge automatically.**
    - Asset edits stay on a branch/PR until the visual result has been reviewed.
 
+10. **Stop when retouching reaches diminishing returns.**
+   - Do not keep making exploratory passes on the same visual defect just because another small change is possible.
+   - After at most **two correction iterations for the same defect**, stop and present the current before/after result plus objective diff/mask evidence.
+   - A third iteration is allowed only after a new explicit user request that identifies what is still wrong; treat it as a newly scoped correction rather than automatic polishing.
+   - If a new pass broadens the changed area, reduces fidelity to the approved source, or makes the result less clearly better, keep or restore the last better/approved result instead of continuing.
+
+11. **Escalate composite-material defects to architecture instead of widening the retouch.**
+   - If correcting one baked material changes another material (for example shell plastic vs magnetic tape), stop local retouching.
+   - If the edit requires independent motion, transparency, state-dependent appearance or repeated reconstruction of adjacent materials, the problem is architectural rather than pixel-local.
+   - For the cassette, follow `docs/CASSETTE_LAYERED_ARCHITECTURE.md` instead of continuing shell/tape/reel repair inside one composite raster.
+   - A layered migration must be a separate explicitly scoped PR sequence; it is not permission to redesign unrelated Looper artwork.
+
 ## Recommended safety check
 
 For a local edit, keep a copy of the decoded image before modification and a binary mask of the approved region. After saving and decoding the new `faceplate.webp`, compare the two pixel arrays and fail the edit if any changed pixel lies outside the mask.
@@ -53,4 +65,4 @@ outside = changed & (allowed_mask == 0)
 assert outside.sum() == 0
 ```
 
-This convention is intentionally strict: local Looper asset work must be surgical and reversible.
+This convention is intentionally strict: local Looper asset work must be surgical and reversible. When a defect cannot be repaired surgically without damaging another visual material, stop editing the composite and change the visual ownership model instead.

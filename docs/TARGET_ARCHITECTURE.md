@@ -154,6 +154,31 @@ Dependencies to remove over time:
 - feature files depending on script-load order for undeclared mutable globals;
 - Core becoming the owner of feature state.
 
+## Looper visual ownership
+
+The same single-owner rule applies to visual materials.
+
+The current cassette is baked into one composite image, which couples shell plastic, magnetic tape, reels, label and reflections. Future cassette work must migrate toward independent visual ownership rather than repeatedly retouching that composite.
+
+Target ownership:
+
+```text
+Deck base          -> chassis / surrounding deck
+Cassette shell     -> plastic body and shell-local shading
+Cassette tape      -> magnetic tape material
+Left reel          -> left rotating mechanism
+Right reel         -> right rotating mechanism
+Cassette label     -> static paper substrate
+HTML               -> dynamic beat title
+Looper transport   -> PLAY/STOP and speed state
+```
+
+The detailed extraction, z-order, coordinate, cutover and verification contract is defined in:
+
+`docs/CASSETTE_LAYERED_ARCHITECTURE.md`
+
+This migration is a visual-asset ownership refactor. It must not be mixed with audio, transport, Practice or unrelated UI architecture work.
+
 ## Migration sequence
 
 1. Remove only proven dead/historical code.
