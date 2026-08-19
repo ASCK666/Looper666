@@ -4,23 +4,34 @@
   It prepares the approved cassette layer geometry without changing production visuals.
 */
 
-#looper.asset-ui.cassette-layered-runtime-enabled .cassette-runtime-stage {
+/*
+  display:contents is deliberate: cassette children participate directly in the
+  Looper stacking order, so the existing dynamic HTML cassette title can sit
+  between shell and glass instead of being trapped above/below one root stacking context.
+*/
+#looper.asset-ui .cassette-runtime-stage { display:none; }
+#looper.asset-ui.cassette-layered-runtime-enabled .cassette-runtime-stage { display:contents; }
+
+#looper.asset-ui .cassette-runtime-full-layer {
   position:absolute;
   inset:0;
-  z-index:2;
+  width:100%;
+  height:100%;
+  object-fit:fill;
   pointer-events:none;
-  overflow:hidden;
 }
 
-#looper.asset-ui .cassette-runtime-stage { display:none; }
-#looper.asset-ui.cassette-layered-runtime-enabled .cassette-runtime-stage { display:block; }
+/* Back-to-front production order begins here. */
+#looper.asset-ui .cassette-runtime-cavity { z-index:2; }
 
 #looper.asset-ui .cassette-runtime-reel {
   position:absolute;
+  z-index:3;
   width:10.0260416667%; /* 154 / 1536 */
   aspect-ratio:1;
   transform-origin:50% 50%;
   will-change:transform;
+  pointer-events:none;
 }
 
 #looper.asset-ui .cassette-runtime-reel-left {
@@ -44,19 +55,17 @@
 @keyframes cassette-runtime-spin-left { to { transform:rotate(-360deg); } }
 @keyframes cassette-runtime-spin-right { to { transform:rotate(-360deg); } }
 
-#looper.asset-ui .cassette-runtime-shell {
-  position:absolute;
-  z-index:3;
-  left:32.3567708333%; /* 497 / 1536 */
-  top:13.37890625%;    /* 137 / 1024 */
-  width:36.0677083333%;/* 554 / 1536 */
-  height:34.47265625%; /* 353 / 1024 */
-  object-fit:fill;
+/* Full 1536x1024 transparent shell asset; visible pixels stay in cassette bounds. */
+#looper.asset-ui .cassette-runtime-shell { z-index:4; }
+
+/* Existing dynamic cassette title is interleaved above shell but below light/glass. */
+#looper.asset-ui.cassette-layered-runtime-enabled .asset-cassette-label-readout {
+  z-index:6;
 }
 
 #looper.asset-ui .cassette-runtime-backlight {
   position:absolute;
-  z-index:4;
+  z-index:7;
   left:30.5%;
   top:10.7%;
   width:38.7%;
@@ -78,64 +87,15 @@
   box-shadow:inset 0 0 29px rgba(255,156,36,.17),0 0 18px rgba(255,156,36,.10);
 }
 
-#looper.asset-ui .cassette-runtime-support {
-  position:absolute;
-  z-index:5;
-  left:31.4453125%; /* 483 / 1536 */
-  top:37.79296875%; /* 387 / 1024 */
-  width:38.0859375%;/* 585 / 1536 */
-  height:6.54296875%;/* 67 / 1024 */
-  object-fit:fill;
-}
+/* Exact extracted support foreground, full-canvas transparent PNG. */
+#looper.asset-ui .cassette-runtime-support { z-index:8; }
 
-/* Natural glass candidate: same locked window geometry, no synthetic diagonal stripe. */
-#looper.asset-ui .cassette-runtime-glass {
-  position:absolute;
-  z-index:6;
-  left:31.5104166667%; /* 484 / 1536 */
-  top:11.5234375%;     /* 118 / 1024 */
-  width:38.0208333333%;/* 584 / 1536 */
-  height:26.5625%;     /* 272 / 1024 */
-  overflow:hidden;
-  border-radius:2px;
-  background:
-    radial-gradient(ellipse at 18% 10%,rgba(255,241,224,.026),transparent 31%),
-    radial-gradient(ellipse at 81% 72%,rgba(211,168,121,.018),transparent 37%),
-    linear-gradient(180deg,rgba(36,24,17,.035),rgba(12,9,7,.018) 48%,rgba(42,25,14,.028));
-  box-shadow:
-    inset 0 1px 0 rgba(255,230,200,.025),
-    inset 0 -1px 0 rgba(0,0,0,.18),
-    inset 1px 0 0 rgba(255,220,180,.014),
-    inset -1px 0 0 rgba(0,0,0,.12);
-}
+/* Full habitacle pane, full-canvas transparent PNG derived from baseline character. */
+#looper.asset-ui .cassette-runtime-glass { z-index:9; }
 
-#looper.asset-ui .cassette-runtime-glass::before,
-#looper.asset-ui .cassette-runtime-glass::after {
-  content:"";
-  position:absolute;
-  pointer-events:none;
-}
-
-/* Small asymmetric top-left reflection, deliberately sparse and low-contrast. */
-#looper.asset-ui .cassette-runtime-glass::before {
-  left:5%;
-  top:3%;
-  width:41%;
-  height:28%;
-  border-radius:48% 55% 62% 45%;
-  background:radial-gradient(ellipse at 34% 28%,rgba(255,244,229,.036),rgba(255,236,214,.012) 44%,transparent 72%);
-  transform:rotate(-3deg);
-}
-
-/* Secondary irregular lower-right response; no straight line and no haze over reels. */
-#looper.asset-ui .cassette-runtime-glass::after {
-  right:4%;
-  bottom:6%;
-  width:28%;
-  height:20%;
-  border-radius:61% 44% 53% 68%;
-  background:radial-gradient(ellipse at 62% 61%,rgba(238,196,150,.021),transparent 70%);
-  transform:rotate(4deg);
+/* Retire the old generic glow only when the staged layered system is enabled. */
+#looper.asset-ui.cassette-layered-runtime-enabled .asset-cassette-glow {
+  display:none!important;
 }
 
 @media (prefers-reduced-motion:reduce) {
