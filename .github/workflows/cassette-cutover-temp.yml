@@ -1,4 +1,4 @@
-# validation bridge: complete seven-part payload
+# validation bridge: complete eight-part payload
 name: Cassette cutover temp
 
 on:
@@ -44,7 +44,7 @@ jobs:
           root = Path('.')
           payload_dir = root / 'assets/looper-ui/cassette/.payload'
           parts = sorted(payload_dir.glob('cassette-static.part*'))
-          assert len(parts) == 7, [p.name for p in parts]
+          assert len(parts) == 8, [p.name for p in parts]
           encoded = ''.join(p.read_text().strip() for p in parts)
           assert len(encoded) == 45528, len(encoded)
           data = base64.b64decode(encoded, validate=True)
