@@ -9,10 +9,12 @@
 window.CassetteLayerRuntimeStaged=(()=>{
   const DEFAULT_ASSET_BASE="./assets/looper-ui/";
   const DEFAULT_ASSETS={
+    cavity:"cassette-cavity.png",
     leftReel:"cassette-reel-left.png",
     rightReel:"cassette-reel-right.png",
     shell:"cassette-shell.png",
-    support:"cassette-support-foreground.png"
+    support:"cassette-support-foreground.png",
+    glass:"cassette-glass-habitacle.png"
   };
 
   let mounted=false;
@@ -50,12 +52,13 @@ window.CassetteLayerRuntimeStaged=(()=>{
     stage.setAttribute("aria-hidden","true");
 
     stage.append(
+      makeImg("cassette-runtime-full-layer cassette-runtime-cavity",url(names.cavity)),
       makeImg("cassette-runtime-reel cassette-runtime-reel-left",url(names.leftReel)),
       makeImg("cassette-runtime-reel cassette-runtime-reel-right",url(names.rightReel)),
-      makeImg("cassette-runtime-shell",url(names.shell)),
+      makeImg("cassette-runtime-full-layer cassette-runtime-shell",url(names.shell)),
       makeLayer("cassette-runtime-backlight"),
-      makeImg("cassette-runtime-support",url(names.support)),
-      makeLayer("cassette-runtime-glass")
+      makeImg("cassette-runtime-full-layer cassette-runtime-support",url(names.support)),
+      makeImg("cassette-runtime-full-layer cassette-runtime-glass",url(names.glass))
     );
 
     looper.appendChild(stage);
