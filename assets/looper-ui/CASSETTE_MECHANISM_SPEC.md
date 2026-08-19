@@ -40,6 +40,16 @@ The left and right tape packs must remain visually distinct. The tape quantity m
 
 The lower tape path may exist in the mechanism layer for physical coherence, but it remains hidden where the full cassette shell and foreground support hide it. It must not be exposed merely to make the animation more visible.
 
+### Visible tape strands
+
+The mechanism must include the two visible magnetic-tape strands that leave the reel packs toward the lower tape route.
+
+- each strand exits tangentially from its reel/tape pack rather than as a detached vertical line;
+- the strands remain static mechanism geometry while the reel images rotate;
+- the strands remain behind the transparent cassette shell;
+- their lower continuation disappears naturally before/under the exact foreground support;
+- the lower tape route must not be exposed merely to show more tape.
+
 ## Animation requirement
 
 The animation concerns the complete visible rotating reel/hub mechanism, not only a cross, spoke or center glyph.
@@ -50,6 +60,18 @@ Rotation origins must be validated against the final extracted/generated mechani
 - right reel center: `(894, 251)`.
 
 These are alignment anchors, not permission to move or resize the cassette.
+
+### Tape transport speed
+
+The compact-cassette tape transport speed is fixed at `4.75 cm/s` (`1 7/8 in/s`). Reel angular speed is therefore derived from the current effective wound-tape radius rather than treated as one universal fixed RPM.
+
+For the current light calibration, use the radii measured from the production reel PNGs without yet simulating radius change over time:
+
+- left visible radius: approximately `77.0 px`;
+- right visible radius: approximately `76.75 px`;
+- current turn period: approximately `1.848 s` left and `1.842 s` right when the frozen 554 px cassette width is mapped to approximately 100.5 mm.
+
+A future full winding simulation may update these angular speeds as tape transfers between reels, but it must preserve the fixed `4.75 cm/s` linear tape speed.
 
 ## Shell requirement
 
@@ -69,6 +91,7 @@ Reject the result if any of the following occurs:
 - a horizontal hump/ridge appears through the tape pack;
 - blur or fog obscures the wound tape geometry;
 - the tape packs are implausibly thick;
+- tape strands look detached from the wound tape or render above the shell;
 - decorative clockwork or unrelated machinery appears;
 - the mechanism renders in front of the cassette shell;
 - the lower cassette becomes more exposed than in the baseline;
