@@ -55,12 +55,21 @@
 @keyframes cassette-runtime-spin-left { to { transform:rotate(-360deg); } }
 @keyframes cassette-runtime-spin-right { to { transform:rotate(-360deg); } }
 
-/* Full 1536x1024 transparent shell asset; visible pixels stay in cassette bounds. */
+/*
+  Full 1536x1024 transparent shell asset; visible pixels stay in cassette bounds.
+  cassette-shell.png owns the static blank white label material.
+*/
 #looper.asset-ui .cassette-runtime-shell { z-index:4; }
 
-/* Existing dynamic cassette title is interleaved above shell but below light/glass. */
+/*
+  Existing dynamic cassette title is interleaved above shell but below light/glass.
+  When layered runtime is enabled, remove its paper background because the static
+  label material is already part of cassette-shell.png. Only the changing text remains.
+*/
 #looper.asset-ui.cassette-layered-runtime-enabled .asset-cassette-label-readout {
   z-index:6;
+  background:none!important;
+  box-shadow:none!important;
 }
 
 #looper.asset-ui .cassette-runtime-backlight {
