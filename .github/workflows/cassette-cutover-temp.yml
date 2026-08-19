@@ -1,4 +1,4 @@
-# validation bridge: complete eight-part payload
+# temporary validation bridge for cassette reel-housing alignment
 name: Cassette cutover temp
 
 on:
@@ -15,7 +15,7 @@ permissions:
   contents: write
 
 jobs:
-  cutover:
+  align:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -27,77 +27,107 @@ jobs:
         with:
           python-version: '3.12'
 
-      - name: Install browser test dependency
+      - name: Install image and browser dependencies
         run: |
           python -m pip install --upgrade pip
-          python -m pip install playwright pillow
+          python -m pip install pillow numpy opencv-python-headless playwright
           python -m playwright install --with-deps chromium
 
-      - name: Build layered cassette cutover
+      - name: Realign cassette reel housings to historic axes
         run: |
           python - <<'PY'
           from pathlib import Path
-          import base64
+          from PIL import Image, ImageDraw, ImageFilter
+          import numpy as np
+          import cv2
           import hashlib
-          import shutil
 
-          root = Path('.')
-          payload_dir = root / 'assets/looper-ui/cassette/.payload'
-          parts = sorted(payload_dir.glob('cassette-static.part*'))
-          assert len(parts) == 8, [p.name for p in parts]
-          encoded = ''.join(p.read_text().strip() for p in parts)
-          assert len(encoded) == 45528, len(encoded)
-          data = base64.b64decode(encoded, validate=True)
-          assert len(data) == 34144, len(data)
-          digest = hashlib.sha256(data).hexdigest()
-          expected = '81b39135f0c969697da8ec73ea598a66a0eae11894737383062eb32e3b892e0e'
-          assert digest == expected, (digest, expected)
-          asset = root / 'assets/looper-ui/cassette/cassette-static.webp'
-          asset.write_bytes(data)
-          shutil.rmtree(payload_dir)
+          asset_path = Path('assets/looper-ui/cassette/cassette-static.webp')
+          before = asset_path.read_bytes()
+          before_sha = hashlib.sha256(before).hexdigest()
 
-          css_path = root / 'assets/looper-ui/overlay.css'
-          css = css_path.read_text()
-          marker = '/* Layered cassette cutover: static cabin/cassette layer + exact faceplate reel crops. */'
-          assert marker not in css
-          css += '''\n\n/* Layered cassette cutover: static cabin/cassette layer + exact faceplate reel crops. */\n#looper.asset-ui .asset-cassette-glow{\n  left:30.9895833333%;\n  top:9.765625%;\n  width:38.9322916667%;\n  height:34.66796875%;\n  border-radius:0;\n  background-image:url("./cassette/cassette-static.webp");\n  background-size:100% 100%;\n  background-position:0 0;\n  background-repeat:no-repeat;\n}\n#looper.asset-ui .asset-cassette-glow::before,\n#looper.asset-ui .asset-cassette-glow::after{\n  top:28.7323943662%;\n  width:15.7190635452%;\n  opacity:1;\n}\n#looper.asset-ui .asset-cassette-glow::before{left:20.9030100334%}\n#looper.asset-ui .asset-cassette-glow::after{left:62.0401337793%}\n'''
-          css_path.write_text(css)
+          src = Image.open(asset_path).convert('RGBA')
+          assert src.size == (598, 355), src.size
+          src_arr = np.array(src)
+          h, w = src_arr.shape[:2]
+          yy, xx = np.mgrid[0:h, 0:w]
 
-          test_path = root / 'tests/asset_render.py'
-          test = test_path.read_text()
-          test = test.replace(
-              "assert info['reelStopped']==['paused','paused','0','0'], info['reelStopped']",
-              "assert info['reelStopped'][0:2]==['paused','paused'], info['reelStopped']\n        assert all(float(v)>.5 for v in info['reelStopped'][2:4]), info['reelStopped']"
-          )
-          test = test.replace(
-              "assert info['cassetteLayer']==['rgba(0, 0, 0, 0)','none','none','none','normal','1'], info['cassetteLayer']",
-              "assert info['cassetteLayer'][0]=='rgba(0, 0, 0, 0)', info['cassetteLayer']\n        assert 'cassette-static.webp' in info['cassetteLayer'][1], info['cassetteLayer']\n        assert info['cassetteLayer'][2:]==['none','none','normal','1'], info['cassetteLayer']"
-          )
-          needle = "centers_small=reel_centers()\n        assert all(abs(a-b)<.004 for pair_a,pair_b in zip(centers_large,centers_small) for a,b in zip(pair_a,pair_b)), (centers_large,centers_small)\n        page.set_viewport_size({'width':1536,'height':1200})"
-          replacement = "centers_small=reel_centers()\n        assert all(abs(a-b)<.004 for pair_a,pair_b in zip(centers_large,centers_small) for a,b in zip(pair_a,pair_b)), (centers_large,centers_small)\n        page.set_viewport_size({'width':390,'height':844})\n        page.wait_for_timeout(100)\n        centers_phone=reel_centers()\n        assert all(abs(a-b)<.004 for pair_a,pair_b in zip(centers_large,centers_phone) for a,b in zip(pair_a,pair_b)), (centers_large,centers_phone)\n        page.locator('#looper').screenshot(path=str(ARTIFACTS/'looper-mobile-stop.png'))\n        page.set_viewport_size({'width':1536,'height':1200})"
-          assert needle in test
-          test = test.replace(needle, replacement)
-          test = test.replace(
-              "parseFloat(getComputedStyle(document.querySelector('.asset-cassette-glow'),'::before').opacity) < .01",
-              "parseFloat(getComputedStyle(document.querySelector('.asset-cassette-glow'),'::before').opacity) > .5"
-          )
-          test = test.replace(
-              "assert stopped[0:2]==['paused','paused'] and stopped[2]<.01 and stopped[3]<.01 and stopped[4]==1, stopped",
-              "assert stopped[0:2]==['paused','paused'] and stopped[2]>.5 and stopped[3]>.5 and stopped[4]==1, stopped"
-          )
-          test = test.replace(
-              "print('OK: faceplate and cassette body stay fixed; exact faceplate reel crops visibly rotate with PLAY/STOP, speed and responsive alignment')",
-              "print('OK: layered cassette STOP stays visible while exact faceplate reel crops rotate with PLAY/STOP, speed and responsive alignment')"
-          )
-          test_path.write_text(test)
+          # Historical reel axes in cassette-static crop coordinates.
+          target_centers = [(172.0, 149.0), (418.0, 149.0)]
+          # Measured visual centres of the current generated housings.
+          visual_centers = [(175.5, 159.0), (415.5, 159.0)]
+          offsets = [(-3.5, -10.0), (2.5, -10.0)]
 
-          readme_path = root / 'assets/looper-ui/cassette/README.md'
-          readme = readme_path.read_text()
-          readme += '''\n\n## First runtime cutover\n\nThe first runtime cutover intentionally uses one static `cassette-static.webp` layer for the cabin/cassette materials while retaining the already-calibrated exact reel crops from `faceplate.webp`. This keeps PLAY/STOP and speed ownership unchanged while STOP/PLAY/mobile parity is validated. Separate lossless reel files remain a later asset-only follow-up after this runtime gate.\n'''
-          readme_path.write_text(readme)
+          rgb = src_arr[..., :3].copy()
+          alpha = src_arr[..., 3].copy()
+
+          # Remove only the old annular housing/mechanical-surround region.
+          for vcx, vcy in visual_centers:
+              rr = np.sqrt((xx - vcx) ** 2 + (yy - vcy) ** 2)
+              remove_mask = ((rr >= 43) & (rr <= 69) & (alpha > 0)).astype(np.uint8) * 255
+              rgb = cv2.inpaint(rgb, remove_mask, 5, cv2.INPAINT_TELEA)
+
+          base = Image.fromarray(np.dstack([rgb, alpha]).astype(np.uint8), 'RGBA')
+          original = src.copy()
+
+          # Reinsert the original annuli at the historic axes.
+          for (vcx, vcy), (dx, dy) in zip(visual_centers, offsets):
+              dist = np.sqrt((xx - vcx) ** 2 + (yy - vcy) ** 2)
+              hard = np.zeros((h, w), dtype=np.uint8)
+              hard[(dist >= 41) & (dist <= 70) & (alpha > 0)] = 255
+              annulus = Image.fromarray(hard, 'L').filter(ImageFilter.GaussianBlur(1.2))
+
+              patch = Image.new('RGBA', src.size, (0, 0, 0, 0))
+              patch.paste(original, (round(dx), round(dy)))
+              moved_mask = Image.new('L', src.size, 0)
+              moved_mask.paste(annulus, (round(dx), round(dy)))
+              base = Image.composite(patch, base, moved_mask)
+
+          # Keep the exact 94x94 reel apertures locked to the historical axes.
+          final_alpha = base.getchannel('A')
+          draw = ImageDraw.Draw(final_alpha)
+          for cx, cy in target_centers:
+              draw.ellipse((int(cx-47), int(cy-47), int(cx+46), int(cy+46)), fill=0)
+          base.putalpha(final_alpha)
+
+          # Preserve the current production encoding class.
+          base.save(asset_path, 'WEBP', lossless=False, quality=90, method=6)
+
+          after = asset_path.read_bytes()
+          assert after != before
+          check = Image.open(asset_path).convert('RGBA')
+          assert check.size == (598, 355), check.size
+
+          # Verify the aperture centres themselves are exactly historical.
+          a = np.array(check)[..., 3]
+          for cx, cy in [(172,149),(418,149)]:
+              assert a[cy, cx] == 0, (cx, cy, a[cy, cx])
+              assert a[cy-45:cy+46, cx-45:cx+46].min() == 0
+
+          print('before sha256:', before_sha)
+          print('after sha256 :', hashlib.sha256(after).hexdigest())
+          print('after bytes  :', len(after))
           PY
 
-      - name: Validate focused project checks
+      - name: Lock absolute historic reel centres in browser test
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          path = Path('tests/asset_render.py')
+          text = path.read_text()
+          marker = "historic reel centres stay locked to the cassette asset axes"
+          assert marker not in text
+          needle = "        centers_large=reel_centers()\n"
+          replacement = """        centers_large=reel_centers()
+        # historic reel centres stay locked to the cassette asset axes
+        expected_centers=[(648/1536,249/1024),(894/1536,249/1024)]
+        assert all(abs(a-b)<.001 for pair_a,pair_b in zip(centers_large,expected_centers) for a,b in zip(pair_a,pair_b)), (centers_large,expected_centers)
+"""
+          assert needle in text
+          path.write_text(text.replace(needle, replacement, 1))
+          PY
+
+      - name: Validate focused cassette checks
         run: |
           python tests/resource_paths.py
           python tests/assets_health.py
@@ -106,18 +136,18 @@ jobs:
           python tests/asset_render.py
           git diff --check
 
-      - name: Upload visual proof
+      - name: Upload STOP PLAY mobile proofs
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: cassette-cutover-preview
+          name: cassette-alignment-preview
           path: test-artifacts/*.png
           if-no-files-found: ignore
 
-      - name: Commit successful cutover
+      - name: Commit successful alignment
         run: |
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
-          git add assets/looper-ui/cassette assets/looper-ui/overlay.css tests/asset_render.py
-          git commit -m 'Cut over cassette to layered static bay'
+          git add assets/looper-ui/cassette/cassette-static.webp tests/asset_render.py
+          git commit -m 'Align cassette reel housings to historic axes'
           git push origin HEAD:feat/cassette-layer-extraction
