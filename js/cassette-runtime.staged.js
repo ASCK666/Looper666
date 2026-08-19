@@ -12,8 +12,7 @@ window.CassetteLayerRuntimeStaged=(()=>{
     leftReel:"cassette-reel-left.png",
     rightReel:"cassette-reel-right.png",
     shell:"cassette-shell.png",
-    support:"cassette-support-foreground.png",
-    glass:"cassette-glass-foreground.png"
+    support:"cassette-support-foreground.png"
   };
 
   let mounted=false;
@@ -31,6 +30,13 @@ window.CassetteLayerRuntimeStaged=(()=>{
     return img;
   }
 
+  function makeLayer(className){
+    const el=document.createElement("div");
+    el.className=className;
+    el.setAttribute("aria-hidden","true");
+    return el;
+  }
+
   function mount({assetBase=DEFAULT_ASSET_BASE,assets={}}={}){
     if(mounted)return stage;
     looper=document.getElementById("looper");
@@ -46,16 +52,10 @@ window.CassetteLayerRuntimeStaged=(()=>{
     stage.append(
       makeImg("cassette-runtime-reel cassette-runtime-reel-left",url(names.leftReel)),
       makeImg("cassette-runtime-reel cassette-runtime-reel-right",url(names.rightReel)),
-      makeImg("cassette-runtime-shell",url(names.shell))
-    );
-
-    const backlight=document.createElement("div");
-    backlight.className="cassette-runtime-backlight";
-    stage.appendChild(backlight);
-
-    stage.append(
+      makeImg("cassette-runtime-shell",url(names.shell)),
+      makeLayer("cassette-runtime-backlight"),
       makeImg("cassette-runtime-support",url(names.support)),
-      makeImg("cassette-runtime-glass",url(names.glass))
+      makeLayer("cassette-runtime-glass")
     );
 
     looper.appendChild(stage);
