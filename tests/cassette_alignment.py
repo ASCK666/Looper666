@@ -8,7 +8,7 @@ CSS = ROOT / 'assets/looper-ui/overlay.css'
 ASSET = ROOT / 'assets/looper-ui/cassette/cassette-static.webp'
 LABEL_ASSET = ROOT / 'assets/looper-ui/cassette/cassette-label-occlusion.webp'
 
-EXPECTED_ASSET_SHA256 = 'c5dd70a125e77b220d454e8b822a6fac0b18459674a3c852ec7bc61053f50db7'
+EXPECTED_ASSET_SHA256 = '5a4437754643d8ed64a341fdc73ba17a3acce9ecea3baa0cccf20ce15e6153a6'
 EXPECTED_LABEL_SHA256 = '22c91b51ff6c7615c5cb31766331ff6084fcc575ee36930224ff68308df50cdb'
 EXPECTED_CENTERS = ((648.0, 249.0), (894.0, 249.0))
 CANVAS = (1536.0, 1024.0)
