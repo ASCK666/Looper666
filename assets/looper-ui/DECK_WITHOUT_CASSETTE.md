@@ -4,7 +4,7 @@ This branch isolates the approved **Looper deck without cassette** as a visual s
 
 ## Canonical source
 
-- asset: `assets/looper-ui/deck-without-cassette.png`
+- asset: `assets/looper-ui/deck.png`
 - canonical canvas: `1536 x 1024`
 - format: PNG, preserved from the working-session source without resize/reframe
 - expected SHA-256: `cde9e0137fca8acb13c05ea575bc051f8a034d509e0bb2c6947ea001a85f228e`
