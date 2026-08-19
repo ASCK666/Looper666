@@ -20,7 +20,7 @@ window.CassetteLayerRuntimeStaged=(()=>{
 
   const EXPECTED={
     cavity:{name:"cassette-cavity.png",width:1536,height:1024,alphaBBox:[497,137,1051,387],sha256:"b5e897e4be61695fa5e5c6ab628f9322b5c06e7a16b2f33bcfbdb97412e1517f"},
-    tapePath:{name:"cassette-tape-path.png",width:1536,height:1024,alphaBBox:[551,287,992,380],sha256:"a076404f06eb0a61197e9e06699c6c7aaf4d96697d49b7a7fb7769b5d0eeda36"},
+    tapePath:{name:"cassette-tape-path.png",width:1536,height:1024,alphaBBox:[558,243,990,306],sha256:"42b4c1eedfbd60a6de40aab6e651bbafffd9d7f62a8f3c0f5f0b1e9e67dc320d"},
     leftReel:{name:"cassette-reel-left.png",width:154,height:154,alphaBBox:[0,0,154,154],sha256:"b1daef2f88a9d8e79c97b89ebcc7cb974703a4d240436928013e83786ab1c03e"},
     rightReel:{name:"cassette-reel-right.png",width:154,height:154,alphaBBox:[0,0,154,154],sha256:"6043c1b1c5a8bd5aba8386595c58cc251fcabd3b54646ca71b517ced16602daa"},
     shell:{name:"cassette-shell.png",width:1536,height:1024,alphaBBox:[497,137,1051,387],sha256:"006ab4bfc5a9684caf7f3ab32cfa8d0b72097ff8ea3e2d3c1b2d7bbb02b983ba"},
