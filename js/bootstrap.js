@@ -1,5 +1,5 @@
 "use strict";
-window.__SP={version:"105-flat-looper-runtime",ready:false,errors:[]};
+window.__SP={version:"106-layered-cassette-runtime",ready:false,errors:[]};
 window.__SP.report=(scope,error)=>{
   const message=error?.message||String(error||"Unknown error");
   const item={scope,message,time:new Date().toISOString()};
@@ -11,6 +11,8 @@ window.addEventListener("error",event=>window.__SP.report("RUNTIME",event.error|
 window.addEventListener("unhandledrejection",event=>window.__SP.report("PROMISE",event.reason));
 
 const LOOPER_FACEPLATE_URL="./assets/looper-ui/faceplate.webp";
+const CASSETTE_RUNTIME_CSS_URL="./assets/looper-ui/cassette-runtime.staged.css";
+const CASSETTE_RUNTIME_JS_URL="./js/cassette-runtime.staged.js";
 const LOOPER_DIRECT_CONTROL_IDS=[
   "librarySearch","libraryOrder","library",
   "prevBeat","playBeat","stopBeat","nextBeat","autoLooperToggle",
@@ -112,6 +114,7 @@ function installLooperAssetReadouts(looper){
     headerState.textContent=value;
     state.textContent=value;
     looper.classList.toggle("asset-playing",value==="PLAYING");
+    window.CassetteLayerRuntimeStaged?.syncFromCurrentLooperState?.();
   };
   if(sourceTrack)new MutationObserver(syncTrack).observe(sourceTrack,{childList:true,subtree:true,characterData:true});
   if(sourceState)new MutationObserver(syncState).observe(sourceState,{childList:true,subtree:true,characterData:true});
@@ -185,6 +188,53 @@ function installCrateTruthTransport(){
   void ensureCurrentTrackInCrate();
 }
 
+function ensureCassetteRuntimeStyles(){
+  if(document.querySelector('link[data-cassette-runtime="1"]'))return;
+  const link=document.createElement("link");
+  link.rel="stylesheet";
+  link.href=CASSETTE_RUNTIME_CSS_URL;
+  link.dataset.cassetteRuntime="1";
+  document.head.appendChild(link);
+}
+
+function loadCassetteRuntimeScript(){
+  if(window.CassetteLayerRuntimeStaged)return Promise.resolve(window.CassetteLayerRuntimeStaged);
+  const existing=document.querySelector('script[data-cassette-runtime="1"]');
+  if(existing){
+    return new Promise((resolve,reject)=>{
+      existing.addEventListener("load",()=>resolve(window.CassetteLayerRuntimeStaged),{once:true});
+      existing.addEventListener("error",()=>reject(new Error("Cassette runtime script failed to load")),{once:true});
+    });
+  }
+  return new Promise((resolve,reject)=>{
+    const script=document.createElement("script");
+    script.src=CASSETTE_RUNTIME_JS_URL;
+    script.dataset.cassetteRuntime="1";
+    script.onload=()=>resolve(window.CassetteLayerRuntimeStaged);
+    script.onerror=()=>reject(new Error("Cassette runtime script failed to load"));
+    document.head.appendChild(script);
+  });
+}
+
+async function activateCassetteLayerRuntime(){
+  ensureCassetteRuntimeStyles();
+  const runtime=await loadCassetteRuntimeScript();
+  if(!runtime)throw new Error("Cassette layered runtime unavailable after script load");
+  await runtime.verifyAssetPackage();
+  runtime.mount();
+  runtime.syncFromCurrentLooperState();
+  runtime.setEnabled(true);
+}
+
+async function activateCassetteLayerRuntimeSafely(){
+  try{
+    await activateCassetteLayerRuntime();
+  }catch(error){
+    window.CassetteLayerRuntimeStaged?.unmount?.();
+    window.__SP.report("CASSETTE RUNTIME",error);
+  }
+}
+
 function loadLooperAsset(){
   const looper=document.getElementById("looper");
   if(!looper||!looperOverlayReady(looper))return;
@@ -255,6 +305,7 @@ function installAssetSpeedControl(){
 }
 
 loadLooperAsset();
+void activateCassetteLayerRuntimeSafely();
 window.addEventListener("load",()=>{
   installAssetSpeedControl();
   if(looperOverlayReady(document.getElementById("looper")))installCrateTruthTransport();
