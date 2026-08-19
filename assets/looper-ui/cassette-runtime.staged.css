@@ -24,9 +24,12 @@
 /* Back-to-front production order begins here. */
 #looper.asset-ui .cassette-runtime-cavity { z-index:2; }
 
+/* Static tape strands: mechanism layer, behind the rotating reels and shell. */
+#looper.asset-ui .cassette-runtime-tape-path { z-index:3; }
+
 #looper.asset-ui .cassette-runtime-reel {
   position:absolute;
-  z-index:3;
+  z-index:4;
   width:10.0260416667%; /* 154 / 1536 */
   aspect-ratio:1;
   transform-origin:50% 50%;
@@ -44,12 +47,18 @@
   top:16.9921875%;     /* (251 - 77) / 1024 */
 }
 
+/*
+  Light physical calibration for standard cassette tape speed 4.75 cm/s.
+  Current visible reel radii measured from the production PNGs are approximately
+  77.0 px (left) and 76.75 px (right), mapped against the frozen 554 px cassette width.
+  No dynamic winding-radius simulation yet.
+*/
 #looper.asset-ui.cassette-runtime-playing .cassette-runtime-reel-left {
-  animation:cassette-runtime-spin-left 1.90s linear infinite;
+  animation:cassette-runtime-spin-left 1.848s linear infinite;
 }
 
 #looper.asset-ui.cassette-runtime-playing .cassette-runtime-reel-right {
-  animation:cassette-runtime-spin-right 1.76s linear infinite;
+  animation:cassette-runtime-spin-right 1.842s linear infinite;
 }
 
 @keyframes cassette-runtime-spin-left { to { transform:rotate(-360deg); } }
@@ -59,7 +68,7 @@
   Full 1536x1024 transparent shell asset; visible pixels stay in cassette bounds.
   cassette-shell.png owns the static blank white label material.
 */
-#looper.asset-ui .cassette-runtime-shell { z-index:4; }
+#looper.asset-ui .cassette-runtime-shell { z-index:5; }
 
 /*
   Existing dynamic cassette title is interleaved above shell but below light/glass.
