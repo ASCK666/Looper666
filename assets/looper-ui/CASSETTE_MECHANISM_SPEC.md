@@ -40,15 +40,14 @@ The left and right tape packs must remain visually distinct. The tape quantity m
 
 The lower tape path may exist in the mechanism layer for physical coherence, but it remains hidden where the full cassette shell and foreground support hide it. It must not be exposed merely to make the animation more visible.
 
-### Visible tape strands
+### Side tape strands — abandoned visual direction
 
-The mechanism must include the two visible magnetic-tape strands that leave the reel packs toward the lower tape route.
+The previous attempts to add visible tape strands beside the left and right reels are no longer part of the requested visual target.
 
-- each strand exits tangentially from its reel/tape pack rather than as a detached vertical line;
-- the strands remain static mechanism geometry while the reel images rotate;
-- the strands remain behind the transparent cassette shell;
-- their lower continuation disappears naturally before/under the exact foreground support;
-- the lower tape route must not be exposed merely to show more tape.
+- do not add, restore, regenerate, tangent-fit or otherwise refine visible side strands unless this requirement is explicitly reopened;
+- do not expose more of the lower tape route merely to suggest those strands;
+- `cassette-tape-path.png` may remain temporarily in the staged runtime as a legacy compatibility asset, but its presence does not make visible side strands a production requirement;
+- any future removal of that legacy layer must be coordinated with the runtime integrity list, CSS and package documentation rather than deleting only the PNG.
 
 ## Animation requirement
 
@@ -91,7 +90,7 @@ Reject the result if any of the following occurs:
 - a horizontal hump/ridge appears through the tape pack;
 - blur or fog obscures the wound tape geometry;
 - the tape packs are implausibly thick;
-- tape strands look detached from the wound tape or render above the shell;
+- visible side tape strands are reintroduced without explicit approval;
 - decorative clockwork or unrelated machinery appears;
 - the mechanism renders in front of the cassette shell;
 - the lower cassette becomes more exposed than in the baseline;
