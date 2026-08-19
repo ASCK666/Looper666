@@ -24,7 +24,7 @@
 /* Back-to-front production order begins here. */
 #looper.asset-ui .cassette-runtime-cavity { z-index:2; }
 
-/* Static tape strands: mechanism layer, behind the rotating reels and shell. */
+/* Physical static tape strands: mechanism layer, behind reels and shell. */
 #looper.asset-ui .cassette-runtime-tape-path { z-index:3; }
 
 #looper.asset-ui .cassette-runtime-reel {
@@ -71,19 +71,30 @@
 #looper.asset-ui .cassette-runtime-shell { z-index:5; }
 
 /*
-  Existing dynamic cassette title is interleaved above shell but below light/glass.
+  Optical transmission pass only: the physical tape remains below the shell.
+  This low-opacity multiply copy restores the visibility lost through the relatively
+  dense shell pixels without making the tape read as paint on the plastic surface.
+*/
+#looper.asset-ui .cassette-runtime-tape-transmission {
+  z-index:6;
+  opacity:.34;
+  mix-blend-mode:multiply;
+}
+
+/*
+  Existing dynamic cassette title is interleaved above shell/transmission but below light/glass.
   When layered runtime is enabled, remove its paper background because the static
   label material is already part of cassette-shell.png. Only the changing text remains.
 */
 #looper.asset-ui.cassette-layered-runtime-enabled .asset-cassette-label-readout {
-  z-index:6;
+  z-index:7;
   background:none!important;
   box-shadow:none!important;
 }
 
 #looper.asset-ui .cassette-runtime-backlight {
   position:absolute;
-  z-index:7;
+  z-index:8;
   left:30.5%;
   top:10.7%;
   width:38.7%;
@@ -106,10 +117,10 @@
 }
 
 /* Exact extracted support foreground, full-canvas transparent PNG. */
-#looper.asset-ui .cassette-runtime-support { z-index:8; }
+#looper.asset-ui .cassette-runtime-support { z-index:9; }
 
 /* Full habitacle pane, full-canvas transparent PNG derived from baseline character. */
-#looper.asset-ui .cassette-runtime-glass { z-index:9; }
+#looper.asset-ui .cassette-runtime-glass { z-index:10; }
 
 /* Retire the old generic glow only when the staged layered system is enabled. */
 #looper.asset-ui.cassette-layered-runtime-enabled .asset-cassette-glow {
