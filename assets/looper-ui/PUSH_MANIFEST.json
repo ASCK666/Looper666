@@ -1,0 +1,22 @@
+{
+  "branch": "faceplate-190826",
+  "destination": "assets/looper-ui/cassette-tape-path.png",
+  "size": [
+    1536,
+    1024
+  ],
+  "alpha_bbox": [
+    704,
+    284,
+    840,
+    382
+  ],
+  "sha256": "d07df8c970ca8a497d36814c9be6d6433cf383b9b18e61f2b7fe18ea727bc3a6",
+  "layer_position": "above cassette-cavity, below rotating reel assets",
+  "notes": [
+    "static tape strands; do not rotate this layer",
+    "behind cassette shell",
+    "lower ends disappear before/under foreground support",
+    "faceplate.webp unchanged"
+  ]
+}
