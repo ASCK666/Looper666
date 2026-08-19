@@ -6,6 +6,7 @@ steps=[
   ['tests/resource_paths.py'],
   ['tests/dead_code.py'],
   ['tests/assets_health.py'],
+  ['tests/cassette_alignment.py'],
   ['tests/validate.py'],
   ['tests/js_health.py'],
   ['tests/core_unit.js'],
