@@ -41,6 +41,53 @@
 9. **Do not merge automatically.**
    - Asset edits stay on a branch/PR until the visual result has been reviewed.
 
+## Cassette reconstruction constraints
+
+The cassette may be rebuilt, but the surrounding deck is locked. The reconstruction must preserve the current composition, placement, scale, depth relationship and visual integration of the cassette within the existing deck.
+
+### Deck geometry is immutable
+
+- Do not change any other part of the deck while rebuilding the cassette.
+- All existing deck positions and dimensions must remain exactly where they are and at the same size.
+- Do not move, resize, crop, stretch, reframe, repaint, relight or reinterpret adjacent deck elements to make the cassette fit.
+- The cassette itself must remain in the same location and at the same apparent scale as the current approved composition.
+- Preserve the current recessed placement: the cassette remains inserted into its holder, including the existing occlusion of its lower portion by the deck/support.
+- No opportunistic redesign, layout adjustment or creative geometry change is allowed outside the explicitly approved cassette work.
+
+### Required cassette layer architecture
+
+Build the cassette as separate composited layers rather than one baked static object. From back to front:
+
+1. **Animated cassette mechanism**
+   - Contains the complete rotating reel/hub mechanisms that support the magnetic tape, not only a cross, spoke or decorative center glyph.
+   - The tape follows its physically coherent path, including the lower path through the cassette mechanism.
+   - The lower tape path may exist in the mechanism layer while remaining visually hidden by the cassette shell; it must not be exposed merely to make the animation visible.
+   - Rotation must read as the cassette mechanism turning behind the shell.
+
+2. **Transparent cassette shell**
+   - The cassette shell is a complete transparent/translucent plastic body placed in front of the mechanism.
+   - It is not a shell with a large central hole cut through it; the mechanism is seen through the transparent plastic.
+   - Preserve the shell's material cues, reflections, tint and depth so the mechanism reads through plastic rather than through an empty opening.
+   - Preserve the white cassette label area as part of the shell/static artwork.
+   - Do not bake the cassette/track name into the shell artwork.
+
+3. **Cassette name in HTML/CSS**
+   - Render the cassette/track name dynamically in HTML/CSS over the white label area.
+   - Keep the label text independent from the static shell asset so runtime content can change without regenerating imagery.
+
+4. **CSS-controlled cassette backlight**
+   - Reproduce the currently approved cassette/deck backlighting rather than inventing a new lighting treatment.
+   - Implement the controllable light component in CSS where practical so it can support explicit on/off states and transitions.
+   - The off state must preserve the underlying cassette/deck appearance; the on state adds only the approved backlight effect.
+
+5. **Deck glass above the cassette assembly**
+   - The deck glass/window remains above the mechanism, shell, label text and cassette lighting in the final visual stack.
+   - Preserve the existing glass appearance, reflections, tint, texture and geometry unless a separate change explicitly targets the glass itself.
+
+### Composition requirement
+
+The purpose of the layered reconstruction is to make the cassette mechanism animatable while preserving the approved deck exactly. The final assembled result must occupy the same visual footprint as the current cassette and must not cause any movement, resizing or alteration elsewhere in the deck.
+
 ## Recommended safety check
 
 For a local edit, keep a copy of the decoded image before modification and a binary mask of the approved region. After saving and decoding the new `faceplate.webp`, compare the two pixel arrays and fail the edit if any changed pixel lies outside the mask.
