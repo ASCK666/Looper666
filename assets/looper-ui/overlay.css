@@ -345,3 +345,16 @@
 }
 #looper.asset-ui .asset-cassette-glow::before{left:20.9030100334%}
 #looper.asset-ui .asset-cassette-glow::after{left:62.0401337793%}
+
+/* Cassette label occlusion: sticker plate above tape, below dynamic title. */
+#looper.asset-ui::after{
+  content:"";
+  position:absolute;
+  z-index:8;
+  left:35.7421875%;
+  top:14.84375%;
+  width:28.2552083333%;
+  height:4.4921875%;
+  pointer-events:none;
+  background:url("./cassette/cassette-label-occlusion.webp") 0 0/100% 100% no-repeat;
+}
