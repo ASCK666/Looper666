@@ -1,3 +1,4 @@
+# validation trigger: sticker occlusion layer
 name: Cassette label occlusion temp
 
 on:
