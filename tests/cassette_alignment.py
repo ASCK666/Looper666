@@ -7,7 +7,7 @@ ROOT = Path(__file__).resolve().parents[1]
 CSS = ROOT / 'assets/looper-ui/overlay.css'
 ASSET = ROOT / 'assets/looper-ui/cassette/cassette-static.webp'
 
-EXPECTED_ASSET_SHA256 = 'caf2f5596ae081b58d6860e8a5d54c184c764ad003188421b159293be2ed1508'
+EXPECTED_ASSET_SHA256 = 'c5dd70a125e77b220d454e8b822a6fac0b18459674a3c852ec7bc61053f50db7'
 EXPECTED_CENTERS = ((648.0, 249.0), (894.0, 249.0))
 CANVAS = (1536.0, 1024.0)
 
