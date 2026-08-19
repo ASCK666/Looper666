@@ -1,4 +1,4 @@
-# temporary one-shot bridge for cassette label occlusion
+# validation trigger: cassette label occlusion
 name: Cassette label occlusion temp
 
 on:
