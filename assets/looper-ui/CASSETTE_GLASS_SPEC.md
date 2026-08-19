@@ -13,6 +13,17 @@ The deck glass must remain visually natural and must continue to read as the sam
 - Do not move, resize, crop, rotate, reframe or reshape the window.
 - The glass remains above mechanism, shell, cassette title and cassette lighting.
 
+## Habitacle integration requirement
+
+The glass must read as the glass of the complete deck habitacle / viewing bay, not as a transparent film placed directly on the cassette.
+
+- the pane spans the full glass reference region and visually belongs to the surrounding bay;
+- its depth cues must be strongest at the bay edges, corners and plausible frame contact zones rather than centered on the cassette body;
+- low-level tint may exist across the full pane, but cassette readability must remain high;
+- reflections and edge response must follow the habitacle/window as a whole, not the shape of the cassette;
+- no rectangular or local overlay should visually terminate on the cassette footprint;
+- the cassette must clearly read as recessed behind this foreground pane.
+
 ## Visual source of truth
 
 Use the approved baseline faceplate as the source for glass character whenever possible.
@@ -72,6 +83,7 @@ The glass candidate is accepted only if:
 2. the cassette remains readable through it;
 3. no synthetic diagonal highlight dominates the window;
 4. no fog or blur obscures reel geometry;
-5. the static composite still reads like the approved deck rather than a newly redesigned window.
+5. the static composite still reads like the approved deck rather than a newly redesigned window;
+6. the pane reads as belonging to the complete habitacle rather than being laid directly on the cassette.
 
 This step does not authorize any faceplate pixel edit by itself.
