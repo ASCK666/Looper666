@@ -85,8 +85,11 @@ with contextlib.ExitStack() as stack:
         assert all('faceplate.webp' in value for value in info['reelAsset']), info['reelAsset']
         assert info['reelCrop'][0]==info['reelCrop'][1], info['reelCrop']
         assert info['reelCrop'][2]!=info['reelCrop'][3], info['reelCrop']
-        assert info['reelStopped']==['paused','paused','0','0'], info['reelStopped']
-        assert info['cassetteLayer']==['rgba(0, 0, 0, 0)','none','none','none','normal','1'], info['cassetteLayer']
+        assert info['reelStopped'][0:2]==['paused','paused'], info['reelStopped']
+        assert all(float(v)>.5 for v in info['reelStopped'][2:4]), info['reelStopped']
+        assert info['cassetteLayer'][0]=='rgba(0, 0, 0, 0)', info['cassetteLayer']
+        assert 'cassette-static.webp' in info['cassetteLayer'][1], info['cassetteLayer']
+        assert info['cassetteLayer'][2:]==['none','none','normal','1'], info['cassetteLayer']
         assert not info['appErrors'], info
         assert not page_errors, page_errors
         assert not failed, failed
@@ -109,6 +112,11 @@ with contextlib.ExitStack() as stack:
         page.wait_for_timeout(100)
         centers_small=reel_centers()
         assert all(abs(a-b)<.004 for pair_a,pair_b in zip(centers_large,centers_small) for a,b in zip(pair_a,pair_b)), (centers_large,centers_small)
+        page.set_viewport_size({'width':390,'height':844})
+        page.wait_for_timeout(100)
+        centers_phone=reel_centers()
+        assert all(abs(a-b)<.004 for pair_a,pair_b in zip(centers_large,centers_phone) for a,b in zip(pair_a,pair_b)), (centers_large,centers_phone)
+        page.locator('#looper').screenshot(path=str(ARTIFACTS/'looper-mobile-stop.png'))
         page.set_viewport_size({'width':1536,'height':1200})
 
         page.evaluate('''() => {
@@ -152,7 +160,7 @@ with contextlib.ExitStack() as stack:
         for _ in range(2):
             page.click('#stopBeat')
             page.wait_for_function("deckSource === null && !document.getElementById('looper').classList.contains('asset-playing')",timeout=3000)
-            page.wait_for_function("parseFloat(getComputedStyle(document.querySelector('.asset-cassette-glow'),'::before').opacity) < .01",timeout=1000)
+            page.wait_for_function("parseFloat(getComputedStyle(document.querySelector('.asset-cassette-glow'),'::before').opacity) > .5",timeout=1000)
             stopped=page.evaluate('''() => {
               const glow=document.querySelector('.asset-cassette-glow');
               return [
@@ -163,14 +171,14 @@ with contextlib.ExitStack() as stack:
                 document.querySelectorAll('.asset-cassette-glow').length
               ];
             }''')
-            assert stopped[0:2]==['paused','paused'] and stopped[2]<.01 and stopped[3]<.01 and stopped[4]==1, stopped
+            assert stopped[0:2]==['paused','paused'] and stopped[2]>.5 and stopped[3]>.5 and stopped[4]==1, stopped
             page.click('#playBeat')
             page.wait_for_function("deckSource !== null && document.getElementById('looper').classList.contains('asset-playing')",timeout=3000)
             page.wait_for_function("parseFloat(getComputedStyle(document.querySelector('.asset-cassette-glow'),'::before').opacity) > .5",timeout=1000)
 
         page.click('#stopBeat')
         page.wait_for_function("deckSource === null && !document.getElementById('looper').classList.contains('asset-playing')",timeout=3000)
-        page.wait_for_function("parseFloat(getComputedStyle(document.querySelector('.asset-cassette-glow'),'::before').opacity) < .01",timeout=1000)
+        page.wait_for_function("parseFloat(getComputedStyle(document.querySelector('.asset-cassette-glow'),'::before').opacity) > .5",timeout=1000)
         page.click('#tapeCounterReset')
         with page.expect_file_chooser(timeout=3000):
             page.click('#importBeatsBtn')
@@ -183,4 +191,4 @@ with contextlib.ExitStack() as stack:
         assert not context_errors,context_errors
         browser.close()
 
-print('OK: faceplate and cassette body stay fixed; exact faceplate reel crops visibly rotate with PLAY/STOP, speed and responsive alignment')
+print('OK: layered cassette STOP stays visible while exact faceplate reel crops rotate with PLAY/STOP, speed and responsive alignment')

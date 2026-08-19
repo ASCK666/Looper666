@@ -47,3 +47,8 @@ Expected local output:
 - Non-cassette deck pixels remain owned by the faceplate.
 - Mobile alignment must derive from the same canonical coordinates; no viewport-specific correction offsets.
 - Any production asset edit requires decoded-pixel verification against the approved source and `0` changed pixels outside its approved mask.
+
+
+## First runtime cutover
+
+The first runtime cutover intentionally uses one static `cassette-static.webp` layer for the cabin/cassette materials while retaining the already-calibrated exact reel crops from `faceplate.webp`. This keeps PLAY/STOP and speed ownership unchanged while STOP/PLAY/mobile parity is validated. Separate lossless reel files remain a later asset-only follow-up after this runtime gate.
