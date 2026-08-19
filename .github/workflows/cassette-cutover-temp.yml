@@ -1,4 +1,4 @@
-# rerun: complete seven-part payload
+# validation bridge: complete seven-part payload
 name: Cassette cutover temp
 
 on:
@@ -7,6 +7,9 @@ on:
       - feat/cassette-layer-extraction
     paths:
       - .github/workflows/cassette-cutover-temp.yml
+  pull_request:
+    branches:
+      - docs/cassette-layered-architecture
 
 permissions:
   contents: write
