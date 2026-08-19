@@ -6,8 +6,10 @@ import re
 ROOT = Path(__file__).resolve().parents[1]
 CSS = ROOT / 'assets/looper-ui/overlay.css'
 ASSET = ROOT / 'assets/looper-ui/cassette/cassette-static.webp'
+LABEL_ASSET = ROOT / 'assets/looper-ui/cassette/cassette-label-occlusion.webp'
 
 EXPECTED_ASSET_SHA256 = 'c5dd70a125e77b220d454e8b822a6fac0b18459674a3c852ec7bc61053f50db7'
+EXPECTED_LABEL_SHA256 = '22c91b51ff6c7615c5cb31766331ff6084fcc575ee36930224ff68308df50cdb'
 EXPECTED_CENTERS = ((648.0, 249.0), (894.0, 249.0))
 CANVAS = (1536.0, 1024.0)
 
@@ -59,4 +61,20 @@ for actual, expected in zip(centers, EXPECTED_CENTERS):
 digest = hashlib.sha256(ASSET.read_bytes()).hexdigest()
 assert digest == EXPECTED_ASSET_SHA256, (digest, EXPECTED_ASSET_SHA256)
 
-print('OK: cassette asset checksum and reel axes are locked to historic centres')
+label_digest = hashlib.sha256(LABEL_ASSET.read_bytes()).hexdigest()
+assert label_digest == EXPECTED_LABEL_SHA256, (label_digest, EXPECTED_LABEL_SHA256)
+
+label_marker = '/* Cassette label occlusion: sticker plate above tape, below dynamic title. */'
+assert label_marker in css
+label_tail = css[css.rfind(label_marker):]
+label_layer = re.search(
+    r'#looper\.asset-ui::after\{\s*content:"";\s*position:absolute;\s*z-index:8;\s*'
+    r'left:35\.7421875%;\s*top:14\.84375%;\s*width:28\.2552083333%;\s*height:4\.4921875%;',
+    label_tail,
+    re.S,
+)
+assert label_layer
+assert 'cassette-label-occlusion.webp' in label_tail
+assert '.asset-readout' in css and 'z-index:9' in css
+
+print('OK: cassette/reel axes and sticker occlusion layer are locked to canonical geometry')
