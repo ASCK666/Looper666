@@ -101,3 +101,42 @@ assert outside.sum() == 0
 ```
 
 This convention is intentionally strict: local Looper asset work must be surgical and reversible.
+
+## Cassette binary pre-push gate
+
+The following gate is mandatory before any new cassette PNG is presented as push-ready.
+
+1. **Reread the binding cassette specs first.**
+   - Do not rely on remembered geometry or an older candidate state.
+
+2. **Composite against the current production stack locally.**
+   - Use the exact current cavity, reel, shell, support and glass assets.
+   - Review a native-resolution static composite.
+   - Review an animated composite when the change can interact with moving reels.
+
+3. **Validate the allowed region before handoff.**
+   - Compute the candidate alpha bbox.
+   - Confirm it is fully inside the explicit region allowed for that asset.
+   - Reject the candidate before handoff if it spills outside the allowed region.
+
+4. **Validate file identity before handoff.**
+   - Confirm exact canvas dimensions.
+   - Confirm the exact destination repository path, including directory names.
+   - Compute and record SHA-256.
+   - Compute and record Git blob SHA when practical.
+
+5. **Binary upload and runtime activation are separate operations.**
+   - Never update the runtime integrity table merely because a binary was intended to be pushed.
+   - After upload, fetch the binary from the intended branch and exact path.
+   - Confirm the remote blob is the expected candidate.
+   - Only then update runtime SHA-256/bbox metadata.
+
+6. **Interpret fallback correctly.**
+   - If the layered cassette disappears and the original baked faceplate returns, first suspect an integrity-gate failure.
+   - Verify current branch HEAD, changed filenames, remote asset path, hash and bbox before diagnosing a Git rollback.
+
+7. **Preserve a recovery point for risky binary work.**
+   - Keep an explicit safety branch/snapshot when a sequence of binary experiments could destabilize the runtime.
+   - Do not continue normal work on the safety branch.
+
+For the detailed cassette reconstruction history and failure modes, see `CASSETTE_LAYERING_NOTES.md`.
