@@ -5,6 +5,7 @@ ROOT=Path(__file__).resolve().parents[1]
 steps=[
   ['tests/resource_paths.py'],
   ['tests/dead_code.py'],
+  ['tests/cassette_runtime.py'],
   ['tests/assets_health.py'],
   ['tests/validate.py'],
   ['tests/js_health.py'],

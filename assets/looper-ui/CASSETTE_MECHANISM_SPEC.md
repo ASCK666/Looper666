@@ -40,14 +40,9 @@ The left and right tape packs must remain visually distinct. The tape quantity m
 
 The lower tape path may exist in the mechanism layer for physical coherence, but it remains hidden where the full cassette shell and foreground support hide it. It must not be exposed merely to make the animation more visible.
 
-### Side tape strands — abandoned visual direction
+### Converging side tape strands
 
-The previous attempts to add visible tape strands beside the left and right reels are no longer part of the requested visual target.
-
-- do not add, restore, regenerate, tangent-fit or otherwise refine visible side strands unless this requirement is explicitly reopened;
-- do not expose more of the lower tape route merely to suggest those strands;
-- `cassette-tape-path.png` may remain temporarily in the staged runtime as a legacy compatibility asset, but its presence does not make visible side strands a production requirement;
-- any future removal of that legacy layer must be coordinated with the runtime integrity list, CSS and package documentation rather than deleting only the PNG.
+Do not render the two diagonal bands that leave the reels and converge toward the cassette center. The physical lower tape route remains hidden by the shell and foreground support and must not be recreated as visible V-shaped CSS geometry.
 
 ## Animation requirement
 
@@ -90,7 +85,7 @@ Reject the result if any of the following occurs:
 - a horizontal hump/ridge appears through the tape pack;
 - blur or fog obscures the wound tape geometry;
 - the tape packs are implausibly thick;
-- visible side tape strands are reintroduced without explicit approval;
+- visible tape bands converge from the reels toward the cassette center;
 - decorative clockwork or unrelated machinery appears;
 - the mechanism renders in front of the cassette shell;
 - the lower cassette becomes more exposed than in the baseline;

@@ -34,29 +34,30 @@ The current runtime mounts the cassette layers in this back-to-front order:
 
 ```text
 faceplate.webp / deck base
+cassette cavity opaque CSS backing
 cassette-cavity.png
-cassette-tape-path.png   (legacy compatibility layer; see below)
-cassette-reel-left.png
-cassette-reel-right.png
-cassette-shell.png
-cassette title HTML/CSS
+cassette aperture mask
+  cassette cartridge
+  cassette-reel-left.png
+  cassette-reel-right.png
+  cassette-shell.png
+  cassette title HTML/CSS
 cassette backlight CSS
 cassette-support-foreground.png
-cassette-glass-habitacle.png
+fixed habitacle glass CSS
 ```
 
 The CSS uses the corresponding z-order:
 
 - cavity: z 2;
-- legacy tape-path: z 3;
-- reels: z 4;
-- shell: z 5;
-- dynamic cassette title: z 6;
+- opaque cavity backing: z 1;
+- fixed aperture mask containing the moving cartridge: z 3;
+- inside the cartridge: reels z 2, shell z 3, dynamic title z 4;
 - backlight: z 7;
 - support: z 8;
 - glass: z 9.
 
-The stage uses `display: contents` when enabled so the existing dynamic cassette title can remain correctly interleaved between shell and glass rather than being trapped in one stacking context.
+The stage fills the faceplate. A fixed mask clips cartridge motion to the measured habitacle aperture. Inside it, the cartridge wrapper moves the reels, shell and dynamic title together while the opaque cavity backing, lower support and habitacle glass remain fixed. The backing prevents the cassette baked into `faceplate.webp` from ghosting through during motion; the mask prevents the moving shell from crossing the deck frame.
 
 ## Geometry choices
 
@@ -70,7 +71,7 @@ Frozen cassette references:
 - foreground support: approximately `x=483..1067`, `y=387..453`;
 - glass region: approximately `x=484..1067`, `y=118..389`.
 
-Static shell/cavity/support/glass assets are full-canvas transparent PNGs so they can be mounted at `(0,0)` with no rescaling or coordinate drift. The two reel assets are local `154 x 154` PNGs mounted around their fixed centers.
+Static shell/cavity/support assets are full-canvas transparent PNGs so they can be mounted at `(0,0)` with no rescaling or coordinate drift. The glass is CSS geometry locked to the measured habitacle rectangle. The two reel assets are local `154 x 154` PNGs mounted around their fixed centers.
 
 ## Reel animation logic
 
@@ -82,6 +83,10 @@ The reel images rotate independently while their centers remain fixed. The curre
 - right period: about `1.842 s/turn`.
 
 This is deliberately not yet a full winding-radius simulation. A future simulation may vary angular speed as tape transfers, but must preserve the fixed linear tape speed.
+
+## Insertion and responsive behavior
+
+Loading or switching a beat restarts one cartridge insertion animation. Desktop uses a short `-9%` drop with mild perspective and a small seating overshoot; screens at or below `760px` use a faster `-6%` drop and reduced tilt. `prefers-reduced-motion` disables both insertion and reel rotation.
 
 ## Integrity gate and fail-safe behavior
 
@@ -144,15 +149,13 @@ The correct diagnosis order for this symptom is:
 4. compare its Git blob/hash/bbox with the runtime `EXPECTED` entry;
 5. only then consider an actual branch rollback.
 
-## Side tape-strand experiment — abandoned
+## Side tape-strand experiment — retired
 
-The attempts to reproduce visible side tape strands beside the two reels are explicitly abandoned as of this note.
+Earlier baseline-derived PNG attempts were abandoned because their geometry was difficult to keep tangent to the larger production reels and the integrity gate made each binary iteration expensive.
 
-Do not continue, refine, regenerate, tangent-fit, extract, or otherwise reintroduce those side strands unless the user explicitly reopens that visual requirement.
+The later CSS replacement was also removed after visual review: the two lines converging toward the cassette center read as decorative bands rather than believable tape transport. The runtime must not draw those side strands.
 
-`cassette-tape-path.png` is currently retained only because the staged runtime package still expects that binary and its integrity metadata. Its presence in the package must not be interpreted as an active requirement to make visible side strands.
-
-If this legacy layer is removed later, do it as one coordinated cleanup: runtime asset list, `EXPECTED` guard, CSS z-order/commentary, shell transparency corrections if relevant, and package documentation must be updated together. Do not remove only the PNG.
+`cassette-tape-path.png` remains only as reconstruction history and is no longer mounted or integrity-checked.
 
 ## Safe binary-asset workflow from now on
 

@@ -22,6 +22,15 @@ for value in re.findall(r'\b(?:src|href)=["\']([^"\']+)["\']', html):
     if not target.exists():
         problems.append(f"Runtime reference missing from index.html: {value}")
 
+# Bootstrap intentionally loads the verified cassette runtime after the faceplate
+# is mounted. Treat those explicit local constants as part of the runtime manifest.
+bootstrap = (ROOT / "js" / "bootstrap.js").read_text(encoding="utf-8")
+for value in re.findall(r'["\'](\./[^"\']+\.(?:js|css))["\']', bootstrap):
+    target = (ROOT / value.lstrip("./")).resolve()
+    referenced.add(target)
+    if not target.exists():
+        problems.append(f"Runtime reference missing from bootstrap.js: {value}")
+
 runtime_files = {
     path.resolve()
     for directory in RUNTIME_DIRS

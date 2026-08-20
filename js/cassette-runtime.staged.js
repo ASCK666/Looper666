@@ -10,22 +10,18 @@ window.CassetteLayerRuntimeStaged=(()=>{
   const DEFAULT_ASSET_BASE="./assets/looper-ui/";
   const DEFAULT_ASSETS={
     cavity:"cassette-cavity.png",
-    tapePath:"cassette-tape-path.png",
     leftReel:"cassette-reel-left.png",
     rightReel:"cassette-reel-right.png",
     shell:"cassette-shell.png",
-    support:"cassette-support-foreground.png",
-    glass:"cassette-glass-habitacle.png"
+    support:"cassette-support-foreground.png"
   };
 
   const EXPECTED={
     cavity:{name:"cassette-cavity.png",width:1536,height:1024,alphaBBox:[497,137,1051,387],sha256:"b5e897e4be61695fa5e5c6ab628f9322b5c06e7a16b2f33bcfbdb97412e1517f"},
-    tapePath:{name:"cassette-tape-path.png",width:1536,height:1024,alphaBBox:[558,243,990,306],sha256:"42b4c1eedfbd60a6de40aab6e651bbafffd9d7f62a8f3c0f5f0b1e9e67dc320d"},
     leftReel:{name:"cassette-reel-left.png",width:154,height:154,alphaBBox:[0,0,154,154],sha256:"b1daef2f88a9d8e79c97b89ebcc7cb974703a4d240436928013e83786ab1c03e"},
     rightReel:{name:"cassette-reel-right.png",width:154,height:154,alphaBBox:[0,0,154,154],sha256:"6043c1b1c5a8bd5aba8386595c58cc251fcabd3b54646ca71b517ced16602daa"},
     shell:{name:"cassette-shell.png",width:1536,height:1024,alphaBBox:[497,137,1051,387],sha256:"006ab4bfc5a9684caf7f3ab32cfa8d0b72097ff8ea3e2d3c1b2d7bbb02b983ba"},
-    support:{name:"cassette-support-foreground.png",width:1536,height:1024,alphaBBox:[483,387,1068,454],sha256:"ff751dd7eda90e2389ab856fa7a90b2d5a5dba72031aae29e0e6548ba0b1e75b"},
-    glass:{name:"cassette-glass-habitacle.png",width:1536,height:1024,alphaBBox:[484,118,1068,390],sha256:"1ebdcd2a3080899a4a5042a8e99eeda8d8fc943420ffedbd29532e673aab3837"}
+    support:{name:"cassette-support-foreground.png",width:1536,height:1024,alphaBBox:[483,387,1068,454],sha256:"ff751dd7eda90e2389ab856fa7a90b2d5a5dba72031aae29e0e6548ba0b1e75b"}
   };
 
   let mounted=false;
@@ -33,6 +29,10 @@ window.CassetteLayerRuntimeStaged=(()=>{
   let verificationReport=null;
   let looper=null;
   let stage=null;
+  let cartridge=null;
+  let cassetteLabel=null;
+  let cassetteLabelNextSibling=null;
+  let motionTimer=null;
   let verifiedConfig=null;
 
   function makeImg(className,src){
@@ -51,6 +51,19 @@ window.CassetteLayerRuntimeStaged=(()=>{
     el.className=className;
     el.setAttribute("aria-hidden","true");
     return el;
+  }
+
+  function restartMotion(className,duration){
+    if(!mounted||!looper||!cartridge)return false;
+    if(motionTimer)clearTimeout(motionTimer);
+    looper.classList.remove("cassette-runtime-inserting","cassette-runtime-ejecting");
+    void cartridge.offsetWidth;
+    looper.classList.add(className);
+    motionTimer=setTimeout(()=>{
+      looper?.classList.remove(className);
+      motionTimer=null;
+    },duration);
+    return true;
   }
 
   function bytesToHex(bytes){
@@ -163,15 +176,29 @@ window.CassetteLayerRuntimeStaged=(()=>{
     stage.className="cassette-runtime-stage";
     stage.setAttribute("aria-hidden","true");
 
-    stage.append(
-      makeImg("cassette-runtime-full-layer cassette-runtime-cavity",url(names.cavity)),
-      makeImg("cassette-runtime-full-layer cassette-runtime-tape-path",url(names.tapePath)),
+    cartridge=makeLayer("cassette-runtime-cartridge");
+    cartridge.append(
       makeImg("cassette-runtime-reel cassette-runtime-reel-left",url(names.leftReel)),
       makeImg("cassette-runtime-reel cassette-runtime-reel-right",url(names.rightReel)),
-      makeImg("cassette-runtime-full-layer cassette-runtime-shell",url(names.shell)),
+      makeImg("cassette-runtime-full-layer cassette-runtime-shell",url(names.shell))
+    );
+
+    cassetteLabel=looper.querySelector(".asset-cassette-label-readout");
+    if(cassetteLabel){
+      cassetteLabelNextSibling=cassetteLabel.nextSibling;
+      cartridge.appendChild(cassetteLabel);
+    }
+
+    const aperture=makeLayer("cassette-runtime-aperture");
+    aperture.appendChild(cartridge);
+
+    stage.append(
+      makeLayer("cassette-runtime-cavity-backdrop"),
+      makeImg("cassette-runtime-full-layer cassette-runtime-cavity",url(names.cavity)),
+      aperture,
       makeLayer("cassette-runtime-backlight"),
       makeImg("cassette-runtime-full-layer cassette-runtime-support",url(names.support)),
-      makeImg("cassette-runtime-full-layer cassette-runtime-glass",url(names.glass))
+      makeLayer("cassette-runtime-glass")
     );
 
     looper.appendChild(stage);
@@ -198,6 +225,14 @@ window.CassetteLayerRuntimeStaged=(()=>{
     looper.classList.toggle("cassette-runtime-light-on",!!on);
   }
 
+  function animateInsertion(){
+    return restartMotion("cassette-runtime-inserting",620);
+  }
+
+  function animateEjection(){
+    return restartMotion("cassette-runtime-ejecting",520);
+  }
+
   function syncFromCurrentLooperState(){
     if(!looper)looper=document.getElementById("looper");
     if(!looper)return;
@@ -206,15 +241,26 @@ window.CassetteLayerRuntimeStaged=(()=>{
   }
 
   function unmount(){
+    if(motionTimer)clearTimeout(motionTimer);
+    motionTimer=null;
+    if(cassetteLabel&&looper){
+      if(cassetteLabelNextSibling?.parentNode===looper)looper.insertBefore(cassetteLabel,cassetteLabelNextSibling);
+      else looper.appendChild(cassetteLabel);
+    }
     stage?.remove();
     if(looper){
       looper.classList.remove(
         "cassette-layered-runtime-enabled",
         "cassette-runtime-playing",
-        "cassette-runtime-light-on"
+        "cassette-runtime-light-on",
+        "cassette-runtime-inserting",
+        "cassette-runtime-ejecting"
       );
     }
     stage=null;
+    cartridge=null;
+    cassetteLabel=null;
+    cassetteLabelNextSibling=null;
     looper=null;
     mounted=false;
   }
@@ -226,6 +272,8 @@ window.CassetteLayerRuntimeStaged=(()=>{
     setEnabled,
     setPlaying,
     setBacklight,
+    animateInsertion,
+    animateEjection,
     syncFromCurrentLooperState,
     isMounted:()=>mounted,
     isVerified:()=>verified,

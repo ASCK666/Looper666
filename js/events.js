@@ -83,6 +83,7 @@ async function handleBeatImport(files,label){
 }
 
 function pulseCassetteDoor(){
+  if(window.CassetteLayerRuntimeStaged?.animateEjection?.())return;
   const deck=$("looperDropzoneBtn");
   if(!deck)return;
   deck.classList.remove("ejecting");

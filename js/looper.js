@@ -655,6 +655,7 @@ function commitLoadedTrack(row,decoded){
   $("deckTrack").textContent=row.name;
   $("deckInfo").textContent=`${deckBuffer.duration.toFixed(1)} s • original speed`;
   refreshCassetteUI();
+  window.CassetteLayerRuntimeStaged?.animateInsertion?.();
 }
 
 async function loadTrack(row,{preservePlayback=false}={}){
