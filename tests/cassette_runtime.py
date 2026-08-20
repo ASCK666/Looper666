@@ -61,11 +61,19 @@ for box in button_regions:
     outside.paste(0, box)
 assert Image.composite(alpha, Image.new("L", faceplate.size, 255), outside).getextrema()[0] == 255, "Transparency leaked outside button regions"
 
+legacy_label_region = faceplate.crop((560, 154, 993, 191)).convert("L")
+legacy_label_mean = sum(value * count for value, count in enumerate(legacy_label_region.histogram())) / (255 * legacy_label_region.width * legacy_label_region.height)
+assert legacy_label_mean < 0.35, "The obsolete fallback cassette banner/text returned"
+
 cavity = Image.open(ROOT / "assets" / "looper-ui" / "cassette-cavity.png").convert("RGBA")
 assert cavity.getchannel("A").getextrema() == (255, 255), "Cassette cavity must block fallback V-shaped bands"
 
 OVERLAY = (ROOT / "assets" / "looper-ui" / "overlay.css").read_text(encoding="utf-8")
 BOOTSTRAP = (ROOT / "js" / "bootstrap.js").read_text(encoding="utf-8")
 assert ".asset-button-light" in OVERLAY and "installButtonBacklights" in BOOTSTRAP, "CSS button backlights are not installed"
+assert "--speed-light-level" in OVERLAY + BOOTSTRAP, "Speed lamp intensity is not CSS-controlled"
+assert "Math.min(50,speedLevel+1)" in BOOTSTRAP and "Math.min(50,Number(level)" in BOOTSTRAP, "Speed must expose exactly 50 incremental clicks"
+assert 'addAssetReadout(looper,"asset-cassette-label-readout","")' in BOOTSTRAP, "Cassette label must start without a legacy loading banner"
+assert ".cassette-runtime-backlight::before" in CSS and "opacity:.50" in CSS, "The restrained idle habitacle backlight is missing"
 
-print("OK: cassette runtime — fixed habitacle mask, opaque V-band blocker, transparent glass and CSS button lamps")
+print("OK: cassette runtime — clean fallback, shiny habitacle, V-band blocker and progressive CSS button lamps")

@@ -1,5 +1,5 @@
 "use strict";
-window.__SP={version:"108-css-button-backlights",ready:false,errors:[]};
+window.__SP={version:"109-shiny-css-backlights",ready:false,errors:[]};
 window.__SP.report=(scope,error)=>{
   const message=error?.message||String(error||"Unknown error");
   const item={scope,message,time:new Date().toISOString()};
@@ -93,7 +93,7 @@ function installLooperAssetReadouts(looper){
   const speedPercent=addAssetReadout(looper,"asset-speed-percent-readout","100.0");
   const loops=addAssetReadout(looper,"asset-loop-readout","0");
   const speedLevel=addAssetReadout(looper,"asset-speed-level-readout","0");
-  const cassetteLabel=addAssetReadout(looper,"asset-cassette-label-readout","AUCUN BEAT");
+  const cassetteLabel=addAssetReadout(looper,"asset-cassette-label-readout","");
   for(const className of ["asset-cassette-glow","asset-speed-glow"]){
     const glow=document.createElement("div");
     glow.className=className;
@@ -106,7 +106,7 @@ function installLooperAssetReadouts(looper){
     const value=(sourceTrack?.textContent||"NO BEAT LOADED").trim();
     track.textContent=value;
     const empty=/^(AUCUN BEAT|NO BEAT)/i.test(value);
-    cassetteLabel.textContent=empty?"AUCUN BEAT":(value.length>22?`${value.slice(0,21)}…`:value);
+    cassetteLabel.textContent=empty?"":(value.length>22?`${value.slice(0,21)}…`:value);
     queueMicrotask(()=>{void ensureCurrentTrackInCrate();});
   };
   const syncState=()=>{
@@ -303,14 +303,16 @@ function installAssetSpeedControl(){
   let speedLevel=0;
   let loopBaseUnits=typeof tapeCounterUnits==="number"?tapeCounterUnits:0;
   const paintSpeed=()=>{
+    const lightLevel=speedLevel/50;
     readouts.speedLevel.textContent=speedLevel?`+${speedLevel}`:"0";
     readouts.speedPercent.textContent=(100+speedLevel).toFixed(1);
     looper.dataset.speedLevel=String(speedLevel);
-    looper.style.setProperty("--asset-glow",speedLevel?String(.08+speedLevel*.10):"0");
+    looper.style.setProperty("--speed-light-level",lightLevel.toFixed(3));
+    looper.style.setProperty("--asset-glow",(.08+lightLevel*.42).toFixed(3));
     button.dataset.speedLevel=String(speedLevel);
     button.setAttribute("aria-pressed",speedLevel?"true":"false");
-    button.setAttribute("aria-label",`Speed +1, niveau ${speedLevel?`+${speedLevel}`:"0"}`);
-    button.title=`SPEED ${speedLevel?`+${speedLevel}`:"0"}`;
+    button.setAttribute("aria-label",`Speed +1, niveau ${speedLevel} sur 50`);
+    button.title=`SPEED +${speedLevel} / 50`;
   };
   const paintLoops=()=>{
     if(!deckBuffer||typeof tapeCounterUnits!=="number"){
@@ -323,7 +325,7 @@ function installAssetSpeedControl(){
     readouts.loops.textContent=String(visible);
   };
   const applySpeedLevel=level=>{
-    speedLevel=Math.max(0,Math.min(5,Number(level)||0));
+    speedLevel=Math.max(0,Math.min(50,Number(level)||0));
     autoLooperEnabledState=false;
     autoLooperModeIndex=0;
     autoLooperSpeedPercent=100+speedLevel;
@@ -332,7 +334,7 @@ function installAssetSpeedControl(){
     refreshCassetteUI();
     paintSpeed();
   };
-  button.onclick=event=>{event.stopPropagation();applySpeedLevel((speedLevel+1)%6);};
+  button.onclick=event=>{event.stopPropagation();applySpeedLevel(Math.min(50,speedLevel+1));};
   if(resetButton){
     const nativeReset=resetButton.onclick;
     resetButton.onclick=event=>{

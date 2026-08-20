@@ -47,12 +47,16 @@ The seven main transport/load buttons no longer contain a fixed amber lamp color
 
 - `faceplate.webp` keeps the black button bodies, metal bezels and physical relief.
 - Only the original inner outline, icon and label light channels carry transparent alpha.
-- `.asset-button-light` elements sit behind the faceplate and provide the neutral/off and amber/on colors.
-- Hover, focus, press, Play/Stop transport state and Speed level are controlled by CSS classes/state rather than new baked artwork.
+- `.asset-button-light` elements sit behind the faceplate and provide a restrained amber idle level plus the stronger interactive states.
+- Play keeps the strongest default glow so its clickability is obvious and remains strong during playback.
+- Speed accepts 50 one-percent steps; its lamp intensity increases continuously from level 0 through level 50 and Reset returns it to 0.
+- Hover, focus and press states are controlled by CSS classes rather than new baked artwork.
 - Transparency is permitted only inside the seven frozen button rectangles defined by `tests/cassette_runtime.py`; every pixel outside those rectangles must remain opaque and unchanged.
 - Do not flatten the CSS lamps back into the faceplate or add another button-glow image.
 
 The production edit changed `30,817` decoded pixels, all inside the approved button rectangles; the audited count outside the mask is `0`.
+
+The obsolete fallback cassette label/banner and its baked `Funk Break.wav` text were removed from native region `x=540..1012`, `y=135..213`. The bounded replacement changed `32,642` decoded pixels and the audited changed-pixel count outside that region is `0`. Runtime track text remains HTML/CSS and stays empty until a beat is loaded.
 
 ## Cassette reconstruction constraints
 

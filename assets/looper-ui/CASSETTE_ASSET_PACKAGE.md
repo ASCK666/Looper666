@@ -26,6 +26,8 @@ All files live under `assets/looper-ui/`:
 
 No converging side tape strands are mounted. A fixed CSS aperture clips the complete cartridge to the habitacle opening, while an opaque CSS cavity backing prevents baked faceplate details from showing through during insertion. The transparent glass PNG remains fixed above the moving cassette and uses the same full-opening geometry.
 
+The habitacle carries a restrained CSS backlight even while idle. Playback raises its intensity and glass-like specular response without changing the cassette assets or promoting the glow above the physical support/glass stack.
+
 The abandoned tape-path binary is preserved by Git history rather than shipped with the application.
 
 The light physical speed calibration remains based on standard compact-cassette tape speed `4.75 cm/s` (`1 7/8 in/s`) without simulating changing winding radius over time.
