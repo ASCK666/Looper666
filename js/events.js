@@ -44,8 +44,7 @@ try{
 
 $("headerCrateToggle").onclick=()=>{
   switchTab("looper");
-  const crate=$("looper").querySelector(".beatCratePanel");
-  crate.animate(
+  $("library")?.animate(
     [{boxShadow:"0 0 0 rgba(226,173,95,0)"},{boxShadow:"0 0 24px rgba(226,173,95,.14)"},{boxShadow:"0 0 0 rgba(226,173,95,0)"}],
     {duration:520,easing:"ease-out"}
   );
@@ -56,8 +55,6 @@ $("practiceOverlayClose").onclick=()=>{
   stopPractice();
   $("practice").classList.remove("overlayOpen");
 };
-
-let cassetteDoorTimer=null;
 
 function openFilePicker(id){
   const input=$(id);
@@ -82,44 +79,10 @@ async function handleBeatImport(files,label){
   }
 }
 
-function pulseCassetteDoor(){
-  if(window.CassetteLayerRuntimeStaged?.animateEjection?.())return;
-  const deck=$("looperDropzoneBtn");
-  if(!deck)return;
-  deck.classList.remove("ejecting");
-  void deck.offsetWidth;
-  deck.classList.add("ejecting");
-  if(cassetteDoorTimer)clearTimeout(cassetteDoorTimer);
-  cassetteDoorTimer=setTimeout(()=>{
-    deck.classList.remove("ejecting");
-    cassetteDoorTimer=null;
-  },760);
-}
-
-$("cassetteDoorEject").onclick=(ev)=>{
-  ev.stopPropagation();
-  if(deckSource)stopDeck();
-  pulseCassetteDoor();
-  openFilePicker("beatFiles");
-};
 $("tapeCounterReset").onclick=(ev)=>{
   ev.stopPropagation();
   resetTapeCounter();
 };
-$("looperDropzoneBtn").addEventListener("dragover",ev=>{
-  ev.preventDefault();
-  $("looperDropzoneBtn").classList.add("dragging");
-});
-$("looperDropzoneBtn").addEventListener("dragleave",()=>{
-  $("looperDropzoneBtn").classList.remove("dragging");
-});
-$("looperDropzoneBtn").addEventListener("drop",async ev=>{
-  ev.preventDefault();
-  $("looperDropzoneBtn").classList.remove("dragging");
-  const files=[...ev.dataTransfer.files].filter(isAudioFile);
-  if(!files.length)return;
-  await handleBeatImport(files,"IMPORT");
-});
 
 $("importBeatsBtn").onclick=()=>openFilePicker("beatFiles");
 $("importFolderBtn").onclick=()=>openFilePicker("beatFolder");

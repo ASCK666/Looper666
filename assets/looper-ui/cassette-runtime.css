@@ -1,5 +1,5 @@
 /*
-  Staged cassette runtime CSS.
+  Production cassette runtime CSS.
   Bootstrap loads this stylesheet only for the verified layered-cassette runtime.
 */
 
@@ -11,11 +11,8 @@
   pointer-events:none;
 }
 
-#looper.asset-ui .cassette-runtime-full-layer {
+#looper.asset-ui .cassette-runtime-asset {
   position:absolute;
-  inset:0;
-  width:100%;
-  height:100%;
   object-fit:fill;
   pointer-events:none;
 }
@@ -36,7 +33,13 @@
   pointer-events:none;
 }
 
-#looper.asset-ui .cassette-runtime-cavity { z-index:2; }
+#looper.asset-ui .cassette-runtime-cavity {
+  z-index:2;
+  left:32.3567708333%; /* 497 / 1536 */
+  top:13.37890625%;    /* 137 / 1024 */
+  width:36.0677083333%;/* 554 / 1536 */
+  height:24.4140625%;  /* 250 / 1024 */
+}
 
 #looper.asset-ui .cassette-runtime-aperture {
   position:absolute;
@@ -89,11 +92,11 @@
   No dynamic winding-radius simulation yet.
 */
 #looper.asset-ui.cassette-runtime-playing .cassette-runtime-reel-left {
-  animation:cassette-runtime-spin-left 1.848s linear infinite;
+  animation:cassette-runtime-spin-left var(--cassette-left-period,1.848s) linear infinite;
 }
 
 #looper.asset-ui.cassette-runtime-playing .cassette-runtime-reel-right {
-  animation:cassette-runtime-spin-right 1.842s linear infinite;
+  animation:cassette-runtime-spin-right var(--cassette-right-period,1.842s) linear infinite;
 }
 
 @keyframes cassette-runtime-spin-left { to { transform:rotate(-360deg); } }
@@ -104,7 +107,13 @@
   The corrected shell keeps the tape visible through local translucent corridors;
   there is no duplicate tape layer above the shell.
 */
-#looper.asset-ui .cassette-runtime-shell { z-index:3; }
+#looper.asset-ui .cassette-runtime-shell {
+  z-index:3;
+  left:32.3567708333%;
+  top:13.37890625%;
+  width:36.0677083333%;
+  height:24.4140625%;
+}
 
 /*
   Existing dynamic cassette title is interleaved above shell but below light/glass.
@@ -119,10 +128,6 @@
 
 #looper.asset-ui.cassette-runtime-inserting .cassette-runtime-cartridge {
   animation:cassette-runtime-insert var(--cassette-insert-duration) cubic-bezier(.18,.82,.22,1) both;
-}
-
-#looper.asset-ui.cassette-runtime-ejecting .cassette-runtime-cartridge {
-  animation:cassette-runtime-eject 420ms cubic-bezier(.3,.05,.24,1) both;
 }
 
 @keyframes cassette-runtime-insert {
@@ -140,17 +145,6 @@
   100% {
     opacity:1;
     transform:perspective(900px) translateY(0) rotateX(0) scale(1);
-  }
-}
-
-@keyframes cassette-runtime-eject {
-  0%,100% {
-    opacity:1;
-    transform:perspective(900px) translateY(0) rotateX(0) scale(1);
-  }
-  48% {
-    opacity:.88;
-    transform:perspective(900px) translateY(-5.5%) rotateX(-3deg) scale(1.014);
   }
 }
 
@@ -180,10 +174,22 @@
 
 /* Fixed full-canvas transparent glass asset. Its alpha mask follows the inner
    habitacle contour; the image contains no cassette or deck-frame pixels. */
-#looper.asset-ui .cassette-runtime-glass { z-index:8; }
+#looper.asset-ui .cassette-runtime-glass {
+  z-index:8;
+  left:31.0546875%;
+  top:10.83984375%;
+  width:39.3229166667%;
+  height:27.1484375%;
+}
 
 /* The physical lower lip holds the pane and therefore masks its bottom edge. */
-#looper.asset-ui .cassette-runtime-support { z-index:9; }
+#looper.asset-ui .cassette-runtime-support {
+  z-index:9;
+  left:31.4453125%;
+  top:37.79296875%;
+  width:38.0859375%;
+  height:6.54296875%;
+}
 
 /* Retire the old generic glow only when the staged layered system is enabled. */
 #looper.asset-ui.cassette-layered-runtime-enabled .asset-cassette-glow {

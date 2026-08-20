@@ -76,9 +76,6 @@ assert.equal(evaluate("visibleLibraryRows([{name:'Zulu',source:'user'},{name:'Al
 assert.equal(evaluate("visibleLibraryRows([{name:'Older',created:1},{name:'Newer',created:2}],'','recent')[0].name"),"Newer");
 assert.equal(evaluate("visibleLibraryRows([{name:'Kick'},{name:'Snare'}],' sna ','name').length"),1);
 assert.equal(evaluate("visibleLibraryRows([{name:'Zulu'},{name:'Alpha'}],'','name').map(row=>row.name).join(',')"),"Alpha,Zulu");
-assert.equal(evaluate("formatTapeCounter(0)"),"0000");
-assert.equal(evaluate("formatTapeCounter(128.9)"),"0128");
-assert.equal(evaluate("formatTapeCounter(10003)"),"0003");
 
 sandbox.mockBuffer={
   numberOfChannels:1,
@@ -99,7 +96,7 @@ blob.arrayBuffer().then(bytes=>{
   assert.equal(ascii(8,4),"WAVE");
   assert.equal(view.getUint32(24,true),8000);
   assert.equal(view.getUint16(22,true),1);
-  console.log("OK: core unit tests — utilities, tape counter, real crate rows and WAV export");
+  console.log("OK: core unit tests — utilities, real crate rows and WAV export");
 }).catch(error=>{
   console.error(error);
   process.exitCode=1;

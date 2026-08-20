@@ -1,12 +1,12 @@
 # Cassette layered reconstruction — implementation notes and retrospective
 
-This document records the layer architecture, implementation logic, failure modes, and workflow lessons from the cassette reconstruction on branch `faceplate-190826`.
+This document records the layer architecture, implementation logic, failure modes, and workflow lessons from the cassette reconstruction now cleaned on branch `200826-clean-deck`.
 
 It is intentionally descriptive rather than a new visual specification. Binding geometry and material rules remain in the existing cassette specs.
 
 ## Current branch safety state
 
-- active working branch: `faceplate-190826`;
+- active working branch: `200826-clean-deck`;
 - safety snapshot branch: `clean-200826`;
 - `clean-200826` was created from commit `8a62cac2f6b4afe313827413c44746316881cb05` and must remain untouched unless explicitly used for recovery;
 - no automatic merge is authorized.
@@ -71,7 +71,7 @@ Frozen cassette references:
 - foreground support: approximately `x=483..1067`, `y=387..453`;
 - inner-habitacle glass alpha bounds: `x=477..1080`, `y=111..388`; the lower support masks its bottom edge.
 
-Static shell/cavity/support/glass assets are full-canvas transparent PNGs so they can be mounted at `(0,0)` with no rescaling or coordinate drift. The glass alpha follows the inner habitacle contour `x=477..1080`, `y=111..388`, including its rounded top corners; it is not derived from the cassette silhouette. The support renders above it and hides its lower edge. The two reel assets are local `154 x 154` PNGs mounted around their fixed centers.
+Shell, cavity, support and glass are cropped to their alpha bounds and positioned in native faceplate percentages, avoiding four unnecessary 1536x1024 decode surfaces. The glass occupies 604x278 at global `(477,111)` and is not derived from the cassette silhouette. The support occupies 585x67 at `(483,387)` and renders above it. The two reel assets are local `154 x 154` PNGs mounted around their fixed centers.
 
 ## Reel animation logic
 
@@ -90,7 +90,7 @@ Loading or switching a beat restarts one cartridge insertion animation. Desktop 
 
 ## Integrity gate and fail-safe behavior
 
-`js/cassette-runtime.staged.js` verifies every required binary before mounting the layered cassette. For each asset it checks:
+`js/cassette-runtime.js` verifies every required binary before mounting the layered cassette. For each asset it checks:
 
 - exact filename/path;
 - width and height;
@@ -155,7 +155,7 @@ Earlier baseline-derived PNG attempts were abandoned because their geometry was 
 
 The later CSS replacement was also removed after visual review: the two lines converging toward the cassette center read as decorative bands rather than believable tape transport. The runtime must not draw those side strands.
 
-`cassette-tape-path.png` remains only as reconstruction history and is no longer mounted or integrity-checked.
+The abandoned tape-path binary was removed from the deployable tree; its reconstruction history remains available in Git.
 
 ## Safe binary-asset workflow from now on
 
@@ -186,4 +186,4 @@ A binary push and a runtime integrity update are two separate operations. Never 
 - reel rotation centers remain fixed;
 - integrity failure must fail safe to the approved base faceplate rather than mount a partial cassette;
 - no automatic merge;
-- `clean-200826` remains a recovery snapshot while work continues on `faceplate-190826`.
+- `clean-200826` remains a recovery snapshot while cleanup continues on `200826-clean-deck`.

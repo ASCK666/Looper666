@@ -1,6 +1,6 @@
 # Cassette depth / mask specification
 
-This file defines the geometry and depth separation for the cassette reconstruction on branch `faceplate-190826`.
+This file defines the geometry and depth separation for the cassette reconstruction on branch `200826-clean-deck`.
 
 The source of truth remains `assets/looper-ui/faceplate.webp`, baseline Git blob SHA `b40f4620595fd56a9365a99bfdafaa40018acbe1`, canvas `1536 x 1024`.
 
@@ -16,14 +16,14 @@ Coordinates below are native `1536 x 1024` source pixels.
 
 ### 1. Glass / viewing aperture reference
 
-Measured inner viewing region:
+Current inner viewing region:
 
-- left: `x = 484`
-- top: `y = 118`
-- right: `x = 1067`
-- bottom: `y = 389`
+- left: `x = 477`
+- top: `y = 111`
+- right: `x = 1080`
+- bottom: `y = 388`
 
-Reference rectangle: `(484, 118) .. (1067, 389)`.
+Current inner-habitacle alpha region: `(477, 111) .. (1080, 388)`.
 
 This is **not** an edit rectangle. It is the region whose glass tint/reflections must visually remain above the cassette assembly in the final stack.
 

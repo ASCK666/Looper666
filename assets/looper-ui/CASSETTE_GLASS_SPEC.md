@@ -1,6 +1,6 @@
 # Cassette glass naturalness spec — step 10
 
-This specification is binding for the cassette reconstruction on branch `faceplate-190826`.
+This specification is binding for the cassette reconstruction on branch `200826-clean-deck`.
 
 ## Goal
 

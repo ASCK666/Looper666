@@ -1,6 +1,6 @@
 # Cassette shell spindle apertures — step 12
 
-This clarification is binding for the cassette reconstruction on branch `faceplate-190826`.
+This clarification is binding for the cassette reconstruction on branch `200826-clean-deck`.
 
 ## Physical shell rule
 

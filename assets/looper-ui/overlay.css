@@ -15,8 +15,6 @@
   box-shadow:0 16px 38px rgba(0,0,0,.38)!important;
 }
 
-#looper.asset-ui>.layout{display:none!important}
-
 #looper.asset-ui .looper-faceplate {
   position:absolute!important;
   inset:0!important;
@@ -37,11 +35,18 @@
   background:linear-gradient(180deg,rgba(255,190,88,.012),transparent 38%);
 }
 
-/* State-only nodes and retired native artwork never become visual assets. */
-#looper.asset-ui :is(
-  #beatFiles,#beatFolder,#cassetteBeatName,#deckTransportState,#deckSpeedReadout,#deckAutoReadout,
-  .cassetteMechanismCrop,.deckReadout,.cassetteDeckImage,.cassetteReel
-){display:none!important}
+/* State-only nodes feed the runtime without carrying a second visual deck. */
+#looper.asset-ui :is(#beatFiles,#beatFolder,.asset-state-source){
+  position:absolute!important;
+  width:1px!important;
+  height:1px!important;
+  padding:0!important;
+  margin:-1px!important;
+  overflow:hidden!important;
+  clip-path:inset(50%)!important;
+  white-space:nowrap!important;
+  border:0!important;
+}
 
 /* Real HTML buttons sit over the matching controls in faceplate.webp. */
 #looper.asset-ui :is(

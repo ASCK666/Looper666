@@ -7,11 +7,7 @@ import sys
 ROOT = Path(__file__).resolve().parents[1]
 ASSETS = ROOT / "assets"
 EXPECTED_VISUALS = {
-    "cassette-mechanism-pixel-v84.png",
-    "cassette-reel-pixel-v81.png",
     "deck-black-ui-texture.png",
-    "looper-deck-faceplate-retro.webp",
-    "looper-beat-crate-retro.webp",
 }
 
 actual_visuals = {
@@ -29,4 +25,4 @@ if missing or unexpected:
         print(f"FAIL: untracked top-level assets: {', '.join(unexpected)}")
     sys.exit(1)
 
-print("OK: asset health — 5 production visuals, no retired deck artwork")
+print("OK: asset health — one shared top-level texture, no retired deck artwork")

@@ -48,7 +48,7 @@ with tempfile.TemporaryDirectory() as td, contextlib.ExitStack() as stack:
         assert page.locator('.looper-faceplate').get_attribute('src')=='./assets/looper-ui/faceplate.webp'
         assert page.locator('#library .track').count()==0
 
-        for rid in ['tapeCounterReset','playBeat','stopBeat','prevBeat','nextBeat','importBeatsBtn','importFolderBtn','loadSampleBtn','kickFolderBtn','snareFolderBtn','hatFolderBtn','autoLooperToggle','deckTransportState','deckSpeedReadout','looperVu']:
+        for rid in ['tapeCounterReset','playBeat','stopBeat','prevBeat','nextBeat','importBeatsBtn','importFolderBtn','loadSampleBtn','kickFolderBtn','snareFolderBtn','hatFolderBtn','autoLooperToggle','deckTransportState']:
             assert page.locator('#'+rid).count()==1,rid
         handlers=page.evaluate('''() => ['playBeat','stopBeat','tapeCounterReset','loadSampleBtn','kickFolderBtn','autoLooperToggle','importBeatsBtn','importFolderBtn'].map(id=>typeof document.getElementById(id).onclick)''')
         assert all(v=='function' for v in handlers),handlers

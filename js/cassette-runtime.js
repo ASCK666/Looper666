@@ -1,12 +1,11 @@
 "use strict";
 
 /*
-  Staged cassette runtime.
-  IMPORTANT: this file is intentionally NOT loaded by index.html yet.
+  Production cassette runtime.
   Nothing mounts unless the frozen binary package first passes verifyAssetPackage().
 */
 
-window.CassetteLayerRuntimeStaged=(()=>{
+window.CassetteLayerRuntime=(()=>{
   const DEFAULT_ASSET_BASE="./assets/looper-ui/";
   const DEFAULT_ASSETS={
     cavity:"cassette-cavity.png",
@@ -18,12 +17,12 @@ window.CassetteLayerRuntimeStaged=(()=>{
   };
 
   const EXPECTED={
-    cavity:{name:"cassette-cavity.png",width:1536,height:1024,alphaBBox:[497,137,1051,387],sha256:"b5e897e4be61695fa5e5c6ab628f9322b5c06e7a16b2f33bcfbdb97412e1517f"},
+    cavity:{name:"cassette-cavity.png",width:554,height:250,alphaBBox:[0,0,554,250],sha256:"43c918622e23f0ba55280afaa3e88caa23ee2595991a49b6116d624f910bb52b"},
     leftReel:{name:"cassette-reel-left.png",width:154,height:154,alphaBBox:[0,0,154,154],sha256:"b1daef2f88a9d8e79c97b89ebcc7cb974703a4d240436928013e83786ab1c03e"},
     rightReel:{name:"cassette-reel-right.png",width:154,height:154,alphaBBox:[0,0,154,154],sha256:"6043c1b1c5a8bd5aba8386595c58cc251fcabd3b54646ca71b517ced16602daa"},
-    shell:{name:"cassette-shell.png",width:1536,height:1024,alphaBBox:[497,137,1051,387],sha256:"006ab4bfc5a9684caf7f3ab32cfa8d0b72097ff8ea3e2d3c1b2d7bbb02b983ba"},
-    support:{name:"cassette-support-foreground.png",width:1536,height:1024,alphaBBox:[483,387,1068,454],sha256:"ff751dd7eda90e2389ab856fa7a90b2d5a5dba72031aae29e0e6548ba0b1e75b"},
-    glass:{name:"cassette-glass-habitacle.png",width:1536,height:1024,alphaBBox:[477,111,1081,389],sha256:"0a717dca8848ec032c9861d19e74af951bfdf31a23c1a19ef9aa567ed3fde83e"}
+    shell:{name:"cassette-shell.png",width:554,height:250,alphaBBox:[0,0,554,250],sha256:"7abb476bf3bfa3bbb137949691ffca31ddcc176415d1314d3df0787de9ace70a"},
+    support:{name:"cassette-support-foreground.png",width:585,height:67,alphaBBox:[0,0,585,67],sha256:"def9953347a1c2caadf7b7336a1e42509653a3f53ee01fc632222e0fea0588e9"},
+    glass:{name:"cassette-glass-habitacle.png",width:604,height:278,alphaBBox:[0,0,604,278],sha256:"813ad24a3fb287f37069afe75f4803f4c00497143b075b21543507f75eed3061"}
   };
 
   let mounted=false;
@@ -36,6 +35,7 @@ window.CassetteLayerRuntimeStaged=(()=>{
   let cassetteLabelNextSibling=null;
   let motionTimer=null;
   let verifiedConfig=null;
+  let verifiedSources=null;
 
   function makeImg(className,src){
     const img=document.createElement("img");
@@ -58,7 +58,7 @@ window.CassetteLayerRuntimeStaged=(()=>{
   function restartMotion(className,duration){
     if(!mounted||!looper||!cartridge)return false;
     if(motionTimer)clearTimeout(motionTimer);
-    looper.classList.remove("cassette-runtime-inserting","cassette-runtime-ejecting");
+    looper.classList.remove("cassette-runtime-inserting");
     void cartridge.offsetWidth;
     looper.classList.add(className);
     motionTimer=setTimeout(()=>{
@@ -114,6 +114,13 @@ window.CassetteLayerRuntimeStaged=(()=>{
     return Array.isArray(a)&&Array.isArray(b)&&a.length===b.length&&a.every((value,index)=>value===b[index]);
   }
 
+  function releaseVerifiedSources(){
+    if(verifiedSources){
+      Object.values(verifiedSources).forEach(src=>URL.revokeObjectURL(src));
+    }
+    verifiedSources=null;
+  }
+
   async function verifyOne(key,url,expected){
     const response=await fetch(url,{cache:"no-store"});
     if(!response.ok)throw new Error(`${expected.name}: HTTP ${response.status}`);
@@ -136,27 +143,39 @@ window.CassetteLayerRuntimeStaged=(()=>{
       throw new Error(`${expected.name}: alpha bounds mismatch (${JSON.stringify(alphaBBox)})`);
     }
 
-    return {key,name:expected.name,url,width,height,alphaBBox,sha256:hash,ok:true};
+    return {key,name:expected.name,url,width,height,alphaBBox,sha256:hash,objectUrl:URL.createObjectURL(blob),ok:true};
   }
 
   async function verifyAssetPackage({assetBase=DEFAULT_ASSET_BASE,assets={}}={}){
+    if(mounted)throw new Error("Cassette layered runtime: unmount before verifying another package");
     const names={...DEFAULT_ASSETS,...assets};
     const url=name=>`${assetBase}${name}`;
+    releaseVerifiedSources();
     verified=false;
     verificationReport=null;
     verifiedConfig=null;
 
     const rows=[];
-    for(const key of Object.keys(EXPECTED)){
-      if(names[key]!==EXPECTED[key].name){
-        throw new Error(`Cassette package filename mismatch for ${key}: expected ${EXPECTED[key].name}`);
+    try{
+      for(const key of Object.keys(EXPECTED)){
+        if(names[key]!==EXPECTED[key].name){
+          throw new Error(`Cassette package filename mismatch for ${key}: expected ${EXPECTED[key].name}`);
+        }
+        rows.push(await verifyOne(key,url(names[key]),EXPECTED[key]));
       }
-      rows.push(await verifyOne(key,url(names[key]),EXPECTED[key]));
+    }catch(error){
+      rows.forEach(row=>URL.revokeObjectURL(row.objectUrl));
+      throw error;
     }
 
+    verifiedSources=Object.fromEntries(rows.map(row=>[row.key,row.objectUrl]));
     verified=true;
     verifiedConfig={assetBase,names};
-    verificationReport={ok:true,checkedAt:new Date().toISOString(),assets:rows};
+    verificationReport={
+      ok:true,
+      checkedAt:new Date().toISOString(),
+      assets:rows.map(({objectUrl,...row})=>row)
+    };
     return verificationReport;
   }
 
@@ -172,7 +191,8 @@ window.CassetteLayerRuntimeStaged=(()=>{
     looper=document.getElementById("looper");
     if(!looper)throw new Error("Cassette layered runtime: #looper not found");
 
-    const url=name=>`${assetBase}${name}`;
+    if(!verifiedSources)throw new Error("Cassette layered runtime: verified asset sources unavailable");
+    const source=key=>verifiedSources[key];
 
     stage=document.createElement("div");
     stage.className="cassette-runtime-stage";
@@ -180,9 +200,9 @@ window.CassetteLayerRuntimeStaged=(()=>{
 
     cartridge=makeLayer("cassette-runtime-cartridge");
     cartridge.append(
-      makeImg("cassette-runtime-reel cassette-runtime-reel-left",url(names.leftReel)),
-      makeImg("cassette-runtime-reel cassette-runtime-reel-right",url(names.rightReel)),
-      makeImg("cassette-runtime-full-layer cassette-runtime-shell",url(names.shell))
+      makeImg("cassette-runtime-reel cassette-runtime-reel-left",source("leftReel")),
+      makeImg("cassette-runtime-reel cassette-runtime-reel-right",source("rightReel")),
+      makeImg("cassette-runtime-asset cassette-runtime-shell",source("shell"))
     );
 
     cassetteLabel=looper.querySelector(".asset-cassette-label-readout");
@@ -196,11 +216,11 @@ window.CassetteLayerRuntimeStaged=(()=>{
 
     stage.append(
       makeLayer("cassette-runtime-cavity-backdrop"),
-      makeImg("cassette-runtime-full-layer cassette-runtime-cavity",url(names.cavity)),
+      makeImg("cassette-runtime-asset cassette-runtime-cavity",source("cavity")),
       aperture,
       makeLayer("cassette-runtime-backlight"),
-      makeImg("cassette-runtime-full-layer cassette-runtime-glass",url(names.glass)),
-      makeImg("cassette-runtime-full-layer cassette-runtime-support",url(names.support))
+      makeImg("cassette-runtime-asset cassette-runtime-glass",source("glass")),
+      makeImg("cassette-runtime-asset cassette-runtime-support",source("support"))
     );
 
     looper.appendChild(stage);
@@ -231,8 +251,12 @@ window.CassetteLayerRuntimeStaged=(()=>{
     return restartMotion("cassette-runtime-inserting",620);
   }
 
-  function animateEjection(){
-    return restartMotion("cassette-runtime-ejecting",520);
+  function setPlaybackRate(rate=1){
+    if(!looper)looper=document.getElementById("looper");
+    if(!looper)return;
+    const safeRate=Math.max(.01,Number(rate)||1);
+    looper.style.setProperty("--cassette-left-period",`${(1.848/safeRate).toFixed(3)}s`);
+    looper.style.setProperty("--cassette-right-period",`${(1.842/safeRate).toFixed(3)}s`);
   }
 
   function syncFromCurrentLooperState(){
@@ -255,8 +279,7 @@ window.CassetteLayerRuntimeStaged=(()=>{
         "cassette-layered-runtime-enabled",
         "cassette-runtime-playing",
         "cassette-runtime-light-on",
-        "cassette-runtime-inserting",
-        "cassette-runtime-ejecting"
+        "cassette-runtime-inserting"
       );
     }
     stage=null;
@@ -265,6 +288,9 @@ window.CassetteLayerRuntimeStaged=(()=>{
     cassetteLabelNextSibling=null;
     looper=null;
     mounted=false;
+    verified=false;
+    verifiedConfig=null;
+    releaseVerifiedSources();
   }
 
   return {
@@ -275,7 +301,7 @@ window.CassetteLayerRuntimeStaged=(()=>{
     setPlaying,
     setBacklight,
     animateInsertion,
-    animateEjection,
+    setPlaybackRate,
     syncFromCurrentLooperState,
     isMounted:()=>mounted,
     isVerified:()=>verified,

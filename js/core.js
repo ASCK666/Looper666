@@ -139,7 +139,6 @@ function ensureMeterElements(){
     }
   };
   build("vu",16);
-  build("looperVu",16);
 }
 
 function analyserPeakDb(analyser){
@@ -197,10 +196,8 @@ function updateRealMeters(){
   if(masterAnalyser){
     const masterDb=analyserPeakDb(masterAnalyser);
     paintMeter("vu",dbToBarCount(masterDb,16),now);
-    paintMeter("looperVu",dbToBarCount(masterDb,16),now);
   }else{
     paintMeter("vu",0,now);
-    paintMeter("looperVu",0,now);
   }
 
   meterAnimationRAF=requestAnimationFrame(updateRealMeters);

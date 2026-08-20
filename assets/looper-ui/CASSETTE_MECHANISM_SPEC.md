@@ -1,6 +1,6 @@
 # Cassette mechanism reconstruction spec
 
-This specification is binding for the cassette reconstruction on branch `faceplate-190826`.
+This specification is binding for the cassette reconstruction on branch `200826-clean-deck`.
 
 ## Scope
 

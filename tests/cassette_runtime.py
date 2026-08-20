@@ -4,18 +4,17 @@
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
-CSS = (ROOT / "assets" / "looper-ui" / "cassette-runtime.staged.css").read_text(encoding="utf-8")
-RUNTIME = (ROOT / "js" / "cassette-runtime.staged.js").read_text(encoding="utf-8")
+CSS = (ROOT / "assets" / "looper-ui" / "cassette-runtime.css").read_text(encoding="utf-8")
+RUNTIME = (ROOT / "js" / "cassette-runtime.js").read_text(encoding="utf-8")
 LOOPER = (ROOT / "js" / "looper.js").read_text(encoding="utf-8")
 
 required_css = [
     ".cassette-runtime-cavity-backdrop",
     ".cassette-runtime-aperture",
     ".cassette-runtime-cartridge",
-    ".cassette-runtime-glass { z-index:8; }",
-    ".cassette-runtime-support { z-index:9; }",
+    ".cassette-runtime-glass {",
+    ".cassette-runtime-support {",
     "@keyframes cassette-runtime-insert",
-    "@keyframes cassette-runtime-eject",
     "@media (max-width:760px)",
     "@media (prefers-reduced-motion:reduce)",
 ]
@@ -29,17 +28,22 @@ for token in [
     "aperture.appendChild(cartridge)",
     'makeLayer("cassette-runtime-cavity-backdrop")',
     'glass:"cassette-glass-habitacle.png"',
-    'makeImg("cassette-runtime-full-layer cassette-runtime-glass",url(names.glass))',
+    'makeImg("cassette-runtime-asset cassette-runtime-glass",source("glass"))',
+    "objectUrl:URL.createObjectURL(blob)",
+    "releaseVerifiedSources",
+    "setPlaybackRate",
     "animateInsertion",
-    "animateEjection",
 ]:
     assert token in RUNTIME, f"Missing cassette runtime contract: {token}"
 
 assert "tapePath:" not in RUNTIME, "Legacy tape-path PNG must not remain in the runtime integrity gate"
 assert "tape-strand" not in CSS + RUNTIME, "Converging tape strands must stay removed"
+assert "cassette-runtime-full-layer" not in CSS + RUNTIME, "Cropped assets must not decode as full-canvas layers"
 assert "cassette-runtime-glass::" not in CSS, "Glass reflections must come from the transparent asset, not CSS pseudo-elements"
-assert RUNTIME.index('makeImg("cassette-runtime-full-layer cassette-runtime-glass"') < RUNTIME.index('makeImg("cassette-runtime-full-layer cassette-runtime-support"'), "The lower support must mount after and mask the glass"
-assert "CassetteLayerRuntimeStaged?.animateInsertion?.()" in LOOPER, "Loaded beats must trigger cassette insertion"
+assert RUNTIME.index('makeImg("cassette-runtime-asset cassette-runtime-glass"') < RUNTIME.index('makeImg("cassette-runtime-asset cassette-runtime-support"'), "The lower support must mount after and mask the glass"
+assert 'width:554,height:250,alphaBBox:[0,0,554,250]' in RUNTIME, "Cassette shell/cavity assets must stay cropped"
+assert 'width:604,height:278,alphaBBox:[0,0,604,278]' in RUNTIME, "Habitacle glass asset must stay cropped"
+assert "CassetteLayerRuntime?.animateInsertion?.()" in LOOPER, "Loaded beats must trigger cassette insertion"
 assert "clip-path:inset(10.83984375%" in CSS, "Cartridge motion must stay clipped to the full habitacle aperture"
 
 print("OK: cassette runtime — fixed habitacle mask, moving cartridge and transparent glass asset")

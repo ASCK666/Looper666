@@ -27,6 +27,9 @@ try:
         "/index.html": ("text/html", b"Scratch Practice"),
         "/css/base.css": ("text/css", b"maintained runtime base stylesheet"),
         "/css/clean-ui.css": ("text/css", b"Lean UI overrides"),
+        "/assets/looper-ui/overlay.css": ("text/css", b"only visual source of truth"),
+        "/assets/looper-ui/cassette-runtime.css": ("text/css", b"Production cassette runtime CSS"),
+        "/js/cassette-runtime.js": ("javascript", b"Production cassette runtime"),
         "/js/events.js": ("javascript", b"addEventListener"),
         "/manifest.json": ("application/json", b"Local pixel-art Looper"),
     }
@@ -40,14 +43,14 @@ try:
             )
             assert marker in body, (path, marker)
 
-    deck = "/assets/cassette-mechanism-pixel-v84.png"
+    deck = "/assets/looper-ui/faceplate.webp"
     with urlopen(Request(base_url + deck, method="HEAD"), timeout=5) as response:
         assert response.status == 200
-        assert response.headers.get_content_type() == "image/png"
-        assert int(response.headers["Content-Length"]) > 1_000_000
+        assert response.headers.get_content_type() == "image/webp"
+        assert int(response.headers["Content-Length"]) > 500_000
 finally:
     server.shutdown()
     server.server_close()
     thread.join(timeout=5)
 
-print("OK: deployable folder serves HTML, both runtime CSS files, JS, manifest and production assets locally")
+print("OK: deployable folder serves the clean deck runtime, manifest and production assets locally")
