@@ -168,13 +168,13 @@
 }
 
 @keyframes asset-play-idle-lamp {
-  0%,100%{filter:brightness(.86) saturate(.96)}
-  50%{filter:brightness(1.10) saturate(1)}
+  0%,100%{filter:brightness(.68) saturate(.94)}
+  50%{filter:brightness(1.14) saturate(1)}
 }
 
 @keyframes asset-play-idle-glow {
-  0%,100%{opacity:.50;filter:brightness(.96)}
-  50%{opacity:.92;filter:brightness(1.08)}
+  0%,100%{opacity:.30;filter:brightness(.90);box-shadow:inset 0 0 8px rgba(255,246,206,.16),0 0 8px rgba(244,226,138,.12)}
+  50%{opacity:1;filter:brightness(1.12);box-shadow:inset 0 0 13px rgba(255,246,206,.30),0 0 18px rgba(244,226,138,.30)}
 }
 
 /* Search/sort remain native controls. */

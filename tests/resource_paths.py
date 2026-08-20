@@ -8,7 +8,8 @@ html=(ROOT/'index.html').read_text(encoding='utf-8')
 for val in re.findall(r'\b(?:src|href)=["\']([^"\']+)["\']', html):
     if val.startswith(('http://','https://','data:','#','mailto:')):
         continue
-    target=(ROOT/val.lstrip('./')).resolve()
+    local_val=val.split('?',1)[0].split('#',1)[0]
+    target=(ROOT/local_val.lstrip('./')).resolve()
     if not target.exists():
         problems.append(f'HTML missing: {val} -> {target}')
 
@@ -49,9 +50,19 @@ for token in ['navigator.serviceWorker.getRegistrations()', 'caches.keys()']:
 # Bootstrap must not hide extra runtime dependencies: any local path it names
 # has to exist in the deployable tree.
 for val in re.findall(r'["\'](\./[^"\']+)["\']', bootstrap):
-    target=(ROOT/val[2:]).resolve()
+    local_val=val.split('?',1)[0].split('#',1)[0]
+    target=(ROOT/local_val[2:]).resolve()
     if not target.exists():
         problems.append(f'Bootstrap missing: {val} -> {target}')
+
+for token in [
+    'overlay.css?v=110-yellow-deck-lighting',
+    'bootstrap.js?v=110-yellow-deck-lighting',
+]:
+    if token not in html:
+        problems.append(f'HTML deck cache-buster missing: {token}')
+if 'cassette-runtime.css?v=110-yellow-deck-lighting' not in bootstrap:
+    problems.append('Cassette runtime cache-buster missing')
 
 events=(ROOT/'js'/'events.js').read_text(encoding='utf-8')
 if 'serviceWorker.register' in events:

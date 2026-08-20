@@ -29,8 +29,8 @@
   height:28.125%;        /* 288 / 1024 */
   border-radius:1.2% 1.2% .35% .35%;
   background:
-    radial-gradient(ellipse at 50% 18%,#17100b 0,#0d0907 48%,#080605 100%);
-  box-shadow:inset 0 0 30px rgba(0,0,0,.78);
+    radial-gradient(ellipse at 50% 18%,#1c1810 0,#110e09 48%,#090806 100%);
+  box-shadow:inset 0 1px rgba(248,232,155,.055),inset 0 0 30px rgba(0,0,0,.72);
   pointer-events:none;
 }
 
@@ -161,8 +161,8 @@
   opacity:.64;
   background:
     linear-gradient(151deg,transparent 0 37%,rgba(255,249,218,.055) 41%,rgba(255,236,184,.026) 44%,transparent 49%),
-    radial-gradient(ellipse at 50% 54%,rgba(244,226,138,.075),transparent 67%),
-    radial-gradient(ellipse at 50% 8%,rgba(248,232,155,.23),transparent 44%),
+    radial-gradient(ellipse at 50% 54%,rgba(244,226,138,.11),transparent 67%),
+    radial-gradient(ellipse at 50% 8%,rgba(248,232,155,.27),transparent 44%),
     linear-gradient(90deg,rgba(244,226,138,.060),transparent 11% 89%,rgba(244,226,138,.060));
   box-shadow:inset 0 1px rgba(255,246,206,.14),inset 0 0 28px rgba(244,226,138,.15),0 0 15px rgba(244,226,138,.075);
   mix-blend-mode:screen;
@@ -186,9 +186,9 @@
   content:"";
   position:absolute;
   inset:7% 5% 9%;
-  border:1px solid rgba(248,232,155,.055);
+  border:1px solid rgba(248,232,155,.08);
   border-radius:4px;
-  box-shadow:inset 0 0 18px rgba(244,226,138,.055);
+  box-shadow:inset 0 0 18px rgba(244,226,138,.075);
 }
 
 #looper.asset-ui.cassette-runtime-light-on .cassette-runtime-backlight {

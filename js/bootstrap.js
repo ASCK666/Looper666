@@ -1,5 +1,5 @@
 "use strict";
-window.__SP={version:"109-shiny-css-backlights",ready:false,errors:[]};
+window.__SP={version:"110-yellow-deck-lighting",ready:false,errors:[]};
 window.__SP.report=(scope,error)=>{
   const message=error?.message||String(error||"Unknown error");
   const item={scope,message,time:new Date().toISOString()};
@@ -11,7 +11,7 @@ window.addEventListener("error",event=>window.__SP.report("RUNTIME",event.error|
 window.addEventListener("unhandledrejection",event=>window.__SP.report("PROMISE",event.reason));
 
 const LOOPER_FACEPLATE_URL="./assets/looper-ui/faceplate.webp";
-const CASSETTE_RUNTIME_CSS_URL="./assets/looper-ui/cassette-runtime.css";
+const CASSETTE_RUNTIME_CSS_URL="./assets/looper-ui/cassette-runtime.css?v=110-yellow-deck-lighting";
 const CASSETTE_RUNTIME_JS_URL="./js/cassette-runtime.js";
 const LOOPER_DIRECT_CONTROL_IDS=[
   "librarySearch","libraryOrder","library",
