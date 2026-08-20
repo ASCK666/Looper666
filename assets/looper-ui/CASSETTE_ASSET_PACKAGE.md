@@ -15,7 +15,7 @@ All files live under `assets/looper-ui/`:
 
 ## Current package geometry
 
-- cavity: cropped 554x250 transparent PNG, mounted at global `(497,137)`;
+- cavity: cropped 554x250 opaque PNG, mounted at global `(497,137)`; it blocks the obsolete V-shaped tape route baked into the fallback faceplate;
 - left reel: 154x154 PNG, mounted around global center `(648,249)`;
 - right reel: 154x154 PNG, mounted around global center `(894,251)`;
 - shell: cropped 554x250 transparent PNG, mounted at global `(497,137)`, with continuous transparent/translucent cassette body, localized spindle apertures and static blank label material;
@@ -54,7 +54,7 @@ The runtime must stay dormant until all six currently required binary assets exi
 
 SHA-256 values used by the current runtime integrity gate:
 
-- `cassette-cavity.png`: `43c918622e23f0ba55280afaa3e88caa23ee2595991a49b6116d624f910bb52b`
+- `cassette-cavity.png`: `8ce02994789f49ebb52f75da425802ebc2616481580c3467d1df66e805253a6e`
 - `cassette-reel-left.png`: `b1daef2f88a9d8e79c97b89ebcc7cb974703a4d240436928013e83786ab1c03e`
 - `cassette-reel-right.png`: `6043c1b1c5a8bd5aba8386595c58cc251fcabd3b54646ca71b517ced16602daa`
 - `cassette-shell.png`: `7abb476bf3bfa3bbb137949691ffca31ddcc176415d1314d3df0787de9ace70a`

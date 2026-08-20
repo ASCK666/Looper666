@@ -17,7 +17,7 @@ window.CassetteLayerRuntime=(()=>{
   };
 
   const EXPECTED={
-    cavity:{name:"cassette-cavity.png",width:554,height:250,alphaBBox:[0,0,554,250],sha256:"43c918622e23f0ba55280afaa3e88caa23ee2595991a49b6116d624f910bb52b"},
+    cavity:{name:"cassette-cavity.png",width:554,height:250,alphaBBox:[0,0,554,250],sha256:"8ce02994789f49ebb52f75da425802ebc2616481580c3467d1df66e805253a6e"},
     leftReel:{name:"cassette-reel-left.png",width:154,height:154,alphaBBox:[0,0,154,154],sha256:"b1daef2f88a9d8e79c97b89ebcc7cb974703a4d240436928013e83786ab1c03e"},
     rightReel:{name:"cassette-reel-right.png",width:154,height:154,alphaBBox:[0,0,154,154],sha256:"6043c1b1c5a8bd5aba8386595c58cc251fcabd3b54646ca71b517ced16602daa"},
     shell:{name:"cassette-shell.png",width:554,height:250,alphaBBox:[0,0,554,250],sha256:"7abb476bf3bfa3bbb137949691ffca31ddcc176415d1314d3df0787de9ace70a"},

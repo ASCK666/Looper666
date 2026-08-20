@@ -18,7 +18,7 @@
 #looper.asset-ui .looper-faceplate {
   position:absolute!important;
   inset:0!important;
-  z-index:0!important;
+  z-index:1!important;
   display:block!important;
   width:100%!important;
   height:100%!important;
@@ -30,7 +30,7 @@
   content:"";
   position:absolute;
   inset:0;
-  z-index:1;
+  z-index:2;
   pointer-events:none;
   background:linear-gradient(180deg,rgba(255,190,88,.012),transparent 38%);
 }
@@ -84,6 +84,66 @@
 #looper.asset-ui #importFolderBtn{left:86.55%;top:10.25%;width:10.3%;height:11.2%}
 #looper.asset-ui #importBeatsBtn{left:86.55%;top:23.25%;width:10.3%;height:11.8%}
 #looper.asset-ui #tapeCounterReset{left:78.55%;top:37.45%;width:2.45%;height:3.55%}
+
+/*
+  The faceplate has transparent light channels in the seven main buttons.
+  These fixed underlays provide the actual lamp color from behind the asset;
+  the physical button body and bezels remain part of faceplate.webp.
+*/
+#looper.asset-ui .asset-button-light {
+  position:absolute;
+  z-index:0;
+  border-radius:5px;
+  pointer-events:none;
+  background:#716b62;
+  opacity:1;
+  transition:background-color 90ms ease,filter 90ms ease;
+}
+#looper.asset-ui .asset-button-light[data-control="prevBeat"]{left:25.52%;top:45.70%;width:9.25%;height:9.48%}
+#looper.asset-ui .asset-button-light[data-control="playBeat"]{left:35.42%;top:45.70%;width:9.31%;height:9.48%}
+#looper.asset-ui .asset-button-light[data-control="stopBeat"]{left:45.31%;top:45.70%;width:9.31%;height:9.48%}
+#looper.asset-ui .asset-button-light[data-control="nextBeat"]{left:55.27%;top:45.70%;width:9.31%;height:9.48%}
+#looper.asset-ui .asset-button-light[data-control="autoLooperToggle"]{left:65.30%;top:45.70%;width:9.44%;height:9.48%}
+#looper.asset-ui .asset-button-light[data-control="importFolderBtn"]{left:86.26%;top:9.67%;width:10.81%;height:11.82%}
+#looper.asset-ui .asset-button-light[data-control="importBeatsBtn"]{left:86.26%;top:22.75%;width:10.81%;height:12.70%}
+
+#looper.asset-ui .asset-button-light:is(.is-hot,.is-pressed,.is-pulse),
+#looper.asset-ui.asset-playing .asset-button-light[data-control="playBeat"],
+#looper.asset-ui:not(.asset-playing) .asset-button-light[data-control="stopBeat"],
+#looper.asset-ui[data-speed-level]:not([data-speed-level="0"]) .asset-button-light[data-control="autoLooperToggle"] {
+  background:#e2ad5f;
+}
+#looper.asset-ui .asset-button-light.is-pressed{filter:brightness(1.28)}
+#looper.asset-ui .asset-button-light.is-pulse{animation:asset-button-light-pulse 240ms ease-out}
+
+#looper.asset-ui :is(
+  #prevBeat,#playBeat,#stopBeat,#nextBeat,#autoLooperToggle,
+  #importFolderBtn,#importBeatsBtn
+)::after {
+  content:"";
+  position:absolute;
+  inset:8%;
+  border-radius:4px;
+  pointer-events:none;
+  opacity:0;
+  box-shadow:inset 0 0 9px rgba(255,177,63,.18),0 0 10px rgba(255,156,36,.16);
+  transition:opacity 90ms ease,filter 90ms ease;
+}
+#looper.asset-ui :is(
+  #prevBeat,#playBeat,#stopBeat,#nextBeat,#autoLooperToggle,
+  #importFolderBtn,#importBeatsBtn
+).asset-backlight-hot::after,
+#looper.asset-ui.asset-playing #playBeat::after,
+#looper.asset-ui:not(.asset-playing) #stopBeat::after,
+#looper.asset-ui[data-speed-level]:not([data-speed-level="0"]) #autoLooperToggle::after {
+  opacity:1;
+}
+
+@keyframes asset-button-light-pulse {
+  0%{filter:brightness(1)}
+  45%{filter:brightness(1.38)}
+  100%{filter:brightness(1)}
+}
 
 /* Search/sort remain native controls. */
 #looper.asset-ui #librarySearch,
@@ -275,7 +335,6 @@
 }
 #looper.asset-ui.asset-playing .asset-cassette-glow{opacity:1;filter:brightness(1.22);box-shadow:inset 0 0 29px rgba(255,156,36,.17),0 0 18px rgba(255,156,36,.10)}
 #looper.asset-ui .asset-speed-glow{position:absolute;z-index:3;left:75.2%;top:22.3%;width:10.7%;height:12%;pointer-events:none;opacity:var(--asset-glow);background:radial-gradient(ellipse at 50% 54%,rgba(255,168,43,.34),transparent 66%);filter:blur(2px);mix-blend-mode:screen;transition:opacity .12s ease,filter .12s ease}
-#looper.asset-ui .asset-speed-button-glow{position:absolute;z-index:3;left:65.45%;top:46.05%;width:9.4%;height:8.7%;pointer-events:none;opacity:var(--asset-glow);border-radius:4px;box-shadow:inset 0 0 12px rgba(255,165,46,.34),0 0 12px rgba(255,165,46,.24);transition:opacity .12s ease,box-shadow .12s ease}
 
 @media(max-width:760px){
   #looper.asset-ui{width:100%!important}

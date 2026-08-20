@@ -6,6 +6,7 @@
 #looper.asset-ui .cassette-runtime-stage { display:none; }
 #looper.asset-ui.cassette-layered-runtime-enabled .cassette-runtime-stage {
   position:absolute;
+  z-index:3;
   inset:0;
   display:block;
   pointer-events:none;

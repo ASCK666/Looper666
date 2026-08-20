@@ -41,6 +41,19 @@
 9. **Do not merge automatically.**
    - Asset edits stay on a branch/PR until the visual result has been reviewed.
 
+## CSS-controlled button backlights
+
+The seven main transport/load buttons no longer contain a fixed amber lamp color.
+
+- `faceplate.webp` keeps the black button bodies, metal bezels and physical relief.
+- Only the original inner outline, icon and label light channels carry transparent alpha.
+- `.asset-button-light` elements sit behind the faceplate and provide the neutral/off and amber/on colors.
+- Hover, focus, press, Play/Stop transport state and Speed level are controlled by CSS classes/state rather than new baked artwork.
+- Transparency is permitted only inside the seven frozen button rectangles defined by `tests/cassette_runtime.py`; every pixel outside those rectangles must remain opaque and unchanged.
+- Do not flatten the CSS lamps back into the faceplate or add another button-glow image.
+
+The production edit changed `30,817` decoded pixels, all inside the approved button rectangles; the audited count outside the mask is `0`.
+
 ## Cassette reconstruction constraints
 
 The cassette may be rebuilt, but the surrounding deck is locked. The reconstruction must preserve the current composition, placement, scale, depth relationship and visual integration of the cassette within the existing deck.

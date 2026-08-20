@@ -1,5 +1,5 @@
 "use strict";
-window.__SP={version:"107-clean-deck-runtime",ready:false,errors:[]};
+window.__SP={version:"108-css-button-backlights",ready:false,errors:[]};
 window.__SP.report=(scope,error)=>{
   const message=error?.message||String(error||"Unknown error");
   const item={scope,message,time:new Date().toISOString()};
@@ -94,7 +94,7 @@ function installLooperAssetReadouts(looper){
   const loops=addAssetReadout(looper,"asset-loop-readout","0");
   const speedLevel=addAssetReadout(looper,"asset-speed-level-readout","0");
   const cassetteLabel=addAssetReadout(looper,"asset-cassette-label-readout","AUCUN BEAT");
-  for(const className of ["asset-cassette-glow","asset-speed-glow","asset-speed-button-glow"]){
+  for(const className of ["asset-cassette-glow","asset-speed-glow"]){
     const glow=document.createElement("div");
     glow.className=className;
     glow.setAttribute("aria-hidden","true");
@@ -121,6 +121,54 @@ function installLooperAssetReadouts(looper){
   syncTrack();
   syncState();
   looper.__assetReadouts={headerState,track,state,speedPercent,loops,speedLevel,cassetteLabel};
+}
+
+function installButtonBacklights(looper){
+  if(looper.querySelector(".asset-button-light"))return;
+  const controlIds=[
+    "prevBeat","playBeat","stopBeat","nextBeat","autoLooperToggle",
+    "importFolderBtn","importBeatsBtn"
+  ];
+
+  for(const controlId of controlIds){
+    const button=document.getElementById(controlId);
+    if(!button)continue;
+    const light=document.createElement("span");
+    light.className="asset-button-light";
+    light.dataset.control=controlId;
+    light.setAttribute("aria-hidden","true");
+    looper.appendChild(light);
+
+    const reasons=new Set();
+    const paint=()=>{
+      const hot=reasons.size>0;
+      light.classList.toggle("is-hot",hot);
+      button.classList.toggle("asset-backlight-hot",hot);
+    };
+    const setReason=(reason,on)=>{
+      if(on)reasons.add(reason);
+      else reasons.delete(reason);
+      paint();
+    };
+    const releasePointer=()=>{
+      setReason("pressed",false);
+      light.classList.remove("is-pressed");
+    };
+
+    button.addEventListener("pointerenter",()=>setReason("hover",true));
+    button.addEventListener("pointerleave",()=>{setReason("hover",false);releasePointer();});
+    button.addEventListener("pointerdown",()=>{setReason("pressed",true);light.classList.add("is-pressed");});
+    button.addEventListener("pointerup",releasePointer);
+    button.addEventListener("pointercancel",releasePointer);
+    button.addEventListener("focus",()=>setReason("focus",true));
+    button.addEventListener("blur",()=>setReason("focus",false));
+    button.addEventListener("click",()=>{
+      light.classList.remove("is-pulse");
+      void light.offsetWidth;
+      light.classList.add("is-pulse");
+      setTimeout(()=>light.classList.remove("is-pulse"),260);
+    });
+  }
 }
 
 function installAssetLibraryPager(looper){
@@ -241,6 +289,7 @@ function loadLooperAsset(){
   looper.classList.add("asset-ui");
   mountLooperRuntimeControls(looper);
   ensureLooperFaceplate(looper);
+  installButtonBacklights(looper);
   installLooperAssetReadouts(looper);
   installAssetLibraryPager(looper);
 }

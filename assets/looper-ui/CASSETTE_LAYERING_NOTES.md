@@ -157,6 +157,8 @@ The later CSS replacement was also removed after visual review: the two lines co
 
 The abandoned tape-path binary was removed from the deployable tree; its reconstruction history remains available in Git.
 
+The production cavity is now fully opaque. This is intentional: the fallback faceplate still contains the rejected V-shaped route, and a translucent cavity allowed it to leak through the otherwise correct shell. The horizontal cassette details remain supplied by the production shell rather than the fallback artwork.
+
 ## Safe binary-asset workflow from now on
 
 Before any new cassette PNG is handed off for Git upload:

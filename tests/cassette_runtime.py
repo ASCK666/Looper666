@@ -2,6 +2,7 @@
 """Protect the responsive layered-cassette insertion contract."""
 
 from pathlib import Path
+from PIL import Image
 
 ROOT = Path(__file__).resolve().parents[1]
 CSS = (ROOT / "assets" / "looper-ui" / "cassette-runtime.css").read_text(encoding="utf-8")
@@ -46,4 +47,25 @@ assert 'width:604,height:278,alphaBBox:[0,0,604,278]' in RUNTIME, "Habitacle gla
 assert "CassetteLayerRuntime?.animateInsertion?.()" in LOOPER, "Loaded beats must trigger cassette insertion"
 assert "clip-path:inset(10.83984375%" in CSS, "Cartridge motion must stay clipped to the full habitacle aperture"
 
-print("OK: cassette runtime — fixed habitacle mask, moving cartridge and transparent glass asset")
+faceplate = Image.open(ROOT / "assets" / "looper-ui" / "faceplate.webp").convert("RGBA")
+assert faceplate.size == (1536, 1024), "Faceplate registration changed"
+button_regions = [
+    (392, 468, 535, 566), (544, 468, 688, 566), (696, 468, 840, 566),
+    (849, 468, 993, 566), (1003, 468, 1149, 566),
+    (1325, 99, 1492, 221), (1325, 233, 1492, 364),
+]
+alpha = faceplate.getchannel("A")
+assert all(alpha.crop(box).getextrema()[0] == 0 for box in button_regions), "Every main button must expose transparent light channels"
+outside = Image.new("L", faceplate.size, 255)
+for box in button_regions:
+    outside.paste(0, box)
+assert Image.composite(alpha, Image.new("L", faceplate.size, 255), outside).getextrema()[0] == 255, "Transparency leaked outside button regions"
+
+cavity = Image.open(ROOT / "assets" / "looper-ui" / "cassette-cavity.png").convert("RGBA")
+assert cavity.getchannel("A").getextrema() == (255, 255), "Cassette cavity must block fallback V-shaped bands"
+
+OVERLAY = (ROOT / "assets" / "looper-ui" / "overlay.css").read_text(encoding="utf-8")
+BOOTSTRAP = (ROOT / "js" / "bootstrap.js").read_text(encoding="utf-8")
+assert ".asset-button-light" in OVERLAY and "installButtonBacklights" in BOOTSTRAP, "CSS button backlights are not installed"
+
+print("OK: cassette runtime — fixed habitacle mask, opaque V-band blocker, transparent glass and CSS button lamps")
