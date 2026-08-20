@@ -74,6 +74,7 @@ assert ".asset-button-light" in OVERLAY and "installButtonBacklights" in BOOTSTR
 assert "--speed-light-level" in OVERLAY + BOOTSTRAP, "Speed lamp intensity is not CSS-controlled"
 assert "Math.min(50,speedLevel+1)" in BOOTSTRAP and "Math.min(50,Number(level)" in BOOTSTRAP, "Speed must expose exactly 50 incremental clicks"
 assert 'addAssetReadout(looper,"asset-cassette-label-readout","")' in BOOTSTRAP, "Cassette label must start without a legacy loading banner"
-assert ".cassette-runtime-backlight::before" in CSS and "opacity:.50" in CSS, "The restrained idle habitacle backlight is missing"
+assert ".cassette-runtime-backlight::before" in CSS and ".cassette-runtime-backlight::after" in CSS and "opacity:.64" in CSS, "The restrained idle habitacle backlight is missing"
+assert "--asset-lamp:#f4e28a" in OVERLAY and "asset-play-idle-glow" in OVERLAY, "Play must pulse in the shared yellow-gold lamp palette while idle"
 
 print("OK: cassette runtime — clean fallback, shiny habitacle, V-band blocker and progressive CSS button lamps")

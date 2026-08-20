@@ -158,12 +158,13 @@
   height:27.6%;
   pointer-events:none;
   border-radius:4px;
-  opacity:.50;
+  opacity:.64;
   background:
-    linear-gradient(151deg,transparent 0 37%,rgba(255,239,210,.052) 41%,rgba(255,219,165,.024) 44%,transparent 49%),
-    radial-gradient(ellipse at 50% 8%,rgba(255,187,80,.20),transparent 43%),
-    linear-gradient(90deg,rgba(255,156,36,.052),transparent 11% 89%,rgba(255,156,36,.052));
-  box-shadow:inset 0 1px rgba(255,224,177,.12),inset 0 0 26px rgba(226,129,36,.14),0 0 15px rgba(226,129,36,.075);
+    linear-gradient(151deg,transparent 0 37%,rgba(255,249,218,.055) 41%,rgba(255,236,184,.026) 44%,transparent 49%),
+    radial-gradient(ellipse at 50% 54%,rgba(244,226,138,.075),transparent 67%),
+    radial-gradient(ellipse at 50% 8%,rgba(248,232,155,.23),transparent 44%),
+    linear-gradient(90deg,rgba(244,226,138,.060),transparent 11% 89%,rgba(244,226,138,.060));
+  box-shadow:inset 0 1px rgba(255,246,206,.14),inset 0 0 28px rgba(244,226,138,.15),0 0 15px rgba(244,226,138,.075);
   mix-blend-mode:screen;
   transition:opacity .15s ease,filter .15s ease,box-shadow .15s ease;
 }
@@ -176,15 +177,24 @@
   top:5%;
   height:9%;
   border-radius:50%;
-  opacity:.42;
-  background:linear-gradient(90deg,transparent,rgba(255,235,204,.12) 34% 66%,transparent);
+  opacity:.48;
+  background:linear-gradient(90deg,transparent,rgba(255,249,217,.14) 34% 66%,transparent);
   filter:blur(2px);
 }
 
+#looper.asset-ui .cassette-runtime-backlight::after {
+  content:"";
+  position:absolute;
+  inset:7% 5% 9%;
+  border:1px solid rgba(248,232,155,.055);
+  border-radius:4px;
+  box-shadow:inset 0 0 18px rgba(244,226,138,.055);
+}
+
 #looper.asset-ui.cassette-runtime-light-on .cassette-runtime-backlight {
-  opacity:.90;
-  filter:brightness(1.13) saturate(1.04);
-  box-shadow:inset 0 1px rgba(255,229,188,.16),inset 0 0 30px rgba(255,156,36,.19),0 0 18px rgba(255,156,36,.11);
+  opacity:.92;
+  filter:brightness(1.10) saturate(1.02);
+  box-shadow:inset 0 1px rgba(255,249,220,.18),inset 0 0 30px rgba(248,232,155,.19),0 0 18px rgba(244,226,138,.11);
 }
 
 /* Fixed full-canvas transparent glass asset. Its alpha mask follows the inner

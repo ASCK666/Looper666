@@ -49,8 +49,10 @@ The seven main transport/load buttons no longer contain a fixed amber lamp color
 - Only the original inner outline, icon and label light channels carry transparent alpha.
 - `.asset-button-light` elements sit behind the faceplate and provide a restrained amber idle level plus the stronger interactive states.
 - Play keeps the strongest default glow so its clickability is obvious and remains strong during playback.
+- While stopped, Play uses a slow yellow-gold pulse; during playback it becomes steady. Reduced-motion users receive the same strong steady cue without animation.
 - Speed accepts 50 one-percent steps; its lamp intensity increases continuously from level 0 through level 50 and Reset returns it to 0.
 - Hover, focus and press states are controlled by CSS classes rather than new baked artwork.
+- Button, Speed and cassette-habitacle lamps share the same pale yellow-gold palette; do not reintroduce the former saturated orange halos.
 - Transparency is permitted only inside the seven frozen button rectangles defined by `tests/cassette_runtime.py`; every pixel outside those rectangles must remain opaque and unchanged.
 - Do not flatten the CSS lamps back into the faceplate or add another button-glow image.
 
