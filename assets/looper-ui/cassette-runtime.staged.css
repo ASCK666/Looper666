@@ -25,10 +25,11 @@
 #looper.asset-ui .cassette-runtime-cavity-backdrop {
   position:absolute;
   z-index:1;
-  left:31.5104166667%;  /* 484 / 1536 */
-  top:11.5234375%;      /* 118 / 1024 */
-  width:37.9557291667%; /* 583 / 1536 */
-  height:26.46484375%;  /* 271 / 1024 */
+  left:31.0546875%;      /* 477 / 1536 */
+  top:10.83984375%;      /* 111 / 1024 */
+  width:39.3229166667%;  /* 604 / 1536 */
+  height:28.125%;        /* 288 / 1024 */
+  border-radius:1.2% 1.2% .35% .35%;
   background:
     radial-gradient(ellipse at 50% 18%,#17100b 0,#0d0907 48%,#080605 100%);
   box-shadow:inset 0 0 30px rgba(0,0,0,.78);
@@ -42,7 +43,7 @@
   z-index:3;
   inset:0;
   overflow:hidden;
-  clip-path:inset(11.5234375% 30.5338541667% 62.01171875% 31.5104166667% round .3%);
+  clip-path:inset(10.83984375% 29.6223958333% 61.03515625% 31.0546875% round 1.2%);
   pointer-events:none;
 }
 
@@ -177,55 +178,12 @@
   box-shadow:inset 0 0 29px rgba(255,156,36,.17),0 0 18px rgba(255,156,36,.10);
 }
 
-/* Exact extracted support foreground, full-canvas transparent PNG. */
-#looper.asset-ui .cassette-runtime-support { z-index:8; }
+/* Fixed full-canvas transparent glass asset. Its alpha mask follows the inner
+   habitacle contour; the image contains no cassette or deck-frame pixels. */
+#looper.asset-ui .cassette-runtime-glass { z-index:8; }
 
-/* One fixed pane spanning the complete measured habitacle. The center stays
-   optically clear; reflections belong to the frame edges, not the cassette. */
-#looper.asset-ui .cassette-runtime-glass {
-  position:absolute;
-  z-index:9;
-  left:31.5104166667%;
-  top:11.5234375%;
-  width:37.9557291667%;
-  height:26.46484375%;
-  overflow:hidden;
-  border-radius:.45%;
-  pointer-events:none;
-  background:
-    linear-gradient(158deg,transparent 0 42%,rgba(242,215,178,.035) 45%,rgba(255,236,207,.018) 47%,transparent 51%),
-    radial-gradient(ellipse at 17% 0,rgba(255,184,79,.085),transparent 32%),
-    radial-gradient(ellipse at 83% 0,rgba(255,184,79,.075),transparent 30%);
-  box-shadow:
-    inset 0 1px rgba(255,225,180,.16),
-    inset 1px 0 rgba(223,174,111,.075),
-    inset -1px 0 rgba(223,174,111,.06),
-    inset 0 -1px rgba(82,54,32,.16);
-  mix-blend-mode:screen;
-}
-
-#looper.asset-ui .cassette-runtime-glass::before {
-  content:"";
-  position:absolute;
-  inset:0;
-  background:
-    linear-gradient(180deg,rgba(255,215,158,.065),transparent 5% 94%,rgba(92,57,31,.04)),
-    linear-gradient(90deg,rgba(226,178,114,.045),transparent 3% 97%,rgba(226,178,114,.038));
-}
-
-#looper.asset-ui .cassette-runtime-glass::after {
-  content:"";
-  position:absolute;
-  top:8%;
-  right:9%;
-  width:34%;
-  height:12%;
-  border-radius:50%;
-  opacity:.18;
-  background:radial-gradient(ellipse,rgba(255,237,211,.18),transparent 70%);
-  filter:blur(4px);
-  transform:rotate(-4deg);
-}
+/* The physical lower lip holds the pane and therefore masks its bottom edge. */
+#looper.asset-ui .cassette-runtime-support { z-index:9; }
 
 /* Retire the old generic glow only when the staged layered system is enabled. */
 #looper.asset-ui.cassette-layered-runtime-enabled .asset-cassette-glow {

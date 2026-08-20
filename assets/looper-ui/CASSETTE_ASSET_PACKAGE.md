@@ -11,6 +11,7 @@ All files live under `assets/looper-ui/`:
 - `cassette-reel-right.png`
 - `cassette-shell.png`
 - `cassette-support-foreground.png`
+- `cassette-glass-habitacle.png`
 
 ## Current package geometry
 
@@ -19,11 +20,11 @@ All files live under `assets/looper-ui/`:
 - right reel: 154x154 PNG, mounted around global center `(894,251)`;
 - shell: full 1536x1024 transparent PNG with continuous transparent/translucent cassette body, two localized spindle apertures and static blank label material. The current shell still contains a narrowly bounded transparency correction created during the abandoned side-strand experiments; keep it unchanged unless a separate cleanup is explicitly approved;
 - support: full 1536x1024 transparent PNG, exact baseline foreground support extraction;
-- glass: fixed CSS pane spanning the complete measured habitacle region `x=484..1067`, `y=118..389`; its center remains clear and only edge/reflection contributions are drawn.
+- glass: full 1536x1024 transparent PNG whose alpha follows the inner habitacle contour `x=477..1080`, `y=111..388`; its lower edge stops at the foreground support, and it contains only restrained glass tint/reflections, never cassette or frame pixels.
 
-## CSS glass, retired tape path and speed calibration
+## Transparent habitacle glass, retired tape path and speed calibration
 
-No converging side tape strands are mounted. A fixed CSS aperture clips the complete cartridge to the glass opening, while an opaque CSS cavity backing prevents baked faceplate details from showing through during insertion. The fixed CSS glass spans the same full aperture instead of reading as a small plate attached to the cassette.
+No converging side tape strands are mounted. A fixed CSS aperture clips the complete cartridge to the habitacle opening, while an opaque CSS cavity backing prevents baked faceplate details from showing through during insertion. The transparent glass PNG remains fixed above the moving cassette and uses the same full-opening geometry.
 
 `cassette-tape-path.png` is retained only as reconstruction history. It is no longer mounted or checked by the runtime integrity gate.
 
@@ -43,7 +44,7 @@ These are current-state calibration values only; a future full winding simulatio
 
 ## Activation gate
 
-The runtime must stay dormant until all five currently required binary assets exist at the exact paths above and have passed integrity verification.
+The runtime must stay dormant until all six currently required binary assets exist at the exact paths above and have passed integrity verification.
 
 `js/cassette-runtime.staged.js` verifies exact filename, dimensions, alpha bbox and SHA-256 before mounting the cassette. If one file does not match, the layered cassette is not partially mounted; bootstrap falls back to the original `faceplate.webp`. This can look like a design rollback plus lost animation even when Git history itself has not rolled back.
 
@@ -58,6 +59,7 @@ SHA-256 values used by the current runtime integrity gate:
 - `cassette-reel-right.png`: `6043c1b1c5a8bd5aba8386595c58cc251fcabd3b54646ca71b517ced16602daa`
 - `cassette-shell.png`: `006ab4bfc5a9684caf7f3ab32cfa8d0b72097ff8ea3e2d3c1b2d7bbb02b983ba`
 - `cassette-support-foreground.png`: `ff751dd7eda90e2389ab856fa7a90b2d5a5dba72031aae29e0e6548ba0b1e75b`
+- `cassette-glass-habitacle.png`: `0a717dca8848ec032c9861d19e74af951bfdf31a23c1a19ef9aa567ed3fde83e`
 
 These hashes are an integrity reference for the staged package; they do not by themselves constitute visual approval or merge authorization.
 

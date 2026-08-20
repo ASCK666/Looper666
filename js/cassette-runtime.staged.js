@@ -13,7 +13,8 @@ window.CassetteLayerRuntimeStaged=(()=>{
     leftReel:"cassette-reel-left.png",
     rightReel:"cassette-reel-right.png",
     shell:"cassette-shell.png",
-    support:"cassette-support-foreground.png"
+    support:"cassette-support-foreground.png",
+    glass:"cassette-glass-habitacle.png"
   };
 
   const EXPECTED={
@@ -21,7 +22,8 @@ window.CassetteLayerRuntimeStaged=(()=>{
     leftReel:{name:"cassette-reel-left.png",width:154,height:154,alphaBBox:[0,0,154,154],sha256:"b1daef2f88a9d8e79c97b89ebcc7cb974703a4d240436928013e83786ab1c03e"},
     rightReel:{name:"cassette-reel-right.png",width:154,height:154,alphaBBox:[0,0,154,154],sha256:"6043c1b1c5a8bd5aba8386595c58cc251fcabd3b54646ca71b517ced16602daa"},
     shell:{name:"cassette-shell.png",width:1536,height:1024,alphaBBox:[497,137,1051,387],sha256:"006ab4bfc5a9684caf7f3ab32cfa8d0b72097ff8ea3e2d3c1b2d7bbb02b983ba"},
-    support:{name:"cassette-support-foreground.png",width:1536,height:1024,alphaBBox:[483,387,1068,454],sha256:"ff751dd7eda90e2389ab856fa7a90b2d5a5dba72031aae29e0e6548ba0b1e75b"}
+    support:{name:"cassette-support-foreground.png",width:1536,height:1024,alphaBBox:[483,387,1068,454],sha256:"ff751dd7eda90e2389ab856fa7a90b2d5a5dba72031aae29e0e6548ba0b1e75b"},
+    glass:{name:"cassette-glass-habitacle.png",width:1536,height:1024,alphaBBox:[477,111,1081,389],sha256:"0a717dca8848ec032c9861d19e74af951bfdf31a23c1a19ef9aa567ed3fde83e"}
   };
 
   let mounted=false;
@@ -197,8 +199,8 @@ window.CassetteLayerRuntimeStaged=(()=>{
       makeImg("cassette-runtime-full-layer cassette-runtime-cavity",url(names.cavity)),
       aperture,
       makeLayer("cassette-runtime-backlight"),
-      makeImg("cassette-runtime-full-layer cassette-runtime-support",url(names.support)),
-      makeLayer("cassette-runtime-glass")
+      makeImg("cassette-runtime-full-layer cassette-runtime-glass",url(names.glass)),
+      makeImg("cassette-runtime-full-layer cassette-runtime-support",url(names.support))
     );
 
     looper.appendChild(stage);

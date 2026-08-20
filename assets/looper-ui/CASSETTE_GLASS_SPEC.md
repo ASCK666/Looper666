@@ -9,8 +9,8 @@ The deck glass must remain visually natural and must continue to read as the sam
 ## Geometry lock
 
 - Native faceplate: `1536 x 1024`.
-- Glass reference region remains `x=484..1067`, `y=118..389`.
-- Do not move, resize, crop, rotate, reframe or reshape the window.
+- The inner-habitacle glass mask occupies alpha bounds `x=477..1080`, `y=111..388` in the native canvas; the physical lower support masks its bottom edge.
+- Preserve this rounded inner-opening contour; do not derive the window shape from the cassette box.
 - The glass remains above mechanism, shell, cassette title and cassette lighting.
 
 ## Habitacle integration requirement
@@ -18,6 +18,7 @@ The deck glass must remain visually natural and must continue to read as the sam
 The glass must read as the glass of the complete deck habitacle / viewing bay, not as a transparent film placed directly on the cassette.
 
 - the pane spans the full glass reference region and visually belongs to the surrounding bay;
+- the transparent PNG contains glass-only optical contributions and no frame, support or cassette pixels;
 - its depth cues must be strongest at the bay edges, corners and plausible frame contact zones rather than centered on the cassette body;
 - low-level tint may exist across the full pane, but cassette readability must remain high;
 - reflections and edge response must follow the habitacle/window as a whole, not the shape of the cassette;
@@ -69,11 +70,11 @@ cassette mechanism
 transparent cassette shell
 cassette title HTML/CSS
 CSS backlight contribution
+glass / reflections foreground, below the lower support lip
 exact lower support foreground
-glass / reflections foreground
 ```
 
-The glass must never render behind the animated reels.
+The glass must never render behind the animated reels, but the physical lower support lip remains in front of it.
 
 ## Validation
 

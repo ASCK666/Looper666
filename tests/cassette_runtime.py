@@ -12,8 +12,8 @@ required_css = [
     ".cassette-runtime-cavity-backdrop",
     ".cassette-runtime-aperture",
     ".cassette-runtime-cartridge",
-    ".cassette-runtime-glass::before",
-    ".cassette-runtime-glass::after",
+    ".cassette-runtime-glass { z-index:8; }",
+    ".cassette-runtime-support { z-index:9; }",
     "@keyframes cassette-runtime-insert",
     "@keyframes cassette-runtime-eject",
     "@media (max-width:760px)",
@@ -28,7 +28,8 @@ for token in [
     'const aperture=makeLayer("cassette-runtime-aperture")',
     "aperture.appendChild(cartridge)",
     'makeLayer("cassette-runtime-cavity-backdrop")',
-    'makeLayer("cassette-runtime-glass")',
+    'glass:"cassette-glass-habitacle.png"',
+    'makeImg("cassette-runtime-full-layer cassette-runtime-glass",url(names.glass))',
     "animateInsertion",
     "animateEjection",
 ]:
@@ -36,8 +37,9 @@ for token in [
 
 assert "tapePath:" not in RUNTIME, "Legacy tape-path PNG must not remain in the runtime integrity gate"
 assert "tape-strand" not in CSS + RUNTIME, "Converging tape strands must stay removed"
-assert "glass:" not in RUNTIME, "Glass is CSS-owned and must not remain in the binary integrity gate"
+assert "cassette-runtime-glass::" not in CSS, "Glass reflections must come from the transparent asset, not CSS pseudo-elements"
+assert RUNTIME.index('makeImg("cassette-runtime-full-layer cassette-runtime-glass"') < RUNTIME.index('makeImg("cassette-runtime-full-layer cassette-runtime-support"'), "The lower support must mount after and mask the glass"
 assert "CassetteLayerRuntimeStaged?.animateInsertion?.()" in LOOPER, "Loaded beats must trigger cassette insertion"
-assert "clip-path:inset(11.5234375%" in CSS, "Cartridge motion must stay clipped to the fixed glass aperture"
+assert "clip-path:inset(10.83984375%" in CSS, "Cartridge motion must stay clipped to the full habitacle aperture"
 
-print("OK: cassette runtime — opaque cavity, fixed aperture, moving cartridge and edge-anchored CSS glass")
+print("OK: cassette runtime — fixed habitacle mask, moving cartridge and transparent glass asset")

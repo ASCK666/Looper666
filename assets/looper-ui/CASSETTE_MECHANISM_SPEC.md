@@ -8,6 +8,8 @@ Only the cassette mechanism and its dedicated cassette layers may be rebuilt. Th
 
 The cassette remains recessed in its existing holder. Its lower portion remains hidden by the existing foreground support exactly as in the approved baseline.
 
+The protective glass belongs to the fixed deck habitacle, not to the cassette. Its transparent asset must follow the inner opening, stop at the lower support, and remain immobile while the cartridge inserts or ejects. The physical lower support renders above the glass edge. The glass asset must not introduce frame, cassette or support pixels.
+
 ## Layer order
 
 From back to front:

@@ -23,8 +23,8 @@ The chosen strategy is conservative:
 4. place the complete translucent cassette shell above the mechanism;
 5. render changing cassette/track text in HTML/CSS rather than baking it into the shell;
 6. add the approved amber light contribution in CSS;
-7. restore the exact lower foreground support above the cassette;
-8. restore the habitacle glass/reflections above the full cassette assembly.
+7. restore the habitacle glass/reflections above the full cassette assembly;
+8. restore the exact lower foreground support above the glass edge.
 
 The surrounding deck is never regenerated or repositioned to accommodate the cassette.
 
@@ -41,10 +41,10 @@ cassette aperture mask
   cassette-reel-left.png
   cassette-reel-right.png
   cassette-shell.png
-  cassette title HTML/CSS
+cassette title HTML/CSS
 cassette backlight CSS
+cassette-glass-habitacle.png
 cassette-support-foreground.png
-fixed habitacle glass CSS
 ```
 
 The CSS uses the corresponding z-order:
@@ -54,8 +54,8 @@ The CSS uses the corresponding z-order:
 - fixed aperture mask containing the moving cartridge: z 3;
 - inside the cartridge: reels z 2, shell z 3, dynamic title z 4;
 - backlight: z 7;
-- support: z 8;
-- glass: z 9.
+- glass: z 8;
+- support: z 9.
 
 The stage fills the faceplate. A fixed mask clips cartridge motion to the measured habitacle aperture. Inside it, the cartridge wrapper moves the reels, shell and dynamic title together while the opaque cavity backing, lower support and habitacle glass remain fixed. The backing prevents the cassette baked into `faceplate.webp` from ghosting through during motion; the mask prevents the moving shell from crossing the deck frame.
 
@@ -69,9 +69,9 @@ Frozen cassette references:
 - left reel center: approximately `(648,249)`;
 - right reel center: approximately `(894,251)`;
 - foreground support: approximately `x=483..1067`, `y=387..453`;
-- glass region: approximately `x=484..1067`, `y=118..389`.
+- inner-habitacle glass alpha bounds: `x=477..1080`, `y=111..388`; the lower support masks its bottom edge.
 
-Static shell/cavity/support assets are full-canvas transparent PNGs so they can be mounted at `(0,0)` with no rescaling or coordinate drift. The glass is CSS geometry locked to the measured habitacle rectangle. The two reel assets are local `154 x 154` PNGs mounted around their fixed centers.
+Static shell/cavity/support/glass assets are full-canvas transparent PNGs so they can be mounted at `(0,0)` with no rescaling or coordinate drift. The glass alpha follows the inner habitacle contour `x=477..1080`, `y=111..388`, including its rounded top corners; it is not derived from the cassette silhouette. The support renders above it and hides its lower edge. The two reel assets are local `154 x 154` PNGs mounted around their fixed centers.
 
 ## Reel animation logic
 

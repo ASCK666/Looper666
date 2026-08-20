@@ -60,12 +60,12 @@ The exact baseline extraction created during step 3 is the reference foreground 
 
 ## Glass reference
 
-Current viewing-window/glass reference region:
+Complete inner-habitacle glass alpha bounds:
 
-- global `x=484..1067`
-- global `y=118..389`
+- global `x=477..1080`
+- global `y=111..388`
 
-Glass/reflections must render above the cassette assembly. Its appearance and geometry must match the approved baseline rather than introducing a new window treatment.
+Glass/reflections must render above the cassette assembly and below the physical lower support lip. The transparent asset follows the rounded inner opening and remains fixed to the deck; it must not reuse the cassette silhouette or contain any frame pixels.
 
 ## Required production layers
 
@@ -75,8 +75,8 @@ The planned production assets are logically:
 2. `cassette-shell` — complete transparent/translucent cassette shell, including static white label material;
 3. HTML/CSS cassette title — runtime text;
 4. CSS backlight — runtime on/off lighting contribution;
-5. `cassette-support-foreground` — exact lower support/occlusion from baseline;
-6. `cassette-glass-foreground` — glass/reflections above the assembly.
+5. `cassette-glass-foreground` — glass/reflections above the moving assembly;
+6. `cassette-support-foreground` — exact lower support/occlusion above the glass edge.
 
 A combined foreground asset may eventually contain support + glass only if doing so preserves the approved baseline exactly and does not prevent correct lighting depth.
 
@@ -121,8 +121,8 @@ cassette mechanism (animated)
 cassette shell (transparent)
 cassette title HTML/CSS
 cassette backlight CSS contribution(s) at calibrated depth
+deck glass / reflections below the physical support lip
 exact lower support foreground
-deck glass / reflections
 ```
 
 No animation may ever promote reel pixels above the shell or glass.
